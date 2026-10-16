@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=8">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -45,6 +45,7 @@
             <div class="hero-actions">
                 <button class="btn btn-primary" id="quickCheckinBtn">✅ Pointer une visite</button>
                 <button class="btn btn-primary" id="quickPrintBtn">🖨️ Impression</button>
+                <button class="btn btn-secondary" id="annualReportBtn" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">📊 Rapport annuel</button>
                 <a href="membres.html" class="btn btn-secondary" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">👥 Gérer les membres</a>
                 <a href="https://atelierduweb.be" class="btn btn-secondary" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">🌐 atelierduweb.be</a>
             </div>
@@ -138,6 +139,16 @@
             </div>
 
             <div class="stat-card">
+                <h2>🧑‍🤝‍🧑 Nouveaux usagers du jour</h2>
+                <ul style="list-style:none;">
+                    <li><strong>Visites du jour :</strong> <span id="fluxTotal">—</span></li>
+                    <li><strong>Nouveaux (première visite) :</strong> <span id="fluxNew">—</span></li>
+                    <li><strong>Usagers connus :</strong> <span id="fluxKnown">—</span></li>
+                </ul>
+                <p class="form-hint" id="fluxHint"></p>
+            </div>
+
+            <div class="stat-card">
                 <h2>🤝 Inclusion numérique</h2>
                 <ul style="list-style:none;">
                     <li><strong>Usagers publics vulnérables :</strong> <span id="inclVulnerable">—</span></li>
@@ -215,7 +226,7 @@
     </div>
 
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=7"></script>
-    <script src="dashboard.js?v=7"></script>
+    <script src="db.js?v=8"></script>
+    <script src="dashboard.js?v=8"></script>
 </body>
 </html>

@@ -179,6 +179,17 @@
         }
         setText('profileHint', totalCp ? Math.round((sg / totalCp) * 100) + ' % des usagers viennent de la R\u00e9gion de Bruxelles-Capitale' : 'Renseignez les codes postaux pour activer cette analyse.');
 
+        /* --- 3b. Nouveaux vs connus du jour --- */
+        var todayFlux = ADWDatabase.queryAll(
+            "SELECT v.member_id, (SELECT COUNT(*) FROM visits v2 WHERE v2.member_id = v.member_id AND v2.visit_date < v.visit_date) AS prior " +
+            "FROM visits v WHERE v.visit_date = date('now')");
+        var newToday = 0;
+        todayFlux.forEach(function (r) { if (r.prior === 0) newToday++; });
+        setText('fluxTotal', String(todayFlux.length));
+        setText('fluxNew', newToday + (todayFlux.length ? ' (' + Math.round((newToday / todayFlux.length) * 100) + ' %)' : ''));
+        setText('fluxKnown', String(todayFlux.length - newToday));
+        setText('fluxHint', 'Chaque visite d\u2019un nouveau usager compte double : il d\u00e9couvre le service.');
+
         /* --- 4. Inclusion numérique (mission service public) --- */
         var totalM = one('SELECT COUNT(*) v FROM members');
         var vulnerable = one("SELECT COUNT(*) v FROM members WHERE social_status IN ('cpas', 'mutuelle', 'interim', 'actiris')");
@@ -225,6 +236,67 @@
                 : 'Tout est réglé.';
         }
     }
+
+    /* ============ Rapport annuel exportable ============ */
+
+    var annualReportBtn = document.getElementById('annualReportBtn');
+
+    function buildAnnualReport() {
+        var year = new Date().getFullYear();
+        var sep = ';';
+        var lines = [];
+        var add = function (k, v) { lines.push('"' + String(k).replace(/"/g, '""') + '"' + sep + '"' + String(v).replace(/"/g, '""') + '"'); };
+        var total = one('SELECT COUNT(*) v FROM members');
+        var active = one("SELECT COUNT(*) v FROM members WHERE date(end_date) >= date('now') OR end_date IS NULL");
+        var visitsYear = one("SELECT COUNT(*) v FROM visits WHERE strftime('%Y', visit_date) = '" + year + "'");
+        var uniqueVisitors = one("SELECT COUNT(DISTINCT member_id) v FROM visits WHERE strftime('%Y', visit_date) = '" + year + "'");
+        var monthly = one("SELECT COUNT(*) v FROM members WHERE subscription = 'monthly'");
+        var yearly = one("SELECT COUNT(*) v FROM members WHERE subscription = 'yearly'");
+        var vuln = one("SELECT COUNT(*) v FROM members WHERE social_status IN ('cpas','mutuelle','interim','actiris')");
+        var seniors = one('SELECT COUNT(*) v FROM members WHERE age >= 65');
+
+        lines.push('"Rapport annuel ' + year + ' \u2014 Atelier du Web (EPN)"');
+        add('Généré le', new Date().toLocaleDateString('fr-BE'));
+        lines.push('');
+        lines.push('"Usagers"');
+        add('Membres enregistrés (total)', total);
+        add('Inscriptions actives', active);
+        add('Abonnements mensuels', monthly);
+        add('Abonnements annuels', yearly);
+        lines.push('');
+        lines.push('"Fréquentation ' + year + '"');
+        add('Visites de l\u2019année', visitsYear);
+        add('Usagers uniques ayant visité', uniqueVisitors);
+        lines.push('');
+        lines.push('"Inclusion numérique"');
+        add('Usagers publics vulnérables (CPAS/Orbem, mutuelle, intérim, Actiris)', vuln);
+        add('Usagers seniors (65+)', seniors);
+        lines.push('');
+        lines.push('"Statuts sociaux (répartition)"');
+        ADWDatabase.queryAll("SELECT social_status, COUNT(*) c FROM members WHERE social_status IS NOT NULL AND social_status != '' GROUP BY social_status ORDER BY c DESC").forEach(function (r) {
+            add(r.social_status, r.c + ' (' + (total ? Math.round((r.c / total) * 100) : 0) + ' %)');
+        });
+        lines.push('');
+        lines.push('"Codes postaux (top 10)"');
+        ADWDatabase.queryAll("SELECT postal_code, COUNT(*) c FROM members WHERE postal_code IS NOT NULL AND postal_code != '' GROUP BY postal_code ORDER BY c DESC LIMIT 10").forEach(function (r) {
+            add(r.postal_code, r.c);
+        });
+        lines.push('');
+        lines.push('"Genres"');
+        ADWDatabase.queryAll("SELECT gender, COUNT(*) c FROM members WHERE gender IS NOT NULL AND gender != '' GROUP BY gender").forEach(function (r) {
+            add(r.gender, r.c);
+        });
+
+        var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'rapport-annuel-' + year + '-atelierduweb.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('📊 Rapport annuel ' + year + ' téléchargé');
+    }
+
+    if (annualReportBtn) annualReportBtn.addEventListener('click', buildAnnualReport);
 
     /* ============ Graphique des visites ============ */
 
