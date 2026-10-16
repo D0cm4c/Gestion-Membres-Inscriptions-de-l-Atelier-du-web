@@ -35,6 +35,16 @@
         });
     }
 
+    function nextMemberNo(db) {
+        var used = {};
+        var res = db.exec('SELECT member_no FROM members WHERE member_no IS NOT NULL');
+        if (res.length) res[0].values.forEach(function (r) { used[r[0]] = true; });
+        var next = 1000;
+        while (used[next]) next++;
+        if (next > 9999) return null;
+        return next;
+    }
+
     function migrateLocalStorage(db) {
         var raw = null;
         try { raw = localStorage.getItem('atelierduweb_members'); } catch (e) { return; }
@@ -59,6 +69,60 @@
         } catch (e) { /* migration best effort */ }
     }
 
+    function ensureSchema(db) {
+        db.run(
+            'CREATE TABLE IF NOT EXISTS members (' +
+            'id TEXT PRIMARY KEY,' +
+            'first_name TEXT NOT NULL,' +
+            'last_name TEXT NOT NULL,' +
+            'age INTEGER,' +
+            'phone TEXT,' +
+            'email TEXT,' +
+            'address TEXT,' +
+            'start_date TEXT,' +
+            'end_date TEXT,' +
+            'subscription TEXT DEFAULT \'none\',' +
+            'member_no INTEGER UNIQUE,' +
+            'created_at TEXT DEFAULT (datetime(\'now\'))' +
+            ')'
+        );
+        db.run(
+            'CREATE TABLE IF NOT EXISTS visits (' +
+            'id TEXT PRIMARY KEY,' +
+            'member_id TEXT NOT NULL,' +
+            'visit_date TEXT NOT NULL,' +
+            'amount REAL DEFAULT 1.0,' +
+            'created_at TEXT DEFAULT (datetime(\'now\')),' +
+            'FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE' +
+            ')'
+        );
+        var cols = {};
+        var res = db.exec('PRAGMA table_info(members)');
+        if (res.length) {
+            res[0].values.forEach(function (row) { cols[row[1]] = true; });
+        }
+        if (!cols.subscription) {
+            db.run('ALTER TABLE members ADD COLUMN subscription TEXT DEFAULT \'none\'');
+        }
+        if (!cols.member_no) {
+            db.run('ALTER TABLE members ADD COLUMN member_no INTEGER');
+        }
+        db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_members_no ON members(member_no)');
+        var missing = db.exec("SELECT id FROM members WHERE member_no IS NULL");
+        if (missing.length) {
+            var used = {};
+            db.exec('SELECT member_no FROM members WHERE member_no IS NOT NULL')[0].values.forEach(function (r) { used[r[0]] = true; });
+            var next = 1000;
+            var stmt = db.prepare('UPDATE members SET member_no = ? WHERE id = ?');
+            missing[0].values.forEach(function (row) {
+                while (used[next]) next++;
+                stmt.run([next, row[0]]);
+                used[next] = true;
+            });
+            stmt.free();
+        }
+    }
+
     var Database = {
         db: null,
         idb: null,
@@ -72,20 +136,7 @@
                         return loadFromIndexedDB(idb);
                     }).then(function (bytes) {
                         self.db = bytes ? new SQL.Database(new Uint8Array(bytes)) : new SQL.Database();
-                        self.db.run(
-                            'CREATE TABLE IF NOT EXISTS members (' +
-                            'id TEXT PRIMARY KEY,' +
-                            'first_name TEXT NOT NULL,' +
-                            'last_name TEXT NOT NULL,' +
-                            'age INTEGER,' +
-                            'phone TEXT,' +
-                            'email TEXT,' +
-                            'address TEXT,' +
-                            'start_date TEXT,' +
-                            'end_date TEXT,' +
-                            'created_at TEXT DEFAULT (datetime(\'now\'))' +
-                            ')'
-                        );
+                        ensureSchema(self.db);
                         migrateLocalStorage(self.db);
                         return self;
                     });
@@ -114,6 +165,8 @@
             return this.persist();
         }
     };
+
+    Database.nextMemberNo = function () { return nextMemberNo(this.db); };
 
     window.ADWDatabase = Database;
 })();
