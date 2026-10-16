@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=13">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">AW</span>
+            <span class="brand-text">
+                <span class="brand-name">Atelier du Web</span>
+                <span class="brand-sub">EPN · Saint-Gilles</span>
+            </span>
+        </a>
+        <nav class="side-nav" aria-label="Navigation principale">
+            <span class="side-section">Général</span>
+            <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
+            <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
+            <span class="side-section">Espace</span>
+            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
+            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+            <span class="side-section">Système</span>
+            <a href="parametres.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">⚙️</span> Paramètres</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+    <header class="topbar">
+        <h1 class="topbar-title">Paramètres</h1>
+        <p class="topbar-date" id="todayDate"></p>
+        <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌗</button>
+    </header>
+
+    <main id="main">
+        <section class="stat-card" style="max-width:720px;">
+            <h2>🧩 Cartes du tableau de bord</h2>
+            <p class="form-hint" style="margin-bottom:1rem;">Cochez les cartes à afficher sur le tableau de bord. La disposition (glisser-déposer) et ce réglage sont mémorisés sur ce navigateur.</p>
+            <ul style="list-style:none;" id="tilesList"></ul>
+            <div class="modal-actions" style="justify-content:flex-start;">
+                <button class="btn btn-secondary" id="tilesAllBtn">Tout afficher</button>
+                <button class="btn btn-secondary" id="tilesNoneBtn">Tout masquer</button>
+            </div>
+        </section>
+    </main>
+    </div>
+    </div>
+
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="theme.js?v=13"></script>
+    <script>
+        document.getElementById('todayDate').textContent =
+            new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    </script>
+    <script src="settings.js?v=13"></script>
+</body>
+</html>

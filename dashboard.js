@@ -49,28 +49,7 @@
     updateOpenStatus();
     setInterval(updateOpenStatus, 60000);
 
-    /* ---------- Toggle thème jour/nuit ---------- */
-    var themeToggle = document.getElementById('themeToggle');
-    var THEME_KEY = 'atelierduweb_theme';
 
-    function applyTheme(mode) {
-        document.documentElement.setAttribute('data-theme', mode);
-        if (themeToggle) themeToggle.textContent = mode === 'dark' ? '☀️' : '🌙';
-    }
-
-    var savedTheme = null;
-    try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) { /* best effort */ }
-    applyTheme(savedTheme || 'auto');
-
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function () {
-            var current = document.documentElement.getAttribute('data-theme');
-            var isDark = current === 'dark' ||
-                (current === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            applyTheme(isDark ? 'light' : 'dark');
-            try { localStorage.setItem(THEME_KEY, isDark ? 'light' : 'dark'); } catch (e) { /* best effort */ }
-        });
-    }
 
     var loading = document.getElementById('dashLoading');
     if (!loading) return;
@@ -706,6 +685,15 @@
         var saved = null;
         try { saved = JSON.parse(localStorage.getItem(TILE_ORDER_KEY)) || []; } catch (e) { /* best effort */ }
 
+        // masquer les tuiles désactivées dans Paramètres
+        var hiddenTiles = [];
+        try { hiddenTiles = JSON.parse(localStorage.getItem('atelierduweb_tiles_hidden')) || []; } catch (e) { /* best effort */ }
+        tiles.forEach(function (tile) {
+            if (hiddenTiles.indexOf(tile.getAttribute('data-tile')) !== -1) {
+                tile.style.display = 'none';
+            }
+        });
+
         // apply saved order
         if (saved.length) {
             saved.forEach(function (tid) {
@@ -714,28 +702,30 @@
             });
         }
 
-        var dragTile = null;
+        mosaic._dragTile = null;
 
         tiles.forEach(function (tile) {
             tile.setAttribute('draggable', 'true');
 
             tile.addEventListener('dragstart', function (e) {
-                dragTile = tile;
+                mosaic._dragTile = tile;
                 tile.classList.add('tile-dragging');
-                e.dataTransfer.effectAllowed = 'move';
-                try { e.dataTransfer.setData('text/plain', tile.getAttribute('data-tile')); } catch (err) { /* IE */ }
+                if (e.dataTransfer) {
+                    e.dataTransfer.effectAllowed = 'move';
+                    try { e.dataTransfer.setData('text/plain', tile.getAttribute('data-tile')); } catch (err) { /* IE */ }
+                }
             });
 
             tile.addEventListener('dragend', function () {
                 tile.classList.remove('tile-dragging');
                 mosaic.querySelectorAll('.tile-drop-target').forEach(function (t) { t.classList.remove('tile-drop-target'); });
-                dragTile = null;
+                mosaic._dragTile = null;
                 saveTileOrder(mosaic);
             });
 
             tile.addEventListener('dragover', function (e) {
                 e.preventDefault();
-                if (!dragTile || dragTile === tile) return;
+                if (!mosaic._dragTile || mosaic._dragTile === tile) return;
                 tile.classList.add('tile-drop-target');
             });
 
@@ -745,12 +735,41 @@
 
             tile.addEventListener('drop', function (e) {
                 e.preventDefault();
-                if (!dragTile || dragTile === tile) return;
+                if (!mosaic._dragTile || mosaic._dragTile === tile) return;
                 tile.classList.remove('tile-drop-target');
                 var rect = tile.getBoundingClientRect();
                 var before = (e.clientX - rect.left) < rect.width / 2;
-                mosaic.insertBefore(dragTile, before ? tile : tile.nextSibling);
+                mosaic.insertBefore(mosaic._dragTile, before ? tile : tile.nextSibling);
             });
+        });
+
+        // Drop aussi sur la grille elle-même (zones vides) :
+        // la tuile est insérée à l'emplacement le plus proche du curseur.
+        mosaic.addEventListener('dragover', function (e) {
+            e.preventDefault();
+        });
+
+        mosaic.addEventListener('drop', function (e) {
+            e.preventDefault();
+            var dragTile = mosaic._dragTile;
+            if (!dragTile) return;
+            if (e.target !== mosaic) return; // le drop sur une tuile est déjà géré
+            var tilesArr = Array.prototype.slice.call(mosaic.querySelectorAll('[data-tile]'));
+            if (!tilesArr.length) { mosaic.appendChild(dragTile); return; }
+            var best = null;
+            var bestDist = Infinity;
+            tilesArr.forEach(function (t) {
+                if (t === dragTile) return;
+                var r = t.getBoundingClientRect();
+                var cx = r.left + r.width / 2;
+                var cy = r.top + r.height / 2;
+                var d = (e.clientX - cx) * (e.clientX - cx) + (e.clientY - cy) * (e.clientY - cy);
+                if (d < bestDist) { bestDist = d; best = t; }
+            });
+            if (!best) { mosaic.appendChild(dragTile); return; }
+            var r = best.getBoundingClientRect();
+            var after = (e.clientX - r.left) > r.width / 2;
+            mosaic.insertBefore(dragTile, after ? best.nextSibling : best);
         });
     }
 
