@@ -1,7 +1,6 @@
 (function () {
     'use strict';
 
-    var STORAGE_KEY = 'atelierduweb_members';
     var grid = document.getElementById('membersGrid');
     if (!grid) return;
 
@@ -12,18 +11,17 @@
     var modalTitle = document.getElementById('modalTitle');
     var searchInput = document.getElementById('searchInput');
     var emptyState = document.getElementById('emptyState');
+    var sortSelect = document.getElementById('sortSelect');
+    var loading = document.getElementById('loadingState');
 
-    function getMembers() {
-        try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function saveMembers(members) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
-    }
+    var SORTS = {
+        'name-asc': 'last_name COLLATE NOCASE ASC, first_name COLLATE NOCASE ASC',
+        'name-desc': 'last_name COLLATE NOCASE DESC, first_name COLLATE NOCASE DESC',
+        'age-asc': 'age IS NULL, age ASC',
+        'age-desc': 'age IS NULL, age DESC',
+        'start-desc': 'start_date IS NULL, start_date DESC',
+        'end-asc': 'end_date IS NULL, end_date ASC'
+    };
 
     function escapeHtml(str) {
         var div = document.createElement('div');
@@ -32,12 +30,12 @@
     }
 
     function isExpired(member) {
-        if (!member.endDate) return false;
-        return new Date(member.endDate) < new Date(new Date().toDateString());
+        if (!member.end_date) return false;
+        return new Date(member.end_date) < new Date(new Date().toDateString());
     }
 
     function initials(member) {
-        return ((member.firstName || '?').charAt(0) + (member.lastName || '?').charAt(0)).toUpperCase();
+        return ((member.first_name || '?').charAt(0) + (member.last_name || '?').charAt(0)).toUpperCase();
     }
 
     function formatDate(dateStr) {
@@ -47,25 +45,31 @@
         return d.toLocaleDateString('fr-BE');
     }
 
+    function getMembers() {
+        var order = SORTS[sortSelect.value] || SORTS['name-asc'];
+        var query = (searchInput.value || '').trim();
+        var sql = 'SELECT * FROM members';
+        var params = [];
+        if (query) {
+            sql += ' WHERE lower(first_name || \' \' || last_name || \' \' || COALESCE(email,\'\') || \' \' || COALESCE(phone,\'\') || \' \' || COALESCE(address,\'\')) LIKE ?';
+            params.push('%' + query.toLowerCase() + '%');
+        }
+        sql += ' ORDER BY ' + order;
+        return ADWDatabase.queryAll(sql, params);
+    }
+
     function render() {
         var members = getMembers();
-        var query = (searchInput.value || '').toLowerCase().trim();
-        var filtered = members.filter(function (m) {
-            if (!query) return true;
-            return [m.firstName, m.lastName, m.email, m.phone, m.address]
-                .some(function (v) { return v && String(v).toLowerCase().indexOf(query) !== -1; });
-        });
-
         grid.innerHTML = '';
-        emptyState.hidden = filtered.length > 0;
+        emptyState.hidden = members.length > 0;
 
-        filtered.forEach(function (member) {
+        members.forEach(function (member) {
             var expired = isExpired(member);
             var card = document.createElement('div');
             card.className = 'member-card' + (expired ? ' expired' : '');
             card.innerHTML =
                 '<div class="member-avatar">' + escapeHtml(initials(member)) + '</div>' +
-                '<div class="member-name">' + escapeHtml(member.firstName) + ' ' + escapeHtml(member.lastName) + '</div>' +
+                '<div class="member-name">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + '</div>' +
                 '<div class="member-meta">' +
                     (member.age ? '<span>🎂 ' + escapeHtml(member.age) + ' ans</span>' : '') +
                     (member.email ? '<span>✉️ ' + escapeHtml(member.email) + '</span>' : '') +
@@ -75,8 +79,8 @@
                 '<div class="member-dates">' +
                     '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
                         (expired ? 'Expirée' : 'Active') + '</span> ' +
-                    'du ' + escapeHtml(formatDate(member.startDate)) +
-                    ' au ' + escapeHtml(formatDate(member.endDate)) +
+                    'du ' + escapeHtml(formatDate(member.start_date)) +
+                    ' au ' + escapeHtml(formatDate(member.end_date)) +
                 '</div>' +
                 '<div class="card-actions">' +
                     '<button class="btn btn-secondary btn-small" data-action="edit">✏️ Modifier</button>' +
@@ -87,9 +91,8 @@
                 openModal(member);
             });
             card.querySelector('[data-action="delete"]').addEventListener('click', function () {
-                if (confirm('Supprimer le membre "' + member.firstName + ' ' + member.lastName + '" ?')) {
-                    saveMembers(getMembers().filter(function (m) { return m.id !== member.id; }));
-                    render();
+                if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?')) {
+                    ADWDatabase.run('DELETE FROM members WHERE id = ?', [member.id]).then(render);
                 }
             });
             grid.appendChild(card);
@@ -99,14 +102,14 @@
     function openModal(member) {
         form.reset();
         document.getElementById('memberId').value = member ? member.id : '';
-        document.getElementById('firstName').value = member ? member.firstName : '';
-        document.getElementById('lastName').value = member ? member.lastName : '';
+        document.getElementById('firstName').value = member ? member.first_name : '';
+        document.getElementById('lastName').value = member ? member.last_name : '';
         document.getElementById('age').value = member ? (member.age || '') : '';
         document.getElementById('phone').value = member ? (member.phone || '') : '';
         document.getElementById('email').value = member ? (member.email || '') : '';
         document.getElementById('address').value = member ? (member.address || '') : '';
-        document.getElementById('startDate').value = member ? (member.startDate || '') : '';
-        document.getElementById('endDate').value = member ? (member.endDate || '') : '';
+        document.getElementById('startDate').value = member ? (member.start_date || '') : '';
+        document.getElementById('endDate').value = member ? (member.end_date || '') : '';
         modalTitle.textContent = member ? 'Modifier le membre' : 'Ajouter un membre';
         modal.hidden = false;
         document.getElementById('firstName').focus();
@@ -130,18 +133,25 @@
             endDate: document.getElementById('endDate').value
         };
 
-        var members = getMembers();
+        var promise;
         if (id) {
-            members = members.map(function (m) {
-                return m.id === id ? Object.assign({}, m, data) : m;
-            });
+            promise = ADWDatabase.run(
+                'UPDATE members SET first_name = ?, last_name = ?, age = ?, phone = ?, email = ?, address = ?, start_date = ?, end_date = ? WHERE id = ?',
+                [data.firstName, data.lastName, data.age ? Number(data.age) : null,
+                 data.phone, data.email, data.address, data.startDate || null, data.endDate || null, id]
+            );
         } else {
-            data.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-            members.push(data);
+            var newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+            promise = ADWDatabase.run(
+                'INSERT INTO members (id, first_name, last_name, age, phone, email, address, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [newId, data.firstName, data.lastName, data.age ? Number(data.age) : null,
+                 data.phone, data.email, data.address, data.startDate || null, data.endDate || null]
+            );
         }
-        saveMembers(members);
-        closeModal();
-        render();
+        promise.then(function () {
+            closeModal();
+            render();
+        });
     });
 
     addBtn.addEventListener('click', function () { openModal(null); });
@@ -150,6 +160,14 @@
         if (e.target === modal) closeModal();
     });
     searchInput.addEventListener('input', render);
+    sortSelect.addEventListener('change', render);
 
-    render();
+    ADWDatabase.init().then(function () {
+        loading.hidden = true;
+        render();
+    }).catch(function (err) {
+        loading.hidden = true;
+        emptyState.hidden = false;
+        emptyState.querySelector('p').textContent = 'Erreur de chargement de la base de données : ' + err.message;
+    });
 })();
