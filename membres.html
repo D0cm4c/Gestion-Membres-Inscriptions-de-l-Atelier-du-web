@@ -89,6 +89,7 @@
             </div>
             <span class="members-count" id="membersCount" aria-live="polite"></span>
             <button class="btn btn-secondary btn-small" id="exportBtn">📤 Exporter CSV</button>
+            <button class="btn btn-secondary btn-small" id="importBtn">📥 Importer XML</button>
         </section>
 
         <div class="empty-state" id="loadingState">
@@ -219,9 +220,37 @@
         <p>© 2024 Atelier du Web — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
 
+    <!-- Import XML -->
+    <div class="modal-overlay" id="importModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+            <h3 id="importTitle">📥 Importer des membres (XML Access)</h3>
+            <div class="form-group">
+                <label for="importFile">Fichier XML (export Access « Membres »)</label>
+                <input type="file" id="importFile" accept=".xml,application/xml">
+                <p class="form-hint">Les mappings appliqués : statuts sociaux vers votre liste, sexe F/M/X, dates normalisées, emails nettoyés, abonnements (mensuel/annuel).</p>
+            </div>
+            <div id="importPreview" hidden>
+                <div class="stat-card" style="box-shadow:none;border:1px solid var(--border);margin-bottom:0.9rem;">
+                    <ul style="list-style:none;">
+                        <li><strong id="impCount">0 membres</strong> prêts à être importés</li>
+                        <li id="impWarn" class="form-hint"></li>
+                    </ul>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="importCancelBtn">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="importConfirmBtn">✅ Importer</button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="importCloseBtn">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js"></script>
     <script src="postal-codes.js"></script>
+    <script src="import.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

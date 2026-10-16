@@ -628,6 +628,102 @@
         }
     } catch (e) { /* best effort */ }
 
+    /* ---------- Import XML (Access) ---------- */
+
+    var importModal = document.getElementById('importModal');
+    var importBtn = document.getElementById('importBtn');
+    var importCloseBtn = document.getElementById('importCloseBtn');
+    var importCancelBtn = document.getElementById('importCancelBtn');
+    var importConfirmBtn = document.getElementById('importConfirmBtn');
+    var importFile = document.getElementById('importFile');
+    var importPreview = document.getElementById('importPreview');
+    var pendingImport = null;
+
+    function closeImport() {
+        if (importModal) importModal.hidden = true;
+        if (importPreview) importPreview.hidden = true;
+        if (importFile) importFile.value = '';
+        pendingImport = null;
+    }
+
+    function openImport() {
+        if (!importModal) return;
+        importModal.hidden = false;
+        if (importPreview) importPreview.hidden = true;
+        if (importFile) importFile.value = '';
+        pendingImport = null;
+    }
+
+    function handleImportFile(file) {
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+            try {
+                var result = ADWImport.parseXml(reader.result);
+                pendingImport = result.members;
+                var w = result.warnings;
+                var warnTxt = [];
+                if (w.noStatus) warnTxt.push(w.noStatus + ' statut(s) non mappé(s) laissé(s) vide(s)');
+                if (w.badEmail) warnTxt.push(w.badEmail + ' email(s) illisible(s) ignoré(s)');
+                if (w.badDate) warnTxt.push(w.badDate + ' date(s) de fin invalide(s)');
+                var el = document.getElementById('impCount');
+                if (el) el.textContent = result.members.length + ' membres';
+                var we = document.getElementById('impWarn');
+                if (we) we.textContent = warnTxt.length ? warnTxt.join(' · ') : 'Aucun problème détecté.';
+                if (importPreview) importPreview.hidden = false;
+            } catch (e) {
+                alert('Erreur de lecture du XML : ' + e.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function confirmImport() {
+        if (!pendingImport || !pendingImport.length) return;
+        var existing = {};
+        ADWDatabase.queryAll('SELECT member_no FROM members WHERE member_no IS NOT NULL').forEach(function (r) {
+            existing[r.member_no] = true;
+        });
+        var toInsert = pendingImport.filter(function (m) { return !existing[m.member_no]; });
+        var skipped = pendingImport.length - toInsert.length;
+
+        var db = ADWDatabase.db;
+        db.run('BEGIN TRANSACTION');
+        var stmt = db.prepare(
+            'INSERT INTO members (id, member_no, first_name, last_name, age, phone, email, address, postal_code, gender, social_status, start_date, end_date, subscription) ' +
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        toInsert.forEach(function (m) {
+            stmt.run([
+                'imp' + m.member_no, m.member_no, m.first_name, m.last_name,
+                m.age, m.phone || null, m.email || null, m.address || null,
+                m.postal_code, m.gender, m.social_status,
+                m.start_date, m.end_date, m.subscription
+            ]);
+        });
+        stmt.free();
+        db.run('COMMIT');
+
+        ADWDatabase.persist().then(function () {
+            closeImport();
+            render();
+            showToast('📥 ' + toInsert.length + ' membres importés' + (skipped ? ' (' + skipped + ' doublons ignorés)' : ''), 'success');
+        });
+    }
+
+    if (importBtn) importBtn.addEventListener('click', openImport);
+    if (importCloseBtn) importCloseBtn.addEventListener('click', closeImport);
+    if (importCancelBtn) importCancelBtn.addEventListener('click', closeImport);
+    if (importConfirmBtn) importConfirmBtn.addEventListener('click', confirmImport);
+    if (importFile) importFile.addEventListener('change', function () {
+        handleImportFile(importFile.files && importFile.files[0]);
+    });
+    if (importModal) importModal.addEventListener('click', function (e) {
+        if (e.target === importModal) closeImport();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && importModal && !importModal.hidden) closeImport();
+    });
+
     ADWDatabase.init().then(function () {
         loading.hidden = true;
         render();
