@@ -221,6 +221,66 @@ main {
     letter-spacing: -0.4px;
 }
 
+/* ============ KPI Dashboard ============ */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.4rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.kpi-extra {
+    font-size: 0.78rem;
+    color: var(--success);
+    font-weight: 700;
+    background: var(--success-bg);
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    margin-left: 0.3rem;
+}
+
+.page-subtitle { color: var(--text-soft); margin-top: 0.25rem; }
+
+.recent-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--bg);
+    font-size: 0.92rem;
+}
+
+.recent-list li:last-child { border-bottom: none; }
+
+.rv-name { font-weight: 700; color: var(--primary-dark); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rv-date { color: var(--text-soft); font-size: 0.85rem; }
+
 /* ============ Cards & grid ============ */
 .stats-container {
     display: grid;
@@ -832,6 +892,7 @@ main {
     .nav-inner { flex-wrap: wrap; justify-content: flex-start; }
 
     .stats-container { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
     .members-grid { grid-template-columns: 1fr; }
 
     .member-row { grid-template-columns: 40px 1fr auto; }

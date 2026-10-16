@@ -3,89 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atelier du Web - Tableau de bord</title>
+    <title>Tableau de bord — Atelier du Web</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <div class="header-container">
-            <div class="logo">
-                <img src="assets/logo.png" alt="Logo Atelier du Web" width="50">
-                <h1>Atelier du Web</h1>
-            </div>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="index.html">
+                <span class="brand-mark" aria-hidden="true">AW</span>
+                <span>
+                    <span class="brand-name">Atelier du Web</span>
+                    <span class="brand-sub">Espace Public Numérique</span>
+                </span>
+            </a>
             <div class="search-bar">
-                <input type="text" placeholder="🔍 Rechercher un membre ou une formation...">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <label for="siteSearch" style="position:absolute;left:-9999px">Rechercher</label>
+                <input type="text" id="siteSearch" placeholder="Rechercher sur atelierduweb.be...">
             </div>
         </div>
     </header>
 
-    <nav>
-        <ul>
-            <li><a href="#" class="active">🏠 Tableau de bord</a></li>
-            <li><a href="membres.html">👥 Membres</a></li>
-            <li><a href="#">🎓 Formations</a></li>
-            <li><a href="#">📊 Rapports</a></li>
-        </ul>
+    <nav class="site-nav" aria-label="Navigation principale">
+        <div class="nav-inner">
+            <a href="index.html" class="active" aria-current="page">🏠 Tableau de bord</a>
+            <a href="membres.html">👥 Membres</a>
+            <a href="#">🎓 Formations</a>
+            <a href="#">📅 Salles</a>
+        </div>
     </nav>
 
-    <main>
-        <section class="stats-container">
+    <main id="main">
+        <section class="page-header">
+            <h1>Tableau de bord</h1>
+            <p class="page-subtitle">Vue d'ensemble de l'activité de l'espace public numérique</p>
+        </section>
+
+        <div class="empty-state" id="dashLoading">
+            <p>⏳ Chargement des données…</p>
+        </div>
+
+        <section class="kpi-grid" aria-label="Indicateurs clés" hidden>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">👥</span>
+                <div>
+                    <div class="stat-num" id="statTotal">0</div>
+                    <div class="stat-label">Membres au total</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">✅</span>
+                <div>
+                    <div class="stat-num" id="statActive">0</div>
+                    <div class="stat-label">Inscriptions actives <span class="kpi-extra" id="statActivePct"></span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">📅</span>
+                <div>
+                    <div class="stat-num" id="statVisitsToday">0</div>
+                    <div class="stat-label">Visites aujourd'hui</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">💶</span>
+                <div>
+                    <div class="stat-num" id="statRevenueMonth">0 €</div>
+                    <div class="stat-label">Revenus visites ce mois</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-container" aria-label="Statistiques détaillées" hidden>
             <div class="stat-card">
-                <h3>📈 Statistiques</h3>
+                <h2>📊 Membres</h2>
                 <ul>
-                    <li><strong>Membres actifs :</strong> <span class="active">18/25</span></li>
-                    <li><strong>Nouveaux membres ce mois :</strong> 3</li>
-                    <li><strong>Formations en cours :</strong> 2</li>
-                    <li><strong>Formations à venir :</strong> 4</li>
+                    <li><strong>Membres actifs :</strong> <span id="statActive2">—</span></li>
+                    <li><strong>Inscriptions expirées :</strong> <span id="statExpired">—</span></li>
+                    <li><strong>Nouveaux ce mois :</strong> <span id="statNewMonth">—</span></li>
+                    <li><strong>Abonnements mensuels (3 €) :</strong> <span id="statMonthly">—</span></li>
+                    <li><strong>Abonnements annuels (30 €) :</strong> <span id="statYearly">—</span></li>
                 </ul>
             </div>
 
             <div class="stat-card alerts">
-                <h3>🚨 Alertes</h3>
-                <ul>
-                    <li>⚠️ 5 inscriptions expirées</li>
-                    <li>⚠️ 2 formations pleines</li>
-                    <li>⚠️ 1 membre à renouveler</li>
-                </ul>
+                <h2>🚨 Alertes</h2>
+                <ul id="alertsList"></ul>
             </div>
 
-            <div class="stat-card next-formations">
-                <h3>📅 Prochaines formations</h3>
-                <ul>
-                    <li>
-                        <strong>Intro Python</strong>
-                        <p>12/05 - 15/05</p>
-                        <span class="badge open">Ouverte</span>
-                    </li>
-                    <li>
-                        <strong>Photoshop</strong>
-                        <p>18/05 - 20/05</p>
-                        <span class="badge full">Pleine</span>
-                    </li>
-                    <li>
-                        <strong>Excel Avancé</strong>
-                        <p>25/05 - 27/05</p>
-                        <span class="badge open">Ouverte</span>
-                    </li>
-                </ul>
+            <div class="stat-card">
+                <h2>📋 Dernières visites</h2>
+                <ul class="recent-list" id="recentVisits"></ul>
+                <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> · Dernière : <strong id="statLastVisit">—</strong></p>
             </div>
         </section>
 
-        <section class="quick-actions">
-            <h3>🔹 Actions rapides</h3>
+        <section class="quick-actions" hidden id="quickActions">
+            <h3>⚡ Actions rapides</h3>
             <div class="action-buttons">
-                <a href="#" class="btn btn-primary">+ Ajouter un membre</a>
-                <a href="#" class="btn btn-primary">+ Créer une formation</a>
-                <a href="#" class="btn btn-secondary">📤 Exporter les données</a>
+                <a href="membres.html" class="btn btn-primary">👥 Voir les membres</a>
+                <a href="membres.html" class="btn btn-secondary">➕ Ajouter un membre</a>
+                <a href="membres.html" class="btn btn-secondary">📤 Exporter les données</a>
             </div>
         </section>
     </main>
 
-    <footer>
-        <p>© 2024 Atelier du Web - <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
+
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js"></script>
+    <script src="dashboard.js"></script>
 </body>
 </html>
