@@ -225,7 +225,9 @@
     var checkinHint = document.getElementById('checkinHint');
 
     var CHECKIN_SQL = 'SELECT id, first_name, last_name, member_no, subscription, ' +
-        '(SELECT COUNT(*) FROM visits v WHERE v.member_id = members.id AND v.visit_date = date(\'now\')) AS visited_today FROM members';
+        '(SELECT COUNT(*) FROM visits v WHERE v.member_id = members.id AND v.visit_date = date(\'now\')) AS visited_today, ' +
+        '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = members.id AND paid = 0) AS print_balance ' +
+        'FROM members';
 
     function searchMembers(q) {
         q = (q || '').trim().toLowerCase();
@@ -302,6 +304,83 @@
     });
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && checkinModal && !checkinModal.hidden) closeCheckin();
+    });
+
+    /* ============ Impression rapide ============ */
+
+    var printModal = document.getElementById('printModal');
+    var quickPrintBtn = document.getElementById('quickPrintBtn');
+    var printCloseBtn = document.getElementById('printCloseBtn');
+    var printSearch = document.getElementById('printSearch');
+    var printResults = document.getElementById('printResults');
+
+    function openPrint() {
+        if (!printModal) return;
+        printModal.hidden = false;
+        if (printSearch) {
+            printSearch.value = '';
+            printSearch.focus();
+        }
+        displayPrintResults(searchMembers(''));
+    }
+
+    function closePrint() {
+        if (printModal) printModal.hidden = true;
+    }
+
+    function displayPrintResults(members) {
+        if (!printResults) return;
+        printResults.innerHTML = '';
+        if (!members.length) {
+            printResults.innerHTML = '<li class="form-hint" style="list-style:none;padding:0.6rem 0;">Aucun membre trouvé.</li>';
+            return;
+        }
+        members.forEach(function (m) {
+            var li = document.createElement('li');
+            li.className = 'checkin-item';
+            li.innerHTML =
+                '<span class="member-avatar small" aria-hidden="true">' +
+                    escapeHtml(((m.first_name || '?').charAt(0) + (m.last_name || '?').charAt(0)).toUpperCase()) +
+                '</span>' +
+                '<span class="rv-name">#' + escapeHtml(m.member_no) + ' ' + escapeHtml(m.first_name) + ' ' + escapeHtml(m.last_name) + '</span>' +
+                (m.print_balance > 0
+                    ? '<span class="badge badge-sub-none">' + m.print_balance.toFixed(2).replace('.', ',') + ' € dus</span>'
+                    : '') +
+                '<span class="print-actions-btns">' +
+                    '<button type="button" class="btn btn-secondary btn-small" data-print="bw">+ N&B (0,10 €)</button>' +
+                    '<button type="button" class="btn btn-secondary btn-small" data-print="color">+ Couleur (0,50 €)</button>' +
+                '</span>';
+
+            li.querySelectorAll('[data-print]').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var type = btn.getAttribute('data-print');
+                    var amount = type === 'bw' ? 0.10 : 0.50;
+                    var today = new Date().toISOString().slice(0, 10);
+                    var printId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                    ADWDatabase.run('INSERT INTO prints (id, member_id, print_date, type, amount, paid) VALUES (?, ?, ?, ?, ?, 0)',
+                        [printId, m.id, today, type, amount]).then(function () {
+                        render();
+                        renderChart();
+                        showToast('🖨️ Impression ' + (type === 'bw' ? 'N&B' : 'couleur') + ' pour ' + m.first_name + ' (' + amount.toFixed(2).replace('.', ',') + ' €)');
+                        displayPrintResults(searchMembers(printSearch ? printSearch.value : ''));
+                    });
+                });
+            });
+            printResults.appendChild(li);
+        });
+    }
+
+    if (quickPrintBtn) quickPrintBtn.addEventListener('click', openPrint);
+    if (printCloseBtn) printCloseBtn.addEventListener('click', closePrint);
+    if (printModal) printModal.addEventListener('click', function (e) {
+        if (e.target === printModal) closePrint();
+    });
+    if (printSearch) printSearch.addEventListener('input', function () {
+        displayPrintResults(searchMembers(printSearch.value));
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && printModal && !printModal.hidden) closePrint();
     });
 
     ADWDatabase.init().then(render).catch(function (err) {

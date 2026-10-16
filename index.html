@@ -44,6 +44,7 @@
             <p>Le tableau de bord de votre espace public numérique : membres, abonnements et visites en un coup d'œil.</p>
             <div class="hero-actions">
                 <button class="btn btn-primary" id="quickCheckinBtn">✅ Pointer une visite</button>
+                <button class="btn btn-primary" id="quickPrintBtn">🖨️ Impression</button>
                 <a href="membres.html" class="btn btn-secondary" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">👥 Gérer les membres</a>
                 <a href="https://atelierduweb.be" class="btn btn-secondary" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">🌐 atelierduweb.be</a>
             </div>
@@ -152,6 +153,22 @@
             <ul class="checkin-results" id="checkinResults"></ul>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" id="checkinCloseBtn">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Impression rapide -->
+    <div class="modal-overlay" id="printModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="printTitle">
+            <h3 id="printTitle">🖨️ Enregistrer une impression</h3>
+            <div class="form-group">
+                <label for="printSearch">Nom ou n° de membre</label>
+                <input type="text" id="printSearch" placeholder="Ex : Marie ou 1002..." autocomplete="off">
+                <p class="form-hint">Sélectionnez le membre puis le type d'impression. Le montant est ajouté à son solde (payable plus tard).</p>
+            </div>
+            <ul class="checkin-results" id="printResults"></ul>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="printCloseBtn">Fermer</button>
             </div>
         </div>
     </div>
