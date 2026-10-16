@@ -136,7 +136,10 @@
         var missing = db.exec("SELECT id FROM members WHERE member_no IS NULL");
         if (missing.length) {
             var used = {};
-            db.exec('SELECT member_no FROM members WHERE member_no IS NOT NULL')[0].values.forEach(function (r) { used[r[0]] = true; });
+            var existingNos = db.exec('SELECT member_no FROM members WHERE member_no IS NOT NULL');
+            if (existingNos.length && existingNos[0].values) {
+                existingNos[0].values.forEach(function (r) { used[r[0]] = true; });
+            }
             var next = 1000;
             var stmt = db.prepare('UPDATE members SET member_no = ? WHERE id = ?');
             missing[0].values.forEach(function (row) {
