@@ -1,6 +1,9 @@
 (function () {
     'use strict';
 
+    var PREFS_KEY = 'atelierduweb_members_prefs';
+    var VISIT_PRICE = 1;
+
     var grid = document.getElementById('membersGrid');
     if (!grid) return;
 
@@ -16,29 +19,79 @@
     var membersCount = document.getElementById('membersCount');
     var viewGridBtn = document.getElementById('viewGridBtn');
     var viewListBtn = document.getElementById('viewListBtn');
+    var exportBtn = document.getElementById('exportBtn');
+    var formError = document.getElementById('formError');
+    var startDateInput = document.getElementById('startDate');
+    var endDateInput = document.getElementById('endDate');
+    var detailModal = document.getElementById('detailModal');
+    var detailBody = document.getElementById('detailBody');
+    var detailTitle = document.getElementById('detailTitle');
+    var detailCloseBtn = document.getElementById('detailCloseBtn');
+    var detailCheckinBtn = document.getElementById('detailCheckinBtn');
+    var detailMember = null;
 
     var currentFilter = 'all';
     var currentView = 'grid';
 
+    var SUB_LABELS = {
+        none: { label: 'Aucun abo', badge: 'badge-sub-none' },
+        monthly: { label: 'Abo mensuel · 3 €', badge: 'badge-sub-monthly' },
+        yearly: { label: 'Abo annuel · 30 €', badge: 'badge-sub-yearly' }
+    };
+
     var SORTS = {
-        'name-asc': 'last_name COLLATE NOCASE ASC, first_name COLLATE NOCASE ASC',
-        'name-desc': 'last_name COLLATE NOCASE DESC, first_name COLLATE NOCASE DESC',
-        'first-name-asc': 'first_name COLLATE NOCASE ASC, last_name COLLATE NOCASE ASC',
-        'first-name-desc': 'first_name COLLATE NOCASE DESC, last_name COLLATE NOCASE DESC',
-        'age-asc': 'age IS NULL, age ASC',
-        'age-desc': 'age IS NULL, age DESC',
-        'start-desc': 'start_date IS NULL, start_date DESC',
-        'start-asc': 'start_date IS NULL, start_date ASC',
-        'end-asc': 'end_date IS NULL, end_date ASC',
-        'end-desc': 'end_date IS NULL, end_date DESC',
-        'created-desc': 'created_at DESC'
+        'name-asc': 'm.last_name COLLATE NOCASE ASC, m.first_name COLLATE NOCASE ASC',
+        'name-desc': 'm.last_name COLLATE NOCASE DESC, m.first_name COLLATE NOCASE DESC',
+        'first-name-asc': 'm.first_name COLLATE NOCASE ASC, m.last_name COLLATE NOCASE ASC',
+        'first-name-desc': 'm.first_name COLLATE NOCASE DESC, m.last_name COLLATE NOCASE DESC',
+        'age-asc': 'm.age IS NULL, m.age ASC',
+        'age-desc': 'm.age IS NULL, m.age DESC',
+        'start-desc': 'm.start_date IS NULL, m.start_date DESC',
+        'start-asc': 'm.start_date IS NULL, m.start_date ASC',
+        'end-asc': 'm.end_date IS NULL, m.end_date ASC',
+        'end-desc': 'm.end_date IS NULL, m.end_date DESC',
+        'visits-desc': 'visit_count DESC, m.last_name COLLATE NOCASE ASC',
+        'created-desc': 'm.created_at DESC'
     };
 
     var FILTERS = {
         all: null,
-        active: 'date(end_date) >= date(\'now\') OR end_date IS NULL',
-        expired: 'date(end_date) < date(\'now\') AND end_date IS NOT NULL'
+        active: 'date(m.end_date) >= date(\'now\') OR m.end_date IS NULL',
+        expired: 'date(m.end_date) < date(\'now\') AND m.end_date IS NOT NULL',
+        subscribed: 'm.subscription != \'none\''
     };
+
+    function loadPrefs() {
+        try {
+            var prefs = JSON.parse(localStorage.getItem(PREFS_KEY)) || {};
+            if (prefs.sort && SORTS[prefs.sort]) sortSelect.value = prefs.sort;
+            if (prefs.filter && FILTERS[prefs.filter]) currentFilter = prefs.filter;
+            if (prefs.view === 'list' || prefs.view === 'grid') currentView = prefs.view;
+            if (typeof prefs.search === 'string') searchInput.value = prefs.search;
+        } catch (e) { /* best effort */ }
+        syncFilterButtons();
+        syncViewButtons();
+    }
+
+    function savePrefs() {
+        try {
+            localStorage.setItem(PREFS_KEY, JSON.stringify({
+                sort: sortSelect.value, filter: currentFilter,
+                view: currentView, search: searchInput.value
+            }));
+        } catch (e) { /* best effort */ }
+    }
+
+    function syncFilterButtons() {
+        document.querySelectorAll('.filters-bar [data-filter]').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-filter') === currentFilter);
+        });
+    }
+
+    function syncViewButtons() {
+        viewGridBtn.classList.toggle('active', currentView === 'grid');
+        viewListBtn.classList.toggle('active', currentView === 'list');
+    }
 
     function escapeHtml(str) {
         var div = document.createElement('div');
@@ -72,46 +125,64 @@
         if (filter) conditions.push('(' + filter + ')');
 
         if (query) {
-            conditions.push('lower(first_name || \' \' || last_name || \' \' || COALESCE(email,\'\') || \' \' || COALESCE(phone,\'\') || \' \' || COALESCE(address,\'\')) LIKE ?');
+            if (/^\d+$/.test(query)) {
+                conditions.push('CAST(m.member_no AS TEXT) LIKE ?');
+                params.push('%' + query + '%');
+            } else {
+            conditions.push('lower(m.first_name || \' \' || m.last_name || \' \' || COALESCE(m.email,\'\') || \' \' || COALESCE(m.phone,\'\') || \' \' || COALESCE(m.address,\'\')) LIKE ?');
             params.push('%' + query.toLowerCase() + '%');
+            }
         }
 
-        var sql = 'SELECT * FROM members';
+        var sql = 'SELECT m.*, ' +
+            '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visit_count, ' +
+            '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id AND v.visit_date = date(\'now\')) AS visited_today ' +
+            'FROM members m';
         if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
         sql += ' ORDER BY ' + order;
         return ADWDatabase.queryAll(sql, params);
     }
 
-    function cardHTML(member) {
+    function subBadge(member) {
+        var s = SUB_LABELS[member.subscription] || SUB_LABELS.none;
+        return '<span class="badge ' + s.badge + '">' + s.label + '</span>';
+    }
+
+    function statusBadge(member) {
         var expired = isExpired(member);
-        return '<div class="member-avatar">' + escapeHtml(initials(member)) + '</div>' +
-            '<div class="member-name">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + '</div>' +
+        return '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
+            (expired ? 'Expirée' : 'Active') + '</span>';
+    }
+
+    function cardHTML(member) {
+        return '<div class="card-top">' +
+                '<div class="member-avatar" aria-hidden="true">' + escapeHtml(initials(member)) + '</div>' +
+                '<div class="member-idblock">' +
+                    '<div class="member-name">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + ' <span class="member-no">#' + (member.member_no || '—') + '</span></div>' +
+                    '<div class="member-badges">' + statusBadge(member) + subBadge(member) + '</div>' +
+                '</div>' +
+            '</div>' +
             '<div class="member-meta">' +
                 (member.age ? '<span>🎂 ' + escapeHtml(member.age) + ' ans</span>' : '') +
-                (member.email ? '<span>✉️ ' + escapeHtml(member.email) + '</span>' : '') +
-                (member.phone ? '<span>📞 ' + escapeHtml(member.phone) + '</span>' : '') +
+                (member.email ? '<span>✉️ <a href="mailto:' + escapeHtml(member.email) + '">' + escapeHtml(member.email) + '</a></span>' : '') +
+                (member.phone ? '<span>📞 <a href="tel:' + escapeHtml(member.phone.replace(/\s/g, '')) + '">' + escapeHtml(member.phone) + '</a></span>' : '') +
                 (member.address ? '<span>📍 ' + escapeHtml(member.address) + '</span>' : '') +
             '</div>' +
-            '<div class="member-dates">' +
-                '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
-                    (expired ? 'Expirée' : 'Active') + '</span> ' +
-                'du ' + escapeHtml(formatDate(member.start_date)) +
-                ' au ' + escapeHtml(formatDate(member.end_date)) +
+            '<div class="member-visits">' +
+                '<span>Visites : <strong>' + member.visit_count + '</strong>' +
+                (member.visited_today ? ' <span class="badge badge-ok">✓ aujourd\'hui</span>' : '') + '</span>' +
+                '<span class="dates-cell">du ' + escapeHtml(formatDate(member.start_date)) + ' au ' + escapeHtml(formatDate(member.end_date)) + '</span>' +
             '</div>';
     }
 
     function rowHTML(member) {
-        var expired = isExpired(member);
-        return '<div class="list-cell avatar-cell"><span class="member-avatar small">' + escapeHtml(initials(member)) + '</span></div>' +
-            '<div class="list-cell name-cell">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + '</div>' +
+        return '<div class="list-cell avatar-cell"><span class="member-avatar small" aria-hidden="true">' + escapeHtml(initials(member)) + '</span></div>' +
+            '<div class="list-cell name-cell">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + ' <span class="member-no">#' + (member.member_no || '—') + '</span></div>' +
             '<div class="list-cell">' + (member.age ? escapeHtml(member.age) + ' ans' : '—') + '</div>' +
+            '<div class="list-cell">' + subBadge(member) + '</div>' +
             '<div class="list-cell">' + (member.email ? escapeHtml(member.email) : '—') + '</div>' +
-            '<div class="list-cell">' + (member.phone ? escapeHtml(member.phone) : '—') + '</div>' +
-            '<div class="list-cell dates-cell">' +
-                '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
-                    (expired ? 'Expirée' : 'Active') + '</span> ' +
-                'du ' + escapeHtml(formatDate(member.start_date)) + ' au ' + escapeHtml(formatDate(member.end_date)) +
-            '</div>';
+            '<div class="list-cell">' + escapeHtml(member.visit_count) + ' visite' + (member.visit_count > 1 ? 's' : '') + '</div>' +
+            '<div class="list-cell dates-cell">' + statusBadge(member) + '</div>';
     }
 
     function render() {
@@ -127,16 +198,28 @@
             item.className = (currentView === 'list' ? 'member-row' : 'member-card') + (expired ? ' expired' : '');
             item.innerHTML = currentView === 'list' ? rowHTML(member) : cardHTML(member);
 
+            item.addEventListener('click', function (e) {
+                if (e.target.closest('button')) return;
+                openDetail(member.id);
+            });
+
             var actions = document.createElement('div');
             actions.className = currentView === 'list' ? 'list-actions' : 'card-actions';
             actions.innerHTML =
                 '<button class="btn btn-secondary btn-small">✏️ Modifier</button>' +
                 '<button class="btn btn-danger btn-small">🗑️ Supprimer</button>';
 
-            actions.children[0].addEventListener('click', function () { openModal(member); });
-            actions.children[1].addEventListener('click', function () {
+            actions.children[0].addEventListener('click', function (e) {
+                e.stopPropagation();
+                openModal(member);
+            });
+            actions.children[1].addEventListener('click', function (e) {
+                e.stopPropagation();
                 if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?')) {
-                    ADWDatabase.run('DELETE FROM members WHERE id = ?', [member.id]).then(render);
+                    ADWDatabase.run('DELETE FROM members WHERE id = ?', [member.id]).then(function () {
+                        render();
+                        showToast('Membre supprimé', 'success');
+                    });
                 }
             });
             item.appendChild(actions);
@@ -144,8 +227,106 @@
         });
     }
 
+    /* ---------- Fiche détail ---------- */
+
+    function openDetail(id) {
+        var rows = ADWDatabase.queryAll(
+            'SELECT m.*, (SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visit_count ' +
+            'FROM members m WHERE m.id = ?', [id]);
+        if (!rows.length) return;
+        var member = rows[0];
+        var visits = ADWDatabase.queryAll(
+            'SELECT * FROM visits WHERE member_id = ? ORDER BY visit_date DESC, created_at DESC LIMIT 30', [id]);
+        detailMember = member;
+
+        detailTitle.textContent = 'Fiche de ' + member.first_name + ' ' + member.last_name;
+        var s = SUB_LABELS[member.subscription] || SUB_LABELS.none;
+        var expired = isExpired(member);
+
+        var html = '<div class="detail-head">' +
+                '<div class="member-avatar">' + escapeHtml(initials(member)) + '</div>' +
+                '<div><div class="member-name">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + '</div>' +
+                '<div class="member-no-detail">N° de membre : <strong>' + (member.member_no || '—') + '</strong></div>' +
+                '<div class="member-badges">' + statusBadge(member) + subBadge(member) + '</div></div>' +
+            '</div>' +
+            '<dl class="detail-list">' +
+                (member.age ? '<div><dt>Âge</dt><dd>' + escapeHtml(member.age) + ' ans</dd></div>' : '') +
+                (member.email ? '<div><dt>Email</dt><dd><a href="mailto:' + escapeHtml(member.email) + '">' + escapeHtml(member.email) + '</a></dd></div>' : '') +
+                (member.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + escapeHtml(member.phone.replace(/\s/g, '')) + '">' + escapeHtml(member.phone) + '</a></dd></div>' : '') +
+                (member.address ? '<div><dt>Adresse</dt><dd>' + escapeHtml(member.address) + '</dd></div>' : '') +
+                '<div><dt>Inscription</dt><dd>du ' + escapeHtml(formatDate(member.start_date)) + ' au ' + escapeHtml(formatDate(member.end_date)) + '</dd></div>' +
+            '</dl>' +
+            '<div class="detail-visits">' +
+                '<h4>Historique des visites <span class="members-count">' + member.visit_count + ' au total</span></h4>';
+
+        if (visits.length) {
+            html += '<ul class="visits-list">';
+            visits.forEach(function (v) {
+                html += '<li><span>📅 ' + escapeHtml(formatDate(v.visit_date)) + '</span>' +
+                    (member.subscription === 'none'
+                        ? '<span class="badge badge-sub-none">' + v.amount.toFixed(2).replace('.', ',') + ' € payé</span>'
+                        : '<span class="badge badge-ok">incluse (abonnement)</span>') + '</li>';
+            });
+            html += '</ul>';
+        } else {
+            html += '<p class="form-hint">Aucune visite enregistrée pour le moment.</p>';
+        }
+        html += '</div>';
+
+        detailBody.innerHTML = html;
+        detailModal.hidden = false;
+        detailCloseBtn.focus();
+    }
+
+    function closeDetail() {
+        detailModal.hidden = true;
+        detailMember = null;
+    }
+
+    detailCloseBtn.addEventListener('click', closeDetail);
+    detailModal.addEventListener('click', function (e) {
+        if (e.target === detailModal) closeDetail();
+    });
+
+    detailCheckinBtn.addEventListener('click', function () {
+        if (!detailMember) return;
+        var today = new Date().toISOString().slice(0, 10);
+        var already = ADWDatabase.queryAll(
+            'SELECT id FROM visits WHERE member_id = ? AND visit_date = ?', [detailMember.id, today]);
+        if (already.length) {
+            showToast('⚠️ Visite déjà pointée aujourd\'hui pour ce membre', 'error');
+            return;
+        }
+        var amount = detailMember.subscription === 'none' ? VISIT_PRICE : 0;
+        var visitId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        ADWDatabase.run('INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, ?, ?)',
+            [visitId, detailMember.id, today, amount]).then(function () {
+            showToast(amount ? 'Visite enregistrée (' + amount + ' €)' : 'Visite enregistrée (incluse abonnement)', 'success');
+            render();
+            openDetail(detailMember.id);
+        });
+    });
+
+    /* ---------- Toast ---------- */
+
+    function showToast(message, type) {
+        var toast = document.createElement('div');
+        toast.className = 'toast toast-' + (type || 'success');
+        toast.setAttribute('role', 'status');
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        requestAnimationFrame(function () { toast.classList.add('visible'); });
+        setTimeout(function () {
+            toast.classList.remove('visible');
+            setTimeout(function () { toast.remove(); }, 300);
+        }, 2500);
+    }
+
+    /* ---------- Formulaire ---------- */
+
     function openModal(member) {
         form.reset();
+        formError.hidden = true;
         document.getElementById('memberId').value = member ? member.id : '';
         document.getElementById('firstName').value = member ? member.first_name : '';
         document.getElementById('lastName').value = member ? member.last_name : '';
@@ -153,7 +334,10 @@
         document.getElementById('phone').value = member ? (member.phone || '') : '';
         document.getElementById('email').value = member ? (member.email || '') : '';
         document.getElementById('address').value = member ? (member.address || '') : '';
-        document.getElementById('startDate').value = member ? (member.start_date || '') : '';
+        var sub = member ? (member.subscription || 'none') : 'none';
+        var radio = form.querySelector('input[name="subscription"][value="' + sub + '"]');
+        if (radio) radio.checked = true;
+        document.getElementById('startDate').value = member ? (member.start_date || '') : new Date().toISOString().slice(0, 10);
         document.getElementById('endDate').value = member ? (member.end_date || '') : '';
         modalTitle.textContent = member ? 'Modifier le membre' : 'Ajouter un membre';
         modal.hidden = false;
@@ -164,9 +348,33 @@
         modal.hidden = true;
     }
 
+    function validateDates() {
+        var start = startDateInput.value;
+        var end = endDateInput.value;
+        if (start && end && end < start) {
+            formError.textContent = '⚠️ La date de fin doit être postérieure à la date de début.';
+            formError.hidden = false;
+            return false;
+        }
+        formError.hidden = true;
+        return true;
+    }
+
+    startDateInput.addEventListener('change', validateDates);
+    endDateInput.addEventListener('change', function () {
+        if (!endDateInput.value && startDateInput.value) {
+            var d = new Date(startDateInput.value);
+            d.setFullYear(d.getFullYear() + 1);
+            endDateInput.value = d.toISOString().slice(0, 10);
+        }
+        validateDates();
+    });
+
     form.addEventListener('submit', function (e) {
         e.preventDefault();
+        if (!validateDates()) return;
         var id = document.getElementById('memberId').value;
+        var subRadio = form.querySelector('input[name="subscription"]:checked');
         var data = {
             firstName: document.getElementById('firstName').value.trim(),
             lastName: document.getElementById('lastName').value.trim(),
@@ -174,57 +382,100 @@
             phone: document.getElementById('phone').value.trim(),
             email: document.getElementById('email').value.trim(),
             address: document.getElementById('address').value.trim(),
-            startDate: document.getElementById('startDate').value,
-            endDate: document.getElementById('endDate').value
+            startDate: startDateInput.value,
+            endDate: endDateInput.value,
+            subscription: subRadio ? subRadio.value : 'none'
         };
 
         var promise;
         if (id) {
             promise = ADWDatabase.run(
-                'UPDATE members SET first_name = ?, last_name = ?, age = ?, phone = ?, email = ?, address = ?, start_date = ?, end_date = ? WHERE id = ?',
+                'UPDATE members SET first_name = ?, last_name = ?, age = ?, phone = ?, email = ?, address = ?, start_date = ?, end_date = ?, subscription = ? WHERE id = ?',
                 [data.firstName, data.lastName, data.age ? Number(data.age) : null,
-                 data.phone, data.email, data.address, data.startDate || null, data.endDate || null, id]
+                 data.phone, data.email, data.address, data.startDate || null, data.endDate || null,
+                 data.subscription, id]
             );
         } else {
             var newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+            var memberNo = ADWDatabase.nextMemberNo();
+            if (memberNo === null) {
+                formError.textContent = '⚠️ Plus de numéros de membre disponibles (maximum 9999).';
+                formError.hidden = false;
+                return;
+            }
             promise = ADWDatabase.run(
-                'INSERT INTO members (id, first_name, last_name, age, phone, email, address, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [newId, data.firstName, data.lastName, data.age ? Number(data.age) : null,
-                 data.phone, data.email, data.address, data.startDate || null, data.endDate || null]
+                'INSERT INTO members (id, member_no, first_name, last_name, age, phone, email, address, start_date, end_date, subscription) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [newId, memberNo, data.firstName, data.lastName, data.age ? Number(data.age) : null,
+                 data.phone, data.email, data.address, data.startDate || null, data.endDate || null,
+                 data.subscription]
             );
         }
         promise.then(function () {
             closeModal();
             render();
+            showToast(id ? 'Membre modifié' : 'Membre ajouté', 'success');
         });
     });
 
+    /* ---------- Vue / filtres / tri ---------- */
+
     function setView(view) {
         currentView = view;
-        viewGridBtn.classList.toggle('active', view === 'grid');
-        viewListBtn.classList.toggle('active', view === 'list');
+        syncViewButtons();
+        savePrefs();
         render();
     }
 
+    function exportCSV() {
+        var members = getMembers();
+        if (!members.length) return;
+        var headers = ['N°', 'Prénom', 'Nom', 'Âge', 'Téléphone', 'Email', 'Adresse', 'Abonnement', 'Visites', 'Début inscription', 'Fin inscription'];
+        var csvRows = [headers.join(';')];
+        members.forEach(function (m) {
+            csvRows.push([
+                m.member_no || '', m.first_name, m.last_name, m.age || '', m.phone || '',
+                m.email || '', m.address || '',
+                (SUB_LABELS[m.subscription] || SUB_LABELS.none).label,
+                m.visit_count, m.start_date || '', m.end_date || ''
+            ].map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(';'));
+        });
+        var blob = new Blob(['\ufeff' + csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'membres-atelierduweb.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
     addBtn.addEventListener('click', function () { openModal(null); });
+    var emptyAddBtn = document.getElementById('emptyAddBtn');
+    if (emptyAddBtn) emptyAddBtn.addEventListener('click', function () { openModal(null); });
     cancelBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', function (e) {
         if (e.target === modal) closeModal();
     });
-    searchInput.addEventListener('input', render);
-    sortSelect.addEventListener('change', render);
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            if (!modal.hidden) closeModal();
+            if (!detailModal.hidden) closeDetail();
+        }
+    });
+    searchInput.addEventListener('input', function () { savePrefs(); render(); });
+    sortSelect.addEventListener('change', function () { savePrefs(); render(); });
     viewGridBtn.addEventListener('click', function () { setView('grid'); });
     viewListBtn.addEventListener('click', function () { setView('list'); });
+    if (exportBtn) exportBtn.addEventListener('click', exportCSV);
 
-    document.querySelectorAll('.segmented[data-filter] .seg-btn, .filters-bar [data-filter]').forEach(function (btn) {
+    document.querySelectorAll('.filters-bar [data-filter]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            document.querySelectorAll('.filters-bar [data-filter]').forEach(function (b) {
-                b.classList.toggle('active', b === btn);
-            });
             currentFilter = btn.getAttribute('data-filter');
+            syncFilterButtons();
+            savePrefs();
             render();
         });
     });
+
+    loadPrefs();
 
     ADWDatabase.init().then(function () {
         loading.hidden = true;

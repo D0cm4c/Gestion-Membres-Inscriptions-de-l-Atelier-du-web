@@ -3,51 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atelier du Web - Membres</title>
+    <title>Membres — Atelier du Web</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <div class="header-container">
-            <div class="logo">
-                <img src="assets/logo.png" alt="Logo Atelier du Web" width="50">
-                <h1>Atelier du Web</h1>
-            </div>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="index.html">
+                <span class="brand-mark" aria-hidden="true">AW</span>
+                <span>
+                    <span class="brand-name">Atelier du Web</span>
+                    <span class="brand-sub">Espace Public Numérique</span>
+                </span>
+            </a>
             <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="🔍 Rechercher un membre...">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <label for="searchInput" class="sr-only" style="position:absolute;left:-9999px">Rechercher un membre</label>
+                <input type="text" id="searchInput" placeholder="Nom, prénom ou n° de membre...">
             </div>
         </div>
     </header>
 
-    <nav>
-        <ul>
-            <li><a href="index.html">🏠 Tableau de bord</a></li>
-            <li><a href="membres.html" class="active">👥 Membres</a></li>
-            <li><a href="#">🎓 Formations</a></li>
-            <li><a href="#">📊 Rapports</a></li>
-        </ul>
+    <nav class="site-nav" aria-label="Navigation principale">
+        <div class="nav-inner">
+            <a href="index.html">🏠 Tableau de bord</a>
+            <a href="membres.html" class="active" aria-current="page">👥 Membres</a>
+            <a href="#">🎓 Formations</a>
+            <a href="#">📅 Salles</a>
+        </div>
     </nav>
 
-    <main>
+    <main id="main">
         <section class="page-header">
-            <h2>Gestion des membres</h2>
+            <h1>Gestion des membres</h1>
             <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
         </section>
 
-        <section class="filters-bar">
+        <section class="filters-bar" aria-label="Filtres et tri">
             <div class="filter-group">
-                <label>Statut :</label>
-                <div class="segmented">
+                <div class="segmented" role="group" aria-label="Filtrer par statut">
                     <button class="seg-btn active" data-filter="all">Tous</button>
                     <button class="seg-btn" data-filter="active">Actifs</button>
                     <button class="seg-btn" data-filter="expired">Expirés</button>
+                    <button class="seg-btn" data-filter="subscribed">Abonnés</button>
                 </div>
             </div>
             <div class="filter-group">
-                <label for="sortSelect">Trier par :</label>
+                <label for="sortSelect">Trier par</label>
                 <select id="sortSelect">
                     <optgroup label="Nom">
                         <option value="name-asc">Nom (A → Z)</option>
@@ -64,47 +71,48 @@
                     <optgroup label="Autre">
                         <option value="age-asc">Âge (croissant)</option>
                         <option value="age-desc">Âge (décroissant)</option>
+                        <option value="visits-desc">Visites (nombre)</option>
                         <option value="created-desc">Ajout (plus récent)</option>
                     </optgroup>
                 </select>
             </div>
             <div class="filter-group">
-                <label>Affichage :</label>
-                <div class="segmented">
+                <label id="viewLabel">Affichage</label>
+                <div class="segmented" role="group" aria-label="Mode d'affichage">
                     <button class="seg-btn active" id="viewGridBtn" title="Vue cartes">▦ Cartes</button>
                     <button class="seg-btn" id="viewListBtn" title="Vue liste compacte">☰ Liste</button>
                 </div>
             </div>
-            <span class="members-count" id="membersCount"></span>
+            <span class="members-count" id="membersCount" aria-live="polite"></span>
+            <button class="btn btn-secondary btn-small" id="exportBtn">📤 Exporter CSV</button>
         </section>
 
         <div class="empty-state" id="loadingState">
-            <p>⏳ Chargement de la base de données...</p>
+            <p>⏳ Chargement de la base de données…</p>
         </div>
 
-        <section class="members-grid" id="membersGrid">
-            <!-- Cartes membres générées en JS -->
-        </section>
+        <section class="members-grid" id="membersGrid" aria-label="Liste des membres"></section>
 
         <div class="empty-state" id="emptyState" hidden>
             <p>Aucun membre trouvé.</p>
+            <button class="btn btn-primary" id="emptyAddBtn">+ Ajouter votre premier membre</button>
         </div>
     </main>
 
-    <!-- Modal formulaire membre -->
+    <!-- Formulaire membre -->
     <div class="modal-overlay" id="memberModal" hidden>
-        <div class="modal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
             <h3 id="modalTitle">Ajouter un membre</h3>
             <form id="memberForm">
                 <input type="hidden" id="memberId">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="firstName">Prénom *</label>
-                        <input type="text" id="firstName" required>
+                        <input type="text" id="firstName" required autocomplete="given-name">
                     </div>
                     <div class="form-group">
                         <label for="lastName">Nom *</label>
-                        <input type="text" id="lastName" required>
+                        <input type="text" id="lastName" required autocomplete="family-name">
                     </div>
                 </div>
                 <div class="form-row">
@@ -114,16 +122,33 @@
                     </div>
                     <div class="form-group">
                         <label for="phone">Téléphone</label>
-                        <input type="tel" id="phone">
+                        <input type="tel" id="phone" autocomplete="tel">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email">
+                    <input type="email" id="email" autocomplete="email">
                 </div>
                 <div class="form-group">
                     <label for="address">Adresse</label>
-                    <input type="text" id="address">
+                    <input type="text" id="address" autocomplete="street-address">
+                </div>
+                <div class="form-group">
+                    <span class="form-label-like" style="display:block;font-size:0.85rem;font-weight:600;color:var(--primary-dark);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.4px;">Abonnement</span>
+                    <div class="subscription-options" id="subscriptionOptions">
+                        <div class="sub-option">
+                            <input type="radio" id="subNone" name="subscription" value="none" checked>
+                            <label for="subNone">Aucun<span class="sub-price">—</span><span class="sub-per">pas d'abo</span></label>
+                        </div>
+                        <div class="sub-option">
+                            <input type="radio" id="subMonthly" name="subscription" value="monthly">
+                            <label for="subMonthly">Mensuel<span class="sub-price">3 €</span><span class="sub-per">par mois</span></label>
+                        </div>
+                        <div class="sub-option">
+                            <input type="radio" id="subYearly" name="subscription" value="yearly">
+                            <label for="subYearly">Annuel<span class="sub-price">30 €</span><span class="sub-per">par an</span></label>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -135,6 +160,7 @@
                         <input type="date" id="endDate">
                     </div>
                 </div>
+                <div class="form-error" id="formError" hidden></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">Annuler</button>
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
@@ -143,8 +169,20 @@
         </div>
     </div>
 
-    <footer>
-        <p>© 2024 Atelier du Web - <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    <!-- Fiche détail membre -->
+    <div class="modal-overlay" id="detailModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+            <h3 id="detailTitle">Fiche membre</h3>
+            <div id="detailBody"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="detailCloseBtn">Fermer</button>
+                <button type="button" class="btn btn-primary" id="detailCheckinBtn">✅ Pointer une visite du jour</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
 
     <script src="vendor/sql-wasm.js"></script>
