@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=7">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -138,14 +138,13 @@
             </div>
 
             <div class="stat-card">
-                <h2>💰 Revenus consolidés ce mois</h2>
+                <h2>🤝 Inclusion numérique</h2>
                 <ul style="list-style:none;">
-                    <li><strong>Abonnements actifs :</strong> <span id="revSubscriptions">—</span></li>
-                    <li><strong>Visites payantes :</strong> <span id="revVisits">—</span></li>
-                    <li><strong>Impressions en attente :</strong> <span id="revPrintsDue">—</span></li>
-                    <li><strong>Total potentiel :</strong> <span id="revTotal">—</span></li>
+                    <li><strong>Usagers publics vulnérables :</strong> <span id="inclVulnerable">—</span></li>
+                    <li><strong>Part des usagers CPAS / Orbem :</strong> <span id="inclCpas">—</span></li>
+                    <li><strong>Sans-abonnement (accès libre) :</strong> <span id="inclFree">—</span></li>
                 </ul>
-                <p class="form-hint" id="revHint"></p>
+                <p class="form-hint" id="inclHint"></p>
             </div>
         </section>
 
@@ -216,7 +215,7 @@
     </div>
 
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=6"></script>
-    <script src="dashboard.js?v=6"></script>
+    <script src="db.js?v=7"></script>
+    <script src="dashboard.js?v=7"></script>
 </body>
 </html>

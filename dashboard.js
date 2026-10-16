@@ -179,15 +179,16 @@
         }
         setText('profileHint', totalCp ? Math.round((sg / totalCp) * 100) + ' % des usagers viennent de la R\u00e9gion de Bruxelles-Capitale' : 'Renseignez les codes postaux pour activer cette analyse.');
 
-        /* --- 4. Revenus consolidés --- */
-        var subRevenue = (monthly || 0) * 3 + (yearly || 0) * 30;
-        var visitRevenue = one("SELECT COALESCE(SUM(amount), 0) v FROM visits WHERE strftime('%Y-%m', visit_date) = strftime('%Y-%m', 'now')");
-        var printsDue = one('SELECT COALESCE(SUM(amount), 0) v FROM prints WHERE paid = 0');
-        setText('revSubscriptions', monthly + ' mensuels + ' + yearly + ' annuels = ' + eur(subRevenue));
-        setText('revVisits', eur(visitRevenue));
-        setText('revPrintsDue', eur(printsDue));
-        setText('revTotal', eur(subRevenue + visitRevenue));
-        setText('revHint', 'Impressions en attente incluses : ' + eur(subRevenue + visitRevenue + printsDue));
+        /* --- 4. Inclusion numérique (mission service public) --- */
+        var totalM = one('SELECT COUNT(*) v FROM members');
+        var vulnerable = one("SELECT COUNT(*) v FROM members WHERE social_status IN ('cpas', 'mutuelle', 'interim', 'actiris')");
+        var cpasPart = one("SELECT COUNT(*) v FROM members WHERE social_status = 'cpas'");
+        var noSub = one("SELECT COUNT(*) v FROM members WHERE subscription = 'none' OR subscription IS NULL");
+        var pct = function (v) { return totalM ? Math.round((v / totalM) * 100) : 0; };
+        setText('inclVulnerable', vulnerable + ' membres (' + pct(vulnerable) + ' %)');
+        setText('inclCpas', pct(cpasPart) + ' %');
+        setText('inclFree', noSub + ' membres (' + pct(noSub) + ' %)');
+        setText('inclHint', 'CPAS/Orbem, mutuellistes, intérimaires et accompagnés Actiris : le public prioritaire de la médiation numérique.');
     }
 
     function renderPrintsDue() {
