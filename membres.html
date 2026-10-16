@@ -34,8 +34,23 @@
     <main>
         <section class="page-header">
             <h2>Gestion des membres</h2>
-            <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
+            <div class="toolbar">
+                <label for="sortSelect" class="sort-label">Trier par :</label>
+                <select id="sortSelect">
+                    <option value="name-asc">Nom (A → Z)</option>
+                    <option value="name-desc">Nom (Z → A)</option>
+                    <option value="age-asc">Âge (croissant)</option>
+                    <option value="age-desc">Âge (décroissant)</option>
+                    <option value="start-desc">Inscription (plus récente)</option>
+                    <option value="end-asc">Expiration (prochaine)</option>
+                </select>
+                <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
+            </div>
         </section>
+
+        <div class="empty-state" id="loadingState">
+            <p>⏳ Chargement de la base de données...</p>
+        </div>
 
         <section class="members-grid" id="membersGrid">
             <!-- Cartes membres générées en JS -->
@@ -102,6 +117,8 @@
         <p>© 2024 Atelier du Web - <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
 
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

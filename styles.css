@@ -259,6 +259,34 @@ footer a:hover {
     color: var(--secondary-color);
 }
 
+/* Toolbar (tri + actions) */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.sort-label {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+}
+
+.toolbar select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--medium-gray);
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-family: var(--font-primary);
+    background-color: var(--white);
+    cursor: pointer;
+}
+
+.toolbar select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+}
+
 /* Page Header (Membres) */
 .page-header {
     display: flex;
