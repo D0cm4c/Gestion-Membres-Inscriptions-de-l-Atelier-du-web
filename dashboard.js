@@ -70,6 +70,7 @@
 
         renderAlerts(expired, visitsToday);
         renderRecentVisits();
+        renderPrintsDue();
         renderChart();
     }
 
@@ -114,6 +115,35 @@
             }).join('');
         } else {
             recentList.innerHTML = '<li class="form-hint" style="list-style:none;padding:0.5rem 0;">Aucune visite enregistrée — pointez une visite depuis le bouton « ✅ Pointer une visite ».</li>';
+        }
+    }
+
+    function renderPrintsDue() {
+        var list = document.getElementById('printsDueList');
+        var totalEl = document.getElementById('printsDueTotal');
+        if (!list) return;
+        var rows = ADWDatabase.queryAll(
+            'SELECT m.id, m.first_name, m.last_name, m.member_no, ' +
+            'COALESCE((SELECT SUM(amount) FROM prints p WHERE p.member_id = m.id AND paid = 0), 0) AS balance ' +
+            'FROM members m ' +
+            'WHERE (SELECT SUM(amount) FROM prints p WHERE p.member_id = m.id AND paid = 0) > 0 ' +
+            'ORDER BY balance DESC LIMIT 3');
+        var total = one('SELECT COALESCE(SUM(amount), 0) v FROM prints WHERE paid = 0');
+        var count = one('SELECT COUNT(DISTINCT member_id) v FROM prints WHERE paid = 0');
+
+        if (rows.length) {
+            list.innerHTML = rows.map(function (r) {
+                return '<li><span class="rv-name">#' + escapeHtml(r.member_no) + ' ' +
+                    escapeHtml(r.first_name) + ' ' + escapeHtml(r.last_name) + '</span>' +
+                    '<span class="badge badge-sub-none">' + r.balance.toFixed(2).replace('.', ',') + ' €</span></li>';
+            }).join('');
+        } else {
+            list.innerHTML = '<li class="form-hint" style="list-style:none;padding:0.5rem 0;">Aucune impression à solder ✨</li>';
+        }
+        if (totalEl) {
+            totalEl.textContent = count > 0
+                ? 'Total dû : ' + total.toFixed(2).replace('.', ',') + ' € (' + count + ' membre' + (count > 1 ? 's' : '') + ')'
+                : 'Tout est réglé.';
         }
     }
 

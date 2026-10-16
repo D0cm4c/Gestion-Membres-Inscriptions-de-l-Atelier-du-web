@@ -58,7 +58,8 @@
         all: null,
         active: 'date(m.end_date) >= date(\'now\') OR m.end_date IS NULL',
         expired: 'date(m.end_date) < date(\'now\') AND m.end_date IS NOT NULL',
-        subscribed: 'm.subscription != \'none\''
+        subscribed: 'm.subscription != \'none\'',
+        'prints-due': '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = m.id AND paid = 0) > 0'
     };
 
     function loadPrefs() {
@@ -559,6 +560,15 @@
     });
 
     loadPrefs();
+
+    try {
+        var urlFilter = new URLSearchParams(window.location.search).get('prints');
+        if (urlFilter === 'due') {
+            currentFilter = 'prints-due';
+            syncFilterButtons();
+            savePrefs();
+        }
+    } catch (e) { /* best effort */ }
 
     ADWDatabase.init().then(function () {
         loading.hidden = true;
