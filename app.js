@@ -300,10 +300,12 @@
                 '<div class="member-badges">' + statusBadge(member) + subBadge(member) + '</div></div>' +
             '</div>' +
             '<dl class="detail-list">' +
-                (member.age ? '<div><dt>Âge</dt><dd>' + escapeHtml(member.age) + ' ans</dd></div>' : '') +
-                (member.gender ? '<div><dt>Genre</dt><dd>' + escapeHtml(GENDER_LABELS[member.gender] || member.gender) + '</dd></div>' : '') +
-                (member.postal_code ? '<div><dt>Code postal</dt><dd>' + escapeHtml(member.postal_code) + (typeof ADW_POSTAL_CODES !== 'undefined' && ADW_POSTAL_CODES.some(function (p) { return p[0] === member.postal_code; }) ? ' — ' + escapeHtml(ADW_POSTAL_CODES.filter(function (p) { return p[0] === member.postal_code; })[0][1]) : '') + '</dd></div>' : '') +
-                (member.social_status ? '<div><dt>Statut social</dt><dd>' + escapeHtml(STATUS_LABELS[member.social_status] || member.social_status) + '</dd></div>' : '') +
+                '<div><dt>Âge</dt><dd>' + (member.age ? escapeHtml(member.age) + ' ans' : 'Non renseigné') + '</dd></div>' +
+                '<div><dt>Genre</dt><dd>' + (member.gender ? escapeHtml(GENDER_LABELS[member.gender] || member.gender) : 'Non renseigné') + '</dd></div>' +
+                '<div><dt>Code postal</dt><dd>' + (member.postal_code
+                    ? escapeHtml(member.postal_code) + (typeof ADW_POSTAL_CODES !== 'undefined' && ADW_POSTAL_CODES.some(function (p) { return p[0] === member.postal_code; }) ? ' — ' + escapeHtml(ADW_POSTAL_CODES.filter(function (p) { return p[0] === member.postal_code; })[0][1]) : '')
+                    : 'Non renseigné') + '</dd></div>' +
+                '<div><dt>Statut social</dt><dd>' + (member.social_status ? escapeHtml(STATUS_LABELS[member.social_status] || member.social_status) : 'Non renseigné') + '</dd></div>' +
                 (member.email ? '<div><dt>Email</dt><dd><a href="mailto:' + escapeHtml(member.email) + '">' + escapeHtml(member.email) + '</a></dd></div>' : '') +
                 (member.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + escapeHtml(member.phone.replace(/\s/g, '')) + '">' + escapeHtml(member.phone) + '</a></dd></div>' : '') +
                 (member.address ? '<div><dt>Adresse</dt><dd>' + escapeHtml(member.address) + '</dd></div>' : '') +
