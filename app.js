@@ -13,14 +13,31 @@
     var emptyState = document.getElementById('emptyState');
     var sortSelect = document.getElementById('sortSelect');
     var loading = document.getElementById('loadingState');
+    var membersCount = document.getElementById('membersCount');
+    var viewGridBtn = document.getElementById('viewGridBtn');
+    var viewListBtn = document.getElementById('viewListBtn');
+
+    var currentFilter = 'all';
+    var currentView = 'grid';
 
     var SORTS = {
         'name-asc': 'last_name COLLATE NOCASE ASC, first_name COLLATE NOCASE ASC',
         'name-desc': 'last_name COLLATE NOCASE DESC, first_name COLLATE NOCASE DESC',
+        'first-name-asc': 'first_name COLLATE NOCASE ASC, last_name COLLATE NOCASE ASC',
+        'first-name-desc': 'first_name COLLATE NOCASE DESC, last_name COLLATE NOCASE DESC',
         'age-asc': 'age IS NULL, age ASC',
         'age-desc': 'age IS NULL, age DESC',
         'start-desc': 'start_date IS NULL, start_date DESC',
-        'end-asc': 'end_date IS NULL, end_date ASC'
+        'start-asc': 'start_date IS NULL, start_date ASC',
+        'end-asc': 'end_date IS NULL, end_date ASC',
+        'end-desc': 'end_date IS NULL, end_date DESC',
+        'created-desc': 'created_at DESC'
+    };
+
+    var FILTERS = {
+        all: null,
+        active: 'date(end_date) >= date(\'now\') OR end_date IS NULL',
+        expired: 'date(end_date) < date(\'now\') AND end_date IS NOT NULL'
     };
 
     function escapeHtml(str) {
@@ -48,54 +65,82 @@
     function getMembers() {
         var order = SORTS[sortSelect.value] || SORTS['name-asc'];
         var query = (searchInput.value || '').trim();
-        var sql = 'SELECT * FROM members';
+        var conditions = [];
         var params = [];
+
+        var filter = FILTERS[currentFilter];
+        if (filter) conditions.push('(' + filter + ')');
+
         if (query) {
-            sql += ' WHERE lower(first_name || \' \' || last_name || \' \' || COALESCE(email,\'\') || \' \' || COALESCE(phone,\'\') || \' \' || COALESCE(address,\'\')) LIKE ?';
+            conditions.push('lower(first_name || \' \' || last_name || \' \' || COALESCE(email,\'\') || \' \' || COALESCE(phone,\'\') || \' \' || COALESCE(address,\'\')) LIKE ?');
             params.push('%' + query.toLowerCase() + '%');
         }
+
+        var sql = 'SELECT * FROM members';
+        if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
         sql += ' ORDER BY ' + order;
         return ADWDatabase.queryAll(sql, params);
     }
 
+    function cardHTML(member) {
+        var expired = isExpired(member);
+        return '<div class="member-avatar">' + escapeHtml(initials(member)) + '</div>' +
+            '<div class="member-name">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + '</div>' +
+            '<div class="member-meta">' +
+                (member.age ? '<span>🎂 ' + escapeHtml(member.age) + ' ans</span>' : '') +
+                (member.email ? '<span>✉️ ' + escapeHtml(member.email) + '</span>' : '') +
+                (member.phone ? '<span>📞 ' + escapeHtml(member.phone) + '</span>' : '') +
+                (member.address ? '<span>📍 ' + escapeHtml(member.address) + '</span>' : '') +
+            '</div>' +
+            '<div class="member-dates">' +
+                '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
+                    (expired ? 'Expirée' : 'Active') + '</span> ' +
+                'du ' + escapeHtml(formatDate(member.start_date)) +
+                ' au ' + escapeHtml(formatDate(member.end_date)) +
+            '</div>';
+    }
+
+    function rowHTML(member) {
+        var expired = isExpired(member);
+        return '<div class="list-cell avatar-cell"><span class="member-avatar small">' + escapeHtml(initials(member)) + '</span></div>' +
+            '<div class="list-cell name-cell">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + '</div>' +
+            '<div class="list-cell">' + (member.age ? escapeHtml(member.age) + ' ans' : '—') + '</div>' +
+            '<div class="list-cell">' + (member.email ? escapeHtml(member.email) : '—') + '</div>' +
+            '<div class="list-cell">' + (member.phone ? escapeHtml(member.phone) : '—') + '</div>' +
+            '<div class="list-cell dates-cell">' +
+                '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
+                    (expired ? 'Expirée' : 'Active') + '</span> ' +
+                'du ' + escapeHtml(formatDate(member.start_date)) + ' au ' + escapeHtml(formatDate(member.end_date)) +
+            '</div>';
+    }
+
     function render() {
         var members = getMembers();
+        grid.className = currentView === 'list' ? 'members-list' : 'members-grid';
         grid.innerHTML = '';
         emptyState.hidden = members.length > 0;
+        membersCount.textContent = members.length + ' membre' + (members.length > 1 ? 's' : '');
 
         members.forEach(function (member) {
             var expired = isExpired(member);
-            var card = document.createElement('div');
-            card.className = 'member-card' + (expired ? ' expired' : '');
-            card.innerHTML =
-                '<div class="member-avatar">' + escapeHtml(initials(member)) + '</div>' +
-                '<div class="member-name">' + escapeHtml(member.first_name) + ' ' + escapeHtml(member.last_name) + '</div>' +
-                '<div class="member-meta">' +
-                    (member.age ? '<span>🎂 ' + escapeHtml(member.age) + ' ans</span>' : '') +
-                    (member.email ? '<span>✉️ ' + escapeHtml(member.email) + '</span>' : '') +
-                    (member.phone ? '<span>📞 ' + escapeHtml(member.phone) + '</span>' : '') +
-                    (member.address ? '<span>📍 ' + escapeHtml(member.address) + '</span>' : '') +
-                '</div>' +
-                '<div class="member-dates">' +
-                    '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
-                        (expired ? 'Expirée' : 'Active') + '</span> ' +
-                    'du ' + escapeHtml(formatDate(member.start_date)) +
-                    ' au ' + escapeHtml(formatDate(member.end_date)) +
-                '</div>' +
-                '<div class="card-actions">' +
-                    '<button class="btn btn-secondary btn-small" data-action="edit">✏️ Modifier</button>' +
-                    '<button class="btn btn-danger btn-small" data-action="delete">🗑️ Supprimer</button>' +
-                '</div>';
+            var item = document.createElement('div');
+            item.className = (currentView === 'list' ? 'member-row' : 'member-card') + (expired ? ' expired' : '');
+            item.innerHTML = currentView === 'list' ? rowHTML(member) : cardHTML(member);
 
-            card.querySelector('[data-action="edit"]').addEventListener('click', function () {
-                openModal(member);
-            });
-            card.querySelector('[data-action="delete"]').addEventListener('click', function () {
+            var actions = document.createElement('div');
+            actions.className = currentView === 'list' ? 'list-actions' : 'card-actions';
+            actions.innerHTML =
+                '<button class="btn btn-secondary btn-small">✏️ Modifier</button>' +
+                '<button class="btn btn-danger btn-small">🗑️ Supprimer</button>';
+
+            actions.children[0].addEventListener('click', function () { openModal(member); });
+            actions.children[1].addEventListener('click', function () {
                 if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?')) {
                     ADWDatabase.run('DELETE FROM members WHERE id = ?', [member.id]).then(render);
                 }
             });
-            grid.appendChild(card);
+            item.appendChild(actions);
+            grid.appendChild(item);
         });
     }
 
@@ -154,6 +199,13 @@
         });
     });
 
+    function setView(view) {
+        currentView = view;
+        viewGridBtn.classList.toggle('active', view === 'grid');
+        viewListBtn.classList.toggle('active', view === 'list');
+        render();
+    }
+
     addBtn.addEventListener('click', function () { openModal(null); });
     cancelBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', function (e) {
@@ -161,6 +213,18 @@
     });
     searchInput.addEventListener('input', render);
     sortSelect.addEventListener('change', render);
+    viewGridBtn.addEventListener('click', function () { setView('grid'); });
+    viewListBtn.addEventListener('click', function () { setView('list'); });
+
+    document.querySelectorAll('.segmented[data-filter] .seg-btn, .filters-bar [data-filter]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.filters-bar [data-filter]').forEach(function (b) {
+                b.classList.toggle('active', b === btn);
+            });
+            currentFilter = btn.getAttribute('data-filter');
+            render();
+        });
+    });
 
     ADWDatabase.init().then(function () {
         loading.hidden = true;

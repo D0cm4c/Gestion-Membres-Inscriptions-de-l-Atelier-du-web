@@ -34,18 +34,48 @@
     <main>
         <section class="page-header">
             <h2>Gestion des membres</h2>
-            <div class="toolbar">
-                <label for="sortSelect" class="sort-label">Trier par :</label>
-                <select id="sortSelect">
-                    <option value="name-asc">Nom (A → Z)</option>
-                    <option value="name-desc">Nom (Z → A)</option>
-                    <option value="age-asc">Âge (croissant)</option>
-                    <option value="age-desc">Âge (décroissant)</option>
-                    <option value="start-desc">Inscription (plus récente)</option>
-                    <option value="end-asc">Expiration (prochaine)</option>
-                </select>
-                <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
+            <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
+        </section>
+
+        <section class="filters-bar">
+            <div class="filter-group">
+                <label>Statut :</label>
+                <div class="segmented">
+                    <button class="seg-btn active" data-filter="all">Tous</button>
+                    <button class="seg-btn" data-filter="active">Actifs</button>
+                    <button class="seg-btn" data-filter="expired">Expirés</button>
+                </div>
             </div>
+            <div class="filter-group">
+                <label for="sortSelect">Trier par :</label>
+                <select id="sortSelect">
+                    <optgroup label="Nom">
+                        <option value="name-asc">Nom (A → Z)</option>
+                        <option value="name-desc">Nom (Z → A)</option>
+                        <option value="first-name-asc">Prénom (A → Z)</option>
+                        <option value="first-name-desc">Prénom (Z → A)</option>
+                    </optgroup>
+                    <optgroup label="Inscription">
+                        <option value="start-desc">Début (plus récent)</option>
+                        <option value="start-asc">Début (plus ancien)</option>
+                        <option value="end-asc">Expiration (prochaine)</option>
+                        <option value="end-desc">Expiration (la plus lointaine)</option>
+                    </optgroup>
+                    <optgroup label="Autre">
+                        <option value="age-asc">Âge (croissant)</option>
+                        <option value="age-desc">Âge (décroissant)</option>
+                        <option value="created-desc">Ajout (plus récent)</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Affichage :</label>
+                <div class="segmented">
+                    <button class="seg-btn active" id="viewGridBtn" title="Vue cartes">▦ Cartes</button>
+                    <button class="seg-btn" id="viewListBtn" title="Vue liste compacte">☰ Liste</button>
+                </div>
+            </div>
+            <span class="members-count" id="membersCount"></span>
         </section>
 
         <div class="empty-state" id="loadingState">
