@@ -23,7 +23,7 @@
             </a>
             <div class="search-bar">
                 <span class="search-icon" aria-hidden="true">🔍</span>
-                <label for="searchInput" class="sr-only" style="position:absolute;left:-9999px">Rechercher un membre</label>
+                <label for="searchInput" style="position:absolute;left:-9999px">Rechercher un membre</label>
                 <input type="text" id="searchInput" placeholder="Nom, prénom ou n° de membre...">
             </div>
         </div>
@@ -40,7 +40,10 @@
 
     <main id="main">
         <section class="page-header">
-            <h1>Gestion des membres</h1>
+            <div>
+                <h1>Gestion des membres</h1>
+                <p class="page-subtitle">Fiches, abonnements et suivi des visites de l'espace.</p>
+            </div>
             <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
         </section>
 
@@ -134,7 +137,7 @@
                     <input type="text" id="address" autocomplete="street-address">
                 </div>
                 <div class="form-group">
-                    <span class="form-label-like" style="display:block;font-size:0.85rem;font-weight:600;color:var(--primary-dark);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.4px;">Abonnement</span>
+                    <span style="display:block;font-size:0.8rem;font-weight:700;color:var(--primary);margin-bottom:0.32rem;text-transform:uppercase;letter-spacing:0.5px;">Abonnement</span>
                     <div class="subscription-options" id="subscriptionOptions">
                         <div class="sub-option">
                             <input type="radio" id="subNone" name="subscription" value="none" checked>
