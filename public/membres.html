@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atelier du Web - Membres</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <img src="assets/logo.png" alt="Logo Atelier du Web" width="50">
+                <h1>Atelier du Web</h1>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="🔍 Rechercher un membre...">
+            </div>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">🏠 Tableau de bord</a></li>
+            <li><a href="membres.html" class="active">👥 Membres</a></li>
+            <li><a href="#">🎓 Formations</a></li>
+            <li><a href="#">📊 Rapports</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="page-header">
+            <h2>Gestion des membres</h2>
+            <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
+        </section>
+
+        <section class="members-grid" id="membersGrid">
+            <!-- Cartes membres générées en JS -->
+        </section>
+
+        <div class="empty-state" id="emptyState" hidden>
+            <p>Aucun membre trouvé.</p>
+        </div>
+    </main>
+
+    <!-- Modal formulaire membre -->
+    <div class="modal-overlay" id="memberModal" hidden>
+        <div class="modal">
+            <h3 id="modalTitle">Ajouter un membre</h3>
+            <form id="memberForm">
+                <input type="hidden" id="memberId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">Prénom *</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Nom *</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="age">Âge</label>
+                        <input type="number" id="age" min="1" max="120">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Téléphone</label>
+                        <input type="tel" id="phone">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email">
+                </div>
+                <div class="form-group">
+                    <label for="address">Adresse</label>
+                    <input type="text" id="address">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Date début inscription</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">Date fin inscription</label>
+                        <input type="date" id="endDate">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2024 Atelier du Web - <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

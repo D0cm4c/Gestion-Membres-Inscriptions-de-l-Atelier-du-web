@@ -5,7 +5,7 @@ Un système unifié pour gérer les membres du cyberespace et les participants a
 ## 📌 À propos
 
 Ce projet permet de :
-- Gérer les **membres** du cyberespace (25 ordinateurs).
+- Gérer les **membres** du cyberespace.
 - Gérer les **inscriptions aux formations** proposées par l'Atelier du Web.
 - Centraliser les informations dans des **fiches membres/participants**.
 
@@ -29,8 +29,7 @@ Gestion-Membres-Inscriptions-de-l-Atelier-du-web/
 │   ├── index.html           # Tableau de bord (accueil)
 │   ├── styles.css           # Styles CSS
 │   └── assets/              # Images (logo, etc.)
-├── README.md                # Documentation
-└── .git/                    # Historique Git
+└── README.md                # Documentation
 ```
 
 ## 🎨 Maquettes
@@ -41,10 +40,6 @@ Gestion-Membres-Inscriptions-de-l-Atelier-du-web/
 
 - **Frontend** : HTML5, CSS3
 - **Polices** : [Roboto (Google Fonts)](https://fonts.google.com/specimen/Roboto)
-
-## 📜 Licence
-
-Ce projet est sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ## 📞 Contact
 
