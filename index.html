@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=11">
+    <link rel="stylesheet" href="styles.css?v=12">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -63,39 +63,39 @@
             <p>⏳ Chargement des données…</p>
         </div>
 
-        <section class="kpi-grid" aria-label="Indicateurs clés" hidden>
-            <div class="kpi-card">
+        <section class="mosaic" id="dashboardMosaic" aria-label="Tableau de bord en mosaïque">
+            <div class="kpi-card" data-tile="kpi0">
                 <span class="kpi-icon" aria-hidden="true">👥</span>
                 <div>
                     <div class="stat-num" id="statTotal">0</div>
                     <div class="stat-label">Membres au total</div>
                 </div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" data-tile="kpi1">
                 <span class="kpi-icon" aria-hidden="true">✅</span>
                 <div>
                     <div class="stat-num" id="statActive">0</div>
                     <div class="stat-label">Inscriptions actives <span class="kpi-extra" id="statActivePct"></span></div>
                 </div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" data-tile="kpi2">
                 <span class="kpi-icon" aria-hidden="true">📅</span>
                 <div>
                     <div class="stat-num" id="statVisitsToday">0</div>
                     <div class="stat-label">Visites aujourd'hui</div>
                 </div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" data-tile="kpi3">
                 <span class="kpi-icon" aria-hidden="true">💶</span>
                 <div>
                     <div class="stat-num" id="statRevenueMonth">0 €</div>
                     <div class="stat-label">Revenus visites ce mois</div>
                 </div>
             </div>
-        </section>
+        
 
-        <section class="stats-container" aria-label="Statistiques détaillées" hidden>
-            <div class="stat-card">
+        
+            <div class="stat-card span-2" data-tile="members">
                 <h2>📊 Membres</h2>
                 <ul>
                     <li><strong>Membres actifs :</strong> <span id="statActive2">—</span></li>
@@ -106,20 +106,20 @@
                 </ul>
             </div>
 
-            <div class="stat-card alerts">
+            <div class="stat-card alerts span-1 ghost" data-tile="alerts">
                 <h2>🚨 Alertes</h2>
                 <ul id="alertsList"></ul>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card span-1" data-tile="recent">
                 <h2>📋 Dernières visites</h2>
                 <ul class="recent-list" id="recentVisits"></ul>
                 <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> · Dernière : <strong id="statLastVisit">—</strong></p>
             </div>
-        </section>
+        
 
-        <section class="stats-container" id="analyticsSection" aria-label="Analyses croisées">
-            <div class="stat-card">
+        
+            <div class="stat-card span-2" data-tile="occupancy">
                 <h2>🔥 Occupation des postes</h2>
                 <div class="occupancy-bar" role="img" id="occupancyBar"
                     aria-label="Taux d'occupation des postes du jour"></div>
@@ -129,7 +129,7 @@
                 </ul>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card span-2" data-tile="retention">
                 <h2>📉 Rétention des inscrits</h2>
                 <ul style="list-style:none;">
                     <li><strong>Habitués (5+ visites) :</strong> <span id="retRegulars">—</span></li>
@@ -140,13 +140,13 @@
                 <p class="form-hint">Les silencieux sont des candidats à la relance.</p>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card span-1" data-tile="profile">
                 <h2>🧭 Profil des usagers</h2>
                 <ul style="list-style:none;" id="profileList"></ul>
                 <p class="form-hint" id="profileHint"></p>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card span-1 ghost" data-tile="flux">
                 <h2>🧑‍🤝‍🧑 Nouveaux usagers du jour</h2>
                 <ul style="list-style:none;">
                     <li><strong>Visites du jour :</strong> <span id="fluxTotal">—</span></li>
@@ -156,7 +156,7 @@
                 <p class="form-hint" id="fluxHint"></p>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card span-2" data-tile="inclusion">
                 <h2>🤝 Inclusion numérique</h2>
                 <ul style="list-style:none;">
                     <li><strong>Usagers publics vulnérables :</strong> <span id="inclVulnerable">—</span></li>
@@ -170,14 +170,14 @@
                 </div>
             </div>
 
-            <div class="stat-card" id="printsDueCard">
+            <div class="stat-card span-2" id="printsDueCard" data-tile="prints">
                 <h2>🖨️ Impressions à solder</h2>
                 <ul class="recent-list" id="printsDueList"></ul>
                 <p class="form-hint" id="printsDueTotal"></p>
                 <a class="btn btn-secondary btn-small" href="membres.html?prints=due" style="margin-top:0.75rem;">→ Voir tous les membres concernés</a>
             </div>
 
-                <section class="stat-card chart-card" hidden id="visitsChartCard" aria-label="Visualisation des visites" style="grid-column: 1 / -1;">
+                <section class="stat-card chart-card" hidden id="visitsChartCard" aria-label="Visualisation des visites" data-tile="chart" style="grid-column: 1 / -1;">
             <div class="chart-header">
                 <h2>📈 Visites</h2>
                 <div class="segmented" role="group" aria-label="Granularité du graphique">
@@ -251,7 +251,7 @@
     </div>
 
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=11"></script>
-    <script src="dashboard.js?v=11"></script>
+    <script src="db.js?v=12"></script>
+    <script src="dashboard.js?v=12"></script>
 </body>
 </html>

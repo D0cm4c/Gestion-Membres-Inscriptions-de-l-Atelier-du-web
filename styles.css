@@ -204,6 +204,64 @@ body {
     transform: translateY(-50%); opacity: 0.55; pointer-events: none;
 }
 
+/* ============ Mosaïque de tuiles ============ */
+.mosaic {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(10px, auto);
+    gap: 1.1rem;
+    margin-bottom: 1.4rem;
+}
+
+.mosaic .kpi-card,
+.mosaic .stat-card {
+    grid-column: span 1;
+}
+
+.mosaic .span-2 { grid-column: span 2; }
+.mosaic .span-1 { grid-column: span 1; }
+.mosaic .chart-card { grid-column: 1 / -1; }
+
+/* Tuile fantôme : intégrée au fond, sans bord */
+.mosaic .ghost {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+.mosaic .ghost h2 { opacity: 0.9; }
+.mosaic .ghost:hover { transform: none; box-shadow: none; background: rgba(127, 127, 127, 0.06); border-radius: var(--radius); }
+
+/* Drag'n'drop */
+.mosaic .tile-dragging {
+    opacity: 0.45;
+    transform: scale(0.98);
+    cursor: grabbing;
+}
+
+.mosaic .tile-drop-target {
+    outline: 2px dashed var(--accent);
+    outline-offset: 3px;
+    border-radius: var(--radius);
+}
+
+.mosaic [draggable="true"] { cursor: grab; }
+.mosaic [draggable="true"]:active { cursor: grabbing; }
+
+/* Poignée de drag visible au survol */
+.mosaic [draggable="true"]::before {
+    content: '⠿';
+    position: absolute;
+    top: 0.7rem;
+    right: 0.8rem;
+    font-size: 1rem;
+    color: var(--text-soft);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+.mosaic [draggable="true"] { position: relative; }
+.mosaic [draggable="true"]:hover::before { opacity: 0.55; }
+
 /* ============ Indicateur ouvert / fermé ============ */
 .open-status {
     display: inline-flex;
@@ -803,7 +861,11 @@ main {
     main { padding: 1.1rem 1rem 2rem; }
 
     .stats-container { grid-template-columns: 1fr; }
+    .mosaic { grid-template-columns: 1fr; }
     #analyticsSection { grid-template-columns: 1fr; }
+    .mosaic { grid-template-columns: 1fr 1fr; }
+    .mosaic .span-2, .mosaic .span-1 { grid-column: span 1; }
+    .mosaic .kpi-card, .mosaic .stat-card { grid-column: span 1; }
     .kpi-grid { grid-template-columns: 1fr 1fr; }
     .members-grid { grid-template-columns: 1fr; }
 

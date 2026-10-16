@@ -693,6 +693,77 @@
         if (e.key === 'Escape' && printModal && !printModal.hidden) closePrint();
     });
 
+    /* ---------- Drag'n'drop de la mosaïque ---------- */
+
+    var TILE_ORDER_KEY = 'atelierduweb_tile_order';
+
+    function initTileDrag() {
+        var mosaic = document.getElementById('dashboardMosaic');
+        if (!mosaic) return;
+        var tiles = mosaic.querySelectorAll('[data-tile]');
+        if (!tiles.length) return;
+
+        var saved = null;
+        try { saved = JSON.parse(localStorage.getItem(TILE_ORDER_KEY)) || []; } catch (e) { /* best effort */ }
+
+        // apply saved order
+        if (saved.length) {
+            saved.forEach(function (tid) {
+                var el = mosaic.querySelector('[data-tile="' + tid + '"]');
+                if (el) mosaic.appendChild(el);
+            });
+        }
+
+        var dragTile = null;
+
+        tiles.forEach(function (tile) {
+            tile.setAttribute('draggable', 'true');
+
+            tile.addEventListener('dragstart', function (e) {
+                dragTile = tile;
+                tile.classList.add('tile-dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                try { e.dataTransfer.setData('text/plain', tile.getAttribute('data-tile')); } catch (err) { /* IE */ }
+            });
+
+            tile.addEventListener('dragend', function () {
+                tile.classList.remove('tile-dragging');
+                mosaic.querySelectorAll('.tile-drop-target').forEach(function (t) { t.classList.remove('tile-drop-target'); });
+                dragTile = null;
+                saveTileOrder(mosaic);
+            });
+
+            tile.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                if (!dragTile || dragTile === tile) return;
+                tile.classList.add('tile-drop-target');
+            });
+
+            tile.addEventListener('dragleave', function () {
+                tile.classList.remove('tile-drop-target');
+            });
+
+            tile.addEventListener('drop', function (e) {
+                e.preventDefault();
+                if (!dragTile || dragTile === tile) return;
+                tile.classList.remove('tile-drop-target');
+                var rect = tile.getBoundingClientRect();
+                var before = (e.clientX - rect.left) < rect.width / 2;
+                mosaic.insertBefore(dragTile, before ? tile : tile.nextSibling);
+            });
+        });
+    }
+
+    function saveTileOrder(mosaic) {
+        var order = [];
+        mosaic.querySelectorAll('[data-tile]').forEach(function (t) {
+            order.push(t.getAttribute('data-tile'));
+        });
+        try { localStorage.setItem(TILE_ORDER_KEY, JSON.stringify(order)); } catch (e) { /* best effort */ }
+    }
+
+    initTileDrag();
+
     ADWDatabase.init().then(render).catch(function (err) {
         if (loading) {
             loading.hidden = true;
