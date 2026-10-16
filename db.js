@@ -83,6 +83,9 @@
             'end_date TEXT,' +
             'subscription TEXT DEFAULT \'none\',' +
             'member_no INTEGER UNIQUE,' +
+            'postal_code TEXT,' +
+            'gender TEXT,' +
+            'social_status TEXT,' +
             'created_at TEXT DEFAULT (datetime(\'now\'))' +
             ')'
         );
@@ -119,6 +122,15 @@
         }
         if (!cols.member_no) {
             db.run('ALTER TABLE members ADD COLUMN member_no INTEGER');
+        }
+        if (!cols.postal_code) {
+            db.run('ALTER TABLE members ADD COLUMN postal_code TEXT');
+        }
+        if (!cols.gender) {
+            db.run('ALTER TABLE members ADD COLUMN gender TEXT');
+        }
+        if (!cols.social_status) {
+            db.run('ALTER TABLE members ADD COLUMN social_status TEXT');
         }
         db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_members_no ON members(member_no)');
         var missing = db.exec("SELECT id FROM members WHERE member_no IS NULL");

@@ -100,6 +100,33 @@
         return div.innerHTML;
     }
 
+    var GENDER_LABELS = { F: 'Femme', M: 'Homme', X: 'Autre / Non-binaire' };
+    var STATUS_LABELS = {
+        travailleur: 'Travailleur.se', interim: 'Intérim', actiris: 'Actiris',
+        mutuelle: 'Mutuelle', cpas: 'CPAS', pensionne: 'Pensionné',
+        etudiant: 'Étudiant', enfant: 'Enfant'
+    };
+
+    function initPostalCodes() {
+        var dl = document.getElementById('postalCodesList');
+        if (!dl || typeof ADW_POSTAL_CODES === 'undefined') return;
+        var frag = document.createDocumentFragment();
+        ADW_POSTAL_CODES.forEach(function (pc) {
+            var opt = document.createElement('option');
+            opt.value = pc[0] + ' — ' + pc[1];
+            frag.appendChild(opt);
+        });
+        dl.appendChild(frag);
+    }
+
+    function normalizePostalCode(input) {
+        if (!input) return '';
+        var m = String(input).match(/\b(\d{4})\b/);
+        return m ? m[1] : '';
+    }
+
+    initPostalCodes();
+
     function isExpired(member) {
         if (!member.end_date) return false;
         return new Date(member.end_date) < new Date(new Date().toDateString());
@@ -165,7 +192,10 @@
                 '</div>' +
             '</div>' +
             '<div class="member-meta">' +
-                (member.age ? '<span>🎂 ' + escapeHtml(member.age) + ' ans</span>' : '') +
+                (member.age ? '<span>🎂 ' + escapeHtml(member.age) + ' ans' +
+                    (member.gender ? ' · ' + (GENDER_LABELS[member.gender] || member.gender) : '') + '</span>' : (member.gender ? '<span>' + (GENDER_LABELS[member.gender] || member.gender) + '</span>' : '')) +
+                (member.postal_code ? '<span>🏠 ' + escapeHtml(member.postal_code) + '</span>' : '') +
+                (member.social_status ? '<span>💼 ' + escapeHtml(STATUS_LABELS[member.social_status] || member.social_status) + '</span>' : '') +
                 (member.email ? '<span>✉️ <a href="mailto:' + escapeHtml(member.email) + '">' + escapeHtml(member.email) + '</a></span>' : '') +
                 (member.phone ? '<span>📞 <a href="tel:' + escapeHtml(member.phone.replace(/\s/g, '')) + '">' + escapeHtml(member.phone) + '</a></span>' : '') +
                 (member.address ? '<span>📍 ' + escapeHtml(member.address) + '</span>' : '') +
@@ -271,6 +301,9 @@
             '</div>' +
             '<dl class="detail-list">' +
                 (member.age ? '<div><dt>Âge</dt><dd>' + escapeHtml(member.age) + ' ans</dd></div>' : '') +
+                (member.gender ? '<div><dt>Genre</dt><dd>' + escapeHtml(GENDER_LABELS[member.gender] || member.gender) + '</dd></div>' : '') +
+                (member.postal_code ? '<div><dt>Code postal</dt><dd>' + escapeHtml(member.postal_code) + (typeof ADW_POSTAL_CODES !== 'undefined' && ADW_POSTAL_CODES.some(function (p) { return p[0] === member.postal_code; }) ? ' — ' + escapeHtml(ADW_POSTAL_CODES.filter(function (p) { return p[0] === member.postal_code; })[0][1]) : '') + '</dd></div>' : '') +
+                (member.social_status ? '<div><dt>Statut social</dt><dd>' + escapeHtml(STATUS_LABELS[member.social_status] || member.social_status) + '</dd></div>' : '') +
                 (member.email ? '<div><dt>Email</dt><dd><a href="mailto:' + escapeHtml(member.email) + '">' + escapeHtml(member.email) + '</a></dd></div>' : '') +
                 (member.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + escapeHtml(member.phone.replace(/\s/g, '')) + '">' + escapeHtml(member.phone) + '</a></dd></div>' : '') +
                 (member.address ? '<div><dt>Adresse</dt><dd>' + escapeHtml(member.address) + '</dd></div>' : '') +
@@ -408,6 +441,9 @@
         var sub = member ? (member.subscription || 'none') : 'none';
         var radio = form.querySelector('input[name="subscription"][value="' + sub + '"]');
         if (radio) radio.checked = true;
+        document.getElementById('postalCode').value = member && member.postal_code ? member.postal_code : '';
+        document.getElementById('gender').value = member && member.gender ? member.gender : '';
+        document.getElementById('socialStatus').value = member && member.social_status ? member.social_status : '';
         document.getElementById('startDate').value = member ? (member.start_date || '') : new Date().toISOString().slice(0, 10);
         document.getElementById('endDate').value = member ? (member.end_date || '') : '';
         modalTitle.textContent = member ? 'Modifier le membre' : 'Ajouter un membre';
@@ -483,16 +519,19 @@
             address: document.getElementById('address').value.trim(),
             startDate: startDateInput.value,
             endDate: endDateInput.value,
-            subscription: subRadio ? subRadio.value : 'none'
+            subscription: subRadio ? subRadio.value : 'none',
+            postalCode: normalizePostalCode(document.getElementById('postalCode').value),
+            gender: document.getElementById('gender').value,
+            socialStatus: document.getElementById('socialStatus').value
         };
 
         var promise;
         if (id) {
             promise = ADWDatabase.run(
-                'UPDATE members SET first_name = ?, last_name = ?, age = ?, phone = ?, email = ?, address = ?, start_date = ?, end_date = ?, subscription = ? WHERE id = ?',
+                'UPDATE members SET first_name = ?, last_name = ?, age = ?, phone = ?, email = ?, address = ?, start_date = ?, end_date = ?, subscription = ?, postal_code = ?, gender = ?, social_status = ? WHERE id = ?',
                 [data.firstName, data.lastName, data.age ? Number(data.age) : null,
                  data.phone, data.email, data.address, data.startDate || null, data.endDate || null,
-                 data.subscription, id]
+                 data.subscription, data.postalCode || null, data.gender || null, data.socialStatus || null, id]
             );
         } else {
             var newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -503,10 +542,10 @@
                 return;
             }
             promise = ADWDatabase.run(
-                'INSERT INTO members (id, member_no, first_name, last_name, age, phone, email, address, start_date, end_date, subscription) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO members (id, member_no, first_name, last_name, age, phone, email, address, start_date, end_date, subscription, postal_code, gender, social_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [newId, memberNo, data.firstName, data.lastName, data.age ? Number(data.age) : null,
                  data.phone, data.email, data.address, data.startDate || null, data.endDate || null,
-                 data.subscription]
+                 data.subscription, data.postalCode || null, data.gender || null, data.socialStatus || null]
             );
         }
         promise.then(function () {
@@ -528,11 +567,13 @@
     function exportCSV() {
         var members = getMembers();
         if (!members.length) return;
-        var headers = ['N°', 'Prénom', 'Nom', 'Âge', 'Téléphone', 'Email', 'Adresse', 'Abonnement', 'Visites', 'Début inscription', 'Fin inscription'];
+        var headers = ['N°', 'Prénom', 'Nom', 'Âge', 'Genre', 'Code postal', 'Statut social', 'Téléphone', 'Email', 'Adresse', 'Abonnement', 'Visites', 'Début inscription', 'Fin inscription'];
         var csvRows = [headers.join(';')];
         members.forEach(function (m) {
             csvRows.push([
-                m.member_no || '', m.first_name, m.last_name, m.age || '', m.phone || '',
+                m.member_no || '', m.first_name, m.last_name, m.age || '',
+                GENDER_LABELS[m.gender] || '', m.postal_code || '', STATUS_LABELS[m.social_status] || '',
+                m.phone || '',
                 m.email || '', m.address || '',
                 (SUB_LABELS[m.subscription] || SUB_LABELS.none).label,
                 m.visit_count, m.start_date || '', m.end_date || ''

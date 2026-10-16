@@ -137,6 +137,36 @@
                     <label for="address">Adresse</label>
                     <input type="text" id="address" autocomplete="street-address">
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="postalCode">Code postal</label>
+                        <input type="text" id="postalCode" list="postalCodesList" placeholder="Ex : 1060 ou Saint-Gilles..." autocomplete="postal-code" maxlength="60">
+                        <datalist id="postalCodesList"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Genre</label>
+                        <select id="gender">
+                            <option value="">— Choisir —</option>
+                            <option value="F">Femme</option>
+                            <option value="M">Homme</option>
+                            <option value="X">Autre / Non-binaire</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="socialStatus">Statut social</label>
+                        <select id="socialStatus">
+                            <option value="">— Choisir —</option>
+                            <option value="travailleur">Travailleur.se</option>
+                            <option value="interim">Intérim</option>
+                            <option value="actiris">Actiris</option>
+                            <option value="mutuelle">Mutuelle</option>
+                            <option value="cpas">CPAS</option>
+                            <option value="pensionne">Pensionné</option>
+                            <option value="etudiant">Étudiant</option>
+                            <option value="enfant">Enfant</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-group">
                     <span style="display:block;font-size:0.8rem;font-weight:700;color:var(--primary);margin-bottom:0.32rem;text-transform:uppercase;letter-spacing:0.5px;">Abonnement</span>
                     <div class="subscription-options" id="subscriptionOptions">
@@ -191,6 +221,7 @@
 
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js"></script>
+    <script src="postal-codes.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
