@@ -360,14 +360,42 @@
         return true;
     }
 
-    startDateInput.addEventListener('change', validateDates);
-    endDateInput.addEventListener('change', function () {
-        if (!endDateInput.value && startDateInput.value) {
-            var d = new Date(startDateInput.value);
-            d.setFullYear(d.getFullYear() + 1);
-            endDateInput.value = d.toISOString().slice(0, 10);
-        }
+    startDateInput.addEventListener('change', function () {
+        applySubscriptionDates();
         validateDates();
+    });
+
+    endDateInput.addEventListener('change', validateDates);
+
+    function applySubscriptionDates() {
+        var checked = form.querySelector('input[name="subscription"]:checked');
+        var sub = checked ? checked.value : 'none';
+        var base = startDateInput.value
+            ? new Date(startDateInput.value)
+            : new Date();
+        var end;
+        if (sub === 'monthly') {
+            end = new Date(base);
+            end.setMonth(end.getMonth() + 1);
+            end.setDate(end.getDate() - 1);
+        } else if (sub === 'yearly') {
+            end = new Date(base);
+            end.setFullYear(end.getFullYear() + 1);
+            end.setDate(end.getDate() - 1);
+        } else {
+            return;
+        }
+        endDateInput.value = end.toISOString().slice(0, 10);
+    }
+
+    form.querySelectorAll('input[name="subscription"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            if (document.getElementById('memberId').value) {
+                applySubscriptionDates();
+            } else if (radio.checked && radio.value !== 'none' && startDateInput.value) {
+                applySubscriptionDates();
+            }
+        });
     });
 
     form.addEventListener('submit', function (e) {

@@ -21,6 +21,20 @@
         if (el) el.textContent = value;
     }
 
+    function showToast(message) {
+        var toast = document.createElement('div');
+        toast.className = 'toast toast-success visible';
+        toast.setAttribute('role', 'status');
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(function () {
+            toast.classList.remove('visible');
+            setTimeout(function () { toast.remove(); }, 300);
+        }, 2600);
+    }
+
+    /* ============ Stats ============ */
+
     function render() {
         var total = one('SELECT COUNT(*) v FROM members');
         var active = one('SELECT COUNT(*) v FROM members WHERE date(end_date) >= date(\'now\') OR end_date IS NULL');
@@ -50,52 +64,215 @@
         var lastVisit = one('SELECT MAX(visit_date) v FROM visits');
         setText('statLastVisit', lastVisit || '—');
 
-        var cards = document.querySelectorAll('.stat-card, .kpi-grid');
+        var cards = document.querySelectorAll('.stat-card, .kpi-grid, .chart-card');
         cards.forEach(function (c) { c.removeAttribute('hidden'); });
         if (loading) loading.hidden = true;
 
-        var alertsList = document.getElementById('alertsList');
-        if (alertsList) {
-            var alerts = [];
-            if (expired > 0) {
-                alerts.push({ text: expired + ' inscription' + (expired > 1 ? 's' : '') + ' expirée' + (expired > 1 ? 's' : '') + ' à renouveler', icon: '⚠️' });
-            }
-            var expiringSoon = one('SELECT COUNT(*) v FROM members WHERE date(end_date) BETWEEN date(\'now\') AND date(\'now\', \'+30 days\')');
-            if (expiringSoon > 0) {
-                alerts.push({ text: expiringSoon + ' inscription' + (expiringSoon > 1 ? 's' : '') + ' expire' + (expiringSoon > 1 ? 'nt' : '') + ' dans les 30 jours', icon: '⏳' });
-            }
-            if (visitsToday === 0) {
-                alerts.push({ text: 'Aucune visite pointée aujourd\'hui', icon: '📌' });
-            }
-            if (alerts.length === 0) {
-                alerts.push({ text: 'Tout est en ordre ✨', icon: '✅' });
-            }
-            alertsList.innerHTML = alerts.map(function (a) {
-                return '<li><span aria-hidden="true">' + a.icon + '</span> ' + escapeHtml(a.text) + '</li>';
-            }).join('');
-        }
+        renderAlerts(expired, visitsToday);
+        renderRecentVisits();
+        renderChart();
+    }
 
+    function renderAlerts(expired, visitsToday) {
+        var alertsList = document.getElementById('alertsList');
+        if (!alertsList) return;
+        var alerts = [];
+        if (expired > 0) {
+            alerts.push({ text: expired + ' inscription' + (expired > 1 ? 's' : '') + ' expirée' + (expired > 1 ? 's' : '') + ' à renouveler', icon: '⚠️' });
+        }
+        var expiringSoon = one('SELECT COUNT(*) v FROM members WHERE date(end_date) BETWEEN date(\'now\') AND date(\'now\', \'+30 days\')');
+        if (expiringSoon > 0) {
+            alerts.push({ text: expiringSoon + ' inscription' + (expiringSoon > 1 ? 's' : '') + ' expire' + (expiringSoon > 1 ? 'nt' : '') + ' dans les 30 jours', icon: '⏳' });
+        }
+        if (visitsToday === 0) {
+            alerts.push({ text: 'Aucune visite pointée aujourd\'hui', icon: '📌' });
+        }
+        if (alerts.length === 0) {
+            alerts.push({ text: 'Tout est en ordre ✨', icon: '✅' });
+        }
+        alertsList.innerHTML = alerts.map(function (a) {
+            return '<li><span aria-hidden="true">' + a.icon + '</span> ' + escapeHtml(a.text) + '</li>';
+        }).join('');
+    }
+
+    function renderRecentVisits() {
         var recentList = document.getElementById('recentVisits');
-        if (recentList) {
-            var recent = ADWDatabase.queryAll(
-                'SELECT v.visit_date, m.first_name, m.last_name, m.member_no, v.amount ' +
-                'FROM visits v JOIN members m ON m.id = v.member_id ' +
-                'ORDER BY v.visit_date DESC, v.created_at DESC LIMIT 6');
-            if (recent.length) {
-                recentList.innerHTML = recent.map(function (r) {
-                    var d = new Date(r.visit_date);
-                    var label = isNaN(d.getTime()) ? r.visit_date : d.toLocaleDateString('fr-BE');
-                    return '<li><span class="rv-name">#' + escapeHtml(r.member_no) + ' ' +
-                        escapeHtml(r.first_name) + ' ' + escapeHtml(r.last_name) + '</span>' +
-                        '<span class="rv-date">' + escapeHtml(label) + '</span>' +
-                        '<span class="badge ' + (r.amount > 0 ? 'badge-sub-none' : 'badge-ok') + '">' +
-                        (r.amount > 0 ? r.amount.toFixed(2).replace('.', ',') + ' €' : 'abo') + '</span></li>';
-                }).join('');
-            } else {
-                recentList.innerHTML = '<li class="form-hint">Aucune visite enregistrée — pointez une visite depuis la fiche d\'un membre.</li>';
-            }
+        if (!recentList) return;
+        var recent = ADWDatabase.queryAll(
+            'SELECT v.visit_date, m.first_name, m.last_name, m.member_no, v.amount ' +
+            'FROM visits v JOIN members m ON m.id = v.member_id ' +
+            'ORDER BY v.visit_date DESC, v.created_at DESC LIMIT 6');
+        if (recent.length) {
+            recentList.innerHTML = recent.map(function (r) {
+                var d = new Date(r.visit_date);
+                var label = isNaN(d.getTime()) ? r.visit_date : d.toLocaleDateString('fr-BE');
+                return '<li><span class="rv-name">#' + escapeHtml(r.member_no) + ' ' +
+                    escapeHtml(r.first_name) + ' ' + escapeHtml(r.last_name) + '</span>' +
+                    '<span class="rv-date">' + escapeHtml(label) + '</span>' +
+                    '<span class="badge ' + (r.amount > 0 ? 'badge-sub-none' : 'badge-ok') + '">' +
+                    (r.amount > 0 ? r.amount.toFixed(2).replace('.', ',') + ' €' : 'abo') + '</span></li>';
+            }).join('');
+        } else {
+            recentList.innerHTML = '<li class="form-hint" style="list-style:none;padding:0.5rem 0;">Aucune visite enregistrée — pointez une visite depuis le bouton « ✅ Pointer une visite ».</li>';
         }
     }
+
+    /* ============ Graphique des visites ============ */
+
+    var chartDaysBtn = document.getElementById('chartDaysBtn');
+    var chartMonthsBtn = document.getElementById('chartMonthsBtn');
+    var chartMode = 'days';
+
+    function renderChart(mode) {
+        chartMode = mode || chartMode;
+        var chart = document.getElementById('visitsChart');
+        if (!chart) return;
+        var chartCard = document.getElementById('visitsChartCard');
+        if (chartCard) chartCard.removeAttribute('hidden');
+        if (chartDaysBtn) chartDaysBtn.classList.toggle('active', chartMode === 'days');
+        if (chartMonthsBtn) chartMonthsBtn.classList.toggle('active', chartMode === 'months');
+
+        var buckets = [];
+        var now = new Date();
+        var i, key, label;
+
+        if (chartMode === 'days') {
+            for (i = 13; i >= 0; i--) {
+                var d = new Date(now);
+                d.setDate(d.getDate() - i);
+                key = d.toISOString().slice(0, 10);
+                label = d.toLocaleDateString('fr-BE', { day: '2-digit', month: '2-digit' });
+                buckets.push({ key: key, label: label });
+            }
+            var rows = ADWDatabase.queryAll(
+                'SELECT visit_date, COUNT(*) c FROM visits WHERE visit_date >= date(\'now\', \'-13 days\') GROUP BY visit_date');
+            var byKey = {};
+            rows.forEach(function (r) { byKey[r.visit_date] = r.c; });
+            buckets.forEach(function (b) { b.count = byKey[b.key] || 0; });
+        } else {
+            for (i = 11; i >= 0; i--) {
+                var m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                key = m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0');
+                label = m.toLocaleDateString('fr-BE', { month: 'short' });
+                buckets.push({ key: key, label: label });
+            }
+            var rowsM = ADWDatabase.queryAll(
+                'SELECT strftime(\'%Y-%m\', visit_date) ym, COUNT(*) c FROM visits ' +
+                'WHERE visit_date >= date(\'now\', \'-11 months\', \'start of month\') GROUP BY ym');
+            var byKeyM = {};
+            rowsM.forEach(function (r) { byKeyM[r.ym] = r.c; });
+            buckets.forEach(function (b) { b.count = byKeyM[b.key] || 0; });
+        }
+
+        var max = 1;
+        buckets.forEach(function (b) { if (b.count > max) max = b.count; });
+
+        chart.innerHTML = '';
+        var frag = document.createDocumentFragment();
+        buckets.forEach(function (b) {
+            var col = document.createElement('div');
+            col.className = 'chart-col';
+            col.title = b.label + ' : ' + b.count + ' visite' + (b.count > 1 ? 's' : '');
+            col.innerHTML =
+                '<span class="chart-value">' + (b.count || '') + '</span>' +
+                '<span class="chart-bar" style="height:' + Math.max(4, Math.round((b.count / max) * 100)) + '%"></span>' +
+                '<span class="chart-label">' + escapeHtml(b.label) + '</span>';
+            frag.appendChild(col);
+        });
+        chart.appendChild(frag);
+    }
+
+    if (chartDaysBtn) chartDaysBtn.addEventListener('click', function () { renderChart('days'); });
+    if (chartMonthsBtn) chartMonthsBtn.addEventListener('click', function () { renderChart('months'); });
+
+    /* ============ Check-in rapide ============ */
+
+    var checkinModal = document.getElementById('checkinModal');
+    var quickCheckinBtn = document.getElementById('quickCheckinBtn');
+    var checkinCloseBtn = document.getElementById('checkinCloseBtn');
+    var checkinSearch = document.getElementById('checkinSearch');
+    var checkinResults = document.getElementById('checkinResults');
+    var checkinHint = document.getElementById('checkinHint');
+
+    var CHECKIN_SQL = 'SELECT id, first_name, last_name, member_no, subscription, ' +
+        '(SELECT COUNT(*) FROM visits v WHERE v.member_id = members.id AND v.visit_date = date(\'now\')) AS visited_today FROM members';
+
+    function searchMembers(q) {
+        q = (q || '').trim().toLowerCase();
+        if (/^\d+$/.test(q)) {
+            return ADWDatabase.queryAll(CHECKIN_SQL + ' WHERE CAST(member_no AS TEXT) LIKE ? ORDER BY member_no LIMIT 8', ['%' + q + '%']);
+        }
+        if (q) {
+            return ADWDatabase.queryAll(CHECKIN_SQL + ' WHERE lower(first_name || \' \' || last_name) LIKE ? ORDER BY last_name COLLATE NOCASE LIMIT 8', ['%' + q + '%']);
+        }
+        return ADWDatabase.queryAll(CHECKIN_SQL + ' ORDER BY last_name COLLATE NOCASE LIMIT 8');
+    }
+
+    function openCheckin() {
+        if (!checkinModal) return;
+        checkinModal.hidden = false;
+        if (checkinSearch) {
+            checkinSearch.value = '';
+            checkinSearch.focus();
+        }
+        displayCheckinResults(searchMembers(''));
+    }
+
+    function closeCheckin() {
+        if (checkinModal) checkinModal.hidden = true;
+    }
+
+    function displayCheckinResults(members) {
+        if (!checkinResults) return;
+        checkinResults.innerHTML = '';
+        if (!members.length) {
+            checkinResults.innerHTML = '<li class="form-hint" style="list-style:none;padding:0.6rem 0;">Aucun membre trouvé.</li>';
+            return;
+        }
+        members.forEach(function (m) {
+            var li = document.createElement('li');
+            li.className = 'checkin-item' + (m.visited_today ? ' done' : '');
+            li.innerHTML =
+                '<span class="member-avatar small" aria-hidden="true">' +
+                    escapeHtml(((m.first_name || '?').charAt(0) + (m.last_name || '?').charAt(0)).toUpperCase()) +
+                '</span>' +
+                '<span class="rv-name">#' + escapeHtml(m.member_no) + ' ' + escapeHtml(m.first_name) + ' ' + escapeHtml(m.last_name) + '</span>' +
+                (m.visited_today
+                    ? '<span class="badge badge-ok">✓ déjà pointé</span>'
+                    : (m.subscription !== 'none'
+                        ? '<span class="badge badge-sub-yearly">abo</span>'
+                        : '<span class="badge badge-sub-none">1 €</span>'));
+
+            li.addEventListener('click', function () { doCheckin(m); });
+            checkinResults.appendChild(li);
+        });
+    }
+
+    function doCheckin(member) {
+        if (member.visited_today) return;
+        var today = new Date().toISOString().slice(0, 10);
+        var amount = member.subscription === 'none' ? 1 : 0;
+        var visitId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        ADWDatabase.run('INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, ?, ?)',
+            [visitId, member.id, today, amount]).then(function () {
+            closeCheckin();
+            render();
+            renderChart();
+            showToast('✅ Visite de ' + member.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)'));
+        });
+    }
+
+    if (quickCheckinBtn) quickCheckinBtn.addEventListener('click', openCheckin);
+    if (checkinCloseBtn) checkinCloseBtn.addEventListener('click', closeCheckin);
+    if (checkinModal) checkinModal.addEventListener('click', function (e) {
+        if (e.target === checkinModal) closeCheckin();
+    });
+    if (checkinSearch) checkinSearch.addEventListener('input', function () {
+        displayCheckinResults(searchMembers(checkinSearch.value));
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && checkinModal && !checkinModal.hidden) closeCheckin();
+    });
 
     ADWDatabase.init().then(render).catch(function (err) {
         if (loading) {

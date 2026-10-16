@@ -954,6 +954,100 @@ main {
 .rv-name { font-weight: 700; color: var(--primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rv-date { color: var(--text-soft); font-size: 0.85rem; }
 
+/* ============ Graphique visites ============ */
+.chart-card { grid-column: 1 / -1; }
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.1rem;
+}
+
+.chart-header h2 { margin-bottom: 0; }
+
+.visits-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.45rem;
+    height: 180px;
+    padding: 0.5rem 0 0;
+}
+
+.chart-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    min-width: 0;
+    gap: 0.3rem;
+}
+
+.chart-value {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    min-height: 1rem;
+}
+
+.chart-bar {
+    width: 100%;
+    max-width: 34px;
+    background: linear-gradient(180deg, var(--teal) 0%, var(--teal-light) 160%);
+    border-radius: 6px 6px 2px 2px;
+    transition: height 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.chart-col:hover .chart-bar { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-light) 160%); }
+
+.chart-label {
+    font-size: 0.68rem;
+    color: var(--text-soft);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ============ Check-in rapide ============ */
+.checkin-results {
+    list-style: none;
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.checkin-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+
+.checkin-item:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    transform: translateY(-1px);
+}
+
+.checkin-item.done { opacity: 0.6; cursor: default; }
+.checkin-item.done:hover { border-color: var(--border); background: var(--surface); transform: none; }
+
+.checkin-item .member-avatar.small { width: 36px; height: 36px; }
+
 /* ============ Footer ============ */
 .site-footer {
     background: var(--primary);

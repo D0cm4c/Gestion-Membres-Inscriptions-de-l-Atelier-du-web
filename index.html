@@ -43,7 +43,8 @@
             <h1>Bienvenue à l'Atelier du Web 👋</h1>
             <p>Le tableau de bord de votre espace public numérique : membres, abonnements et visites en un coup d'œil.</p>
             <div class="hero-actions">
-                <a href="membres.html" class="btn btn-primary">👥 Gérer les membres</a>
+                <button class="btn btn-primary" id="quickCheckinBtn">✅ Pointer une visite</button>
+                <a href="membres.html" class="btn btn-secondary" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">👥 Gérer les membres</a>
                 <a href="https://atelierduweb.be" class="btn btn-secondary" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">🌐 atelierduweb.be</a>
             </div>
         </section>
@@ -107,6 +108,17 @@
             </div>
         </section>
 
+        <section class="stat-card chart-card" hidden id="visitsChartCard" aria-label="Visualisation des visites">
+            <div class="chart-header">
+                <h2>📈 Visites</h2>
+                <div class="segmented" role="group" aria-label="Granularité du graphique">
+                    <button class="seg-btn active" id="chartDaysBtn">14 jours</button>
+                    <button class="seg-btn" id="chartMonthsBtn">12 mois</button>
+                </div>
+            </div>
+            <div id="visitsChart" class="visits-chart"></div>
+        </section>
+
         <section class="quick-actions" hidden id="quickActions">
             <h3>⚡ Actions rapides</h3>
             <div class="action-buttons">
@@ -120,6 +132,22 @@
     <footer class="site-footer">
         <p>© 2024 Atelier du Web — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
+
+    <!-- Check-in rapide -->
+    <div class="modal-overlay" id="checkinModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="checkinTitle">
+            <h3 id="checkinTitle">✅ Pointer une visite</h3>
+            <div class="form-group">
+                <label for="checkinSearch">Nom ou n° de membre</label>
+                <input type="text" id="checkinSearch" placeholder="Ex : Marie ou 1002..." autocomplete="off">
+                <p class="form-hint" id="checkinHint">Tapez les premières lettres ou le numéro (#1002).</p>
+            </div>
+            <ul class="checkin-results" id="checkinResults"></ul>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="checkinCloseBtn">Fermer</button>
+            </div>
+        </div>
+    </div>
 
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js"></script>
