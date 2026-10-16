@@ -87,6 +87,19 @@
             ')'
         );
         db.run(
+            'CREATE TABLE IF NOT EXISTS prints (' +
+            'id TEXT PRIMARY KEY,' +
+            'member_id TEXT NOT NULL,' +
+            'print_date TEXT NOT NULL,' +
+            'type TEXT NOT NULL CHECK (type IN (\'bw\', \'color\')),' +
+            'amount REAL NOT NULL,' +
+            'paid INTEGER DEFAULT 0,' +
+            'paid_date TEXT,' +
+            'created_at TEXT DEFAULT (datetime(\'now\')),' +
+            'FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE' +
+            ')'
+        );
+        db.run(
             'CREATE TABLE IF NOT EXISTS visits (' +
             'id TEXT PRIMARY KEY,' +
             'member_id TEXT NOT NULL,' +

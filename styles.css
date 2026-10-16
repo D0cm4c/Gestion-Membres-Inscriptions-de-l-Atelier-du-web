@@ -1015,6 +1015,33 @@ main {
     max-width: 100%;
 }
 
+/* ============ Impressions ============ */
+.print-balance {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--warning);
+    white-space: nowrap;
+}
+
+.detail-prints { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--bg); }
+
+.detail-prints h4 {
+    font-size: 0.98rem;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-weight: 700;
+}
+
+.print-actions-btns {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+}
+
 /* ============ Check-in rapide ============ */
 .checkin-results {
     list-style: none;

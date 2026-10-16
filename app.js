@@ -136,7 +136,8 @@
 
         var sql = 'SELECT m.*, ' +
             '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visit_count, ' +
-            '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id AND v.visit_date = date(\'now\')) AS visited_today ' +
+            '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id AND v.visit_date = date(\'now\')) AS visited_today, ' +
+            '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = m.id AND paid = 0) AS print_balance ' +
             'FROM members m';
         if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
         sql += ' ORDER BY ' + order;
@@ -171,6 +172,7 @@
             '<div class="member-visits">' +
                 '<span>Visites : <strong>' + member.visit_count + '</strong>' +
                 (member.visited_today ? ' <span class="badge badge-ok">✓ aujourd\'hui</span>' : '') + '</span>' +
+                (member.print_balance > 0 ? '<span class="print-balance">🖨️ ' + member.print_balance.toFixed(2).replace('.', ',') + ' € dus</span>' : '') +
                 '<span class="dates-cell">du ' + escapeHtml(formatDate(member.start_date)) + ' au ' + escapeHtml(formatDate(member.end_date)) + '</span>' +
             '</div>';
     }
@@ -231,7 +233,9 @@
 
     function openDetail(id) {
         var rows = ADWDatabase.queryAll(
-            'SELECT m.*, (SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visit_count ' +
+            'SELECT m.*, ' +
+            '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visit_count, ' +
+            '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = m.id AND paid = 0) AS print_balance ' +
             'FROM members m WHERE m.id = ?', [id]);
         if (!rows.length) return;
         var member = rows[0];
@@ -273,6 +277,38 @@
         }
         html += '</div>';
 
+        var balance = member.print_balance || 0;
+        html += '<div class="detail-prints">' +
+            '<div class="chart-header">' +
+                '<h4>🖨️ Impressions ' +
+                (balance > 0
+                    ? '<span class="badge badge-sub-none">' + balance.toFixed(2).replace('.', ',') + ' € dus</span>'
+                    : '<span class="badge badge-ok">✓ rien à payer</span>') +
+                '</h4>' +
+                '<div class="print-actions-btns">' +
+                    '<button type="button" class="btn btn-secondary btn-small" data-print="bw">+ 1 N&B (0,10 €)</button>' +
+                    '<button type="button" class="btn btn-secondary btn-small" data-print="color">+ 1 Couleur (0,50 €)</button>' +
+                    (balance > 0 ? '<button type="button" class="btn btn-primary btn-small" data-print="pay">💰 Solder ' + balance.toFixed(2).replace('.', ',') + ' €</button>' : '') +
+                '</div>' +
+            '</div>';
+
+        var prints = ADWDatabase.queryAll(
+            'SELECT * FROM prints WHERE member_id = ? ORDER BY print_date DESC, created_at DESC LIMIT 15', [id]);
+        if (prints.length) {
+            html += '<ul class="visits-list">';
+            prints.forEach(function (p) {
+                html += '<li><span>🖨️ ' + escapeHtml(formatDate(p.print_date)) + '</span>' +
+                    '<span>' + (p.type === 'bw' ? 'Noir &amp; blanc' : 'Couleur') + '</span>' +
+                    '<span>' + p.amount.toFixed(2).replace('.', ',') + ' € ' +
+                    (p.paid
+                        ? '<span class="badge badge-ok">payée</span>'
+                        : '<span class="badge badge-sub-none">due</span>') +
+                    '</span></li>';
+            });
+            html += '</ul>';
+        }
+        html += '</div>';
+
         detailBody.innerHTML = html;
         detailModal.hidden = false;
         detailCloseBtn.focus();
@@ -286,6 +322,30 @@
     detailCloseBtn.addEventListener('click', closeDetail);
     detailModal.addEventListener('click', function (e) {
         if (e.target === detailModal) closeDetail();
+    });
+
+    detailBody.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-print]');
+        if (!btn || !detailMember) return;
+        var action = btn.getAttribute('data-print');
+        var today = new Date().toISOString().slice(0, 10);
+        if (action === 'bw' || action === 'color') {
+            var amount = action === 'bw' ? 0.10 : 0.50;
+            var printId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+            ADWDatabase.run('INSERT INTO prints (id, member_id, print_date, type, amount, paid) VALUES (?, ?, ?, ?, ?, 0)',
+                [printId, detailMember.id, today, action, amount]).then(function () {
+                showToast('🖨️ Impression ' + (action === 'bw' ? 'N&B' : 'couleur') + ' ajoutée (' + amount.toFixed(2).replace('.', ',') + ' €)', 'success');
+                render();
+                openDetail(detailMember.id);
+            });
+        } else if (action === 'pay') {
+            ADWDatabase.run('UPDATE prints SET paid = 1, paid_date = date(\'now\') WHERE member_id = ? AND paid = 0',
+                [detailMember.id]).then(function () {
+                showToast('💰 Impressions soldées', 'success');
+                render();
+                openDetail(detailMember.id);
+            });
+        }
     });
 
     detailCheckinBtn.addEventListener('click', function () {
