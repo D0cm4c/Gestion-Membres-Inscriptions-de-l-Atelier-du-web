@@ -204,6 +204,101 @@ body {
     transform: translateY(-50%); opacity: 0.55; pointer-events: none;
 }
 
+/* ============ Indicateur ouvert / fermé ============ */
+.open-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.83rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background 0.3s, color 0.3s;
+}
+
+.open-status.open {
+    background: var(--success-bg);
+    color: var(--success);
+    box-shadow: 0 0 0 3px rgba(24, 165, 95, 0.12);
+}
+
+.open-status.closed {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+/* ============ Toggle thème ============ */
+.theme-toggle {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 999px;
+    width: 44px; height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.25s, box-shadow 0.2s, border-color 0.15s;
+    flex-shrink: 0;
+}
+.theme-toggle:hover { border-color: var(--accent); transform: rotate(15deg) scale(1.06); box-shadow: var(--shadow-md); }
+
+/* ============ Heatmap fréquentation ============ */
+.heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
+    gap: 3px;
+    overflow-x: auto;
+    padding-bottom: 0.4rem;
+}
+
+.heat-cell {
+    width: 15px; height: 15px;
+    border-radius: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+}
+
+.heat-cell.l1 { background: #CDE7F6; border-color: #B5D9EF; }
+.heat-cell.l2 { background: #7FBFE4; border-color: #6AB0DA; }
+.heat-cell.l3 { background: #2F9BE4; border-color: #1F86CE; }
+.heat-cell.l4 { background: #0F3D5C; border-color: #0A2E46; }
+
+.heat-cell.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.heatmap-legend {
+    display: flex; align-items: center; gap: 0.35rem;
+    font-size: 0.75rem; color: var(--text-soft); font-weight: 600;
+    margin-top: 0.6rem;
+}
+.heatmap-legend .heat-cell { width: 12px; height: 12px; }
+
+/* ============ Donut statuts sociaux ============ */
+.donut-wrap {
+    display: flex; align-items: center; gap: 1.1rem;
+    margin-top: 0.7rem;
+}
+
+.donut {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.4s ease;
+}
+
+.donut::after {
+    content: '';
+    position: absolute;
+    inset: 22px;
+    background: var(--surface);
+    border-radius: 50%;
+}
+
+.donut-legend { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem; min-width: 0; }
+.donut-legend li { display: flex; align-items: center; gap: 0.45rem; border-bottom: none; padding: 0.12rem 0; }
+.donut-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
 /* ============ Main content ============ */
 main {
     padding: 1.6rem 2rem 2.5rem;
@@ -772,4 +867,93 @@ main {
     .btn-primary { color: #0E1620; }
     .member-avatar { background: linear-gradient(135deg, #2E4A5C, #17635A); color: var(--text); }
     .badge-sub-none { background: #223240; color: var(--text-soft); }
+}
+
+
+/* ============ Toggle thème explicite ============ */
+/* Quand l'utilisateur force le clair alors que le système est sombre */
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="light"] {
+        --side-bg: #0D1B2A;
+        --side-bg-2: #13263A;
+        --side-text: #A9BCCA;
+        --bg: #F2F5F8;
+        --surface: #FFFFFF;
+        --border: #E2E8EF;
+        --text: #17252F;
+        --text-soft: #64758A;
+        --primary: #0F3D5C;
+        --primary-soft: #1B5A7F;
+        --accent: #E8734A;
+        --accent-hover: #D05A32;
+        --accent-light: #FDEEE7;
+        --violet: #6C5CE7;
+        --violet-light: #EEEBFB;
+        --blue: #2F9BE4;
+        --blue-light: #E4F2FC;
+        --green: #18A55F;
+        --green-light: #E2F6EC;
+        --orange: #EFA02C;
+        --orange-light: #FCF2DF;
+        --red: #D8434B;
+        --red-light: #FBE7E8;
+        --success: #18A55F; --success-bg: #E2F6EC;
+        --warning: #B26A00; --warning-bg: #FFF3E0;
+        --danger: #D8434B; --danger-bg: #FBE7E8;
+        --info: #1F5FA8; --info-bg: #E7F0FA;
+        color-scheme: light;
+    }
+
+    :root[data-theme="light"] .sidebar { background: linear-gradient(180deg, var(--side-bg) 0%, var(--side-bg-2) 100%); }
+    :root[data-theme="light"] .topbar { background: rgba(255, 255, 255, 0.85); }
+    :root[data-theme="light"] .seg-btn.active { background: var(--primary); color: #fff; }
+    :root[data-theme="light"] .btn-primary { color: #fff; }
+    :root[data-theme="light"] .member-avatar { background: linear-gradient(135deg, var(--primary-soft), var(--violet)); color: #fff; }
+    :root[data-theme="light"] .badge-sub-none { background: #EDF1F5; color: var(--text-soft); }
+    :root[data-theme="light"] .site-footer a { color: #F5B79E; }
+}
+
+/* Quand l'utilisateur force le sombre alors que le système est clair */
+@media (prefers-color-scheme: light) {
+    :root[data-theme="dark"] {
+        --side-bg: #060D14;
+        --side-bg-2: #0A1520;
+        --side-text: #8FA3B3;
+        --bg: #0E1620;
+        --surface: #16222E;
+        --border: #263646;
+        --text: #E5EDF3;
+        --text-soft: #93A7B8;
+        --primary: #9CC8E8;
+        --primary-soft: #2E4A5C;
+        --accent: #F0885E;
+        --accent-hover: #F59F7B;
+        --accent-light: #33221B;
+        --violet: #9B8CFF;
+        --violet-light: #232040;
+        --blue: #58B4F0;
+        --blue-light: #12283A;
+        --green: #4FCE8F;
+        --green-light: #12291D;
+        --orange: #F5B54E;
+        --orange-light: #2E2413;
+        --red: #F2837B;
+        --red-light: #371C1E;
+        --success: #4FCE8F; --success-bg: #12291D;
+        --warning: #EBB368; --warning-bg: #2A200E;
+        --danger: #F2837B; --danger-bg: #371C1E;
+        --info: #74B8EE; --info-bg: #14273A;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+        color-scheme: dark;
+    }
+
+    :root[data-theme="dark"] .sidebar { background: linear-gradient(180deg, var(--side-bg) 0%, var(--side-bg-2) 100%); }
+    :root[data-theme="dark"] .topbar { background: rgba(22, 34, 46, 0.9); }
+    :root[data-theme="dark"] .seg-btn.active { background: var(--accent); color: #0E1620; }
+    :root[data-theme="dark"] .btn-primary { color: #0E1620; }
+    :root[data-theme="dark"] .member-avatar { background: linear-gradient(135deg, #2E4A5C, #17635A); color: var(--text); }
+    :root[data-theme="dark"] .badge-sub-none { background: #223240; color: var(--text-soft); }
+    :root[data-theme="dark"] .site-footer a { color: var(--accent); }
 }

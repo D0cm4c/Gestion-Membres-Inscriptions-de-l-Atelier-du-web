@@ -6,6 +6,72 @@
         todayDateEl.textContent = new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     }
 
+    /* ---------- Indicateur ouvert / fermé ---------- */
+    var OPENING_HOURS = {
+        1: [12.5, 17],   // lundi
+        2: [9, 17],      // mardi
+        3: [9, 17],      // mercredi
+        4: [9, 17],      // jeudi
+        5: [9, 12],      // vendredi
+        6: [9.5, 12]     // samedi
+    };
+
+    function updateOpenStatus() {
+        var el = document.getElementById('openStatus');
+        if (!el) return;
+        var now = new Date();
+        var day = now.getDay();
+        var t = now.getHours() + now.getMinutes() / 60;
+        var hours = OPENING_HOURS[day];
+
+        if (!hours) {
+            el.className = 'open-status closed';
+            el.textContent = '🔴 Fermé aujourd’hui';
+            return;
+        }
+        var fmt = function (h) {
+            var hh = Math.floor(h);
+            var mm = Math.round((h - hh) * 60);
+            return hh + 'h' + (mm ? String(mm).padStart(2, '0') : '');
+        };
+        if (t < hours[0]) {
+            el.className = 'open-status closed';
+            el.textContent = '🟡 Ouverture à ' + fmt(hours[0]);
+        } else if (t < hours[1]) {
+            el.className = 'open-status open';
+            el.textContent = '🟢 Ouvert · ferme à ' + fmt(hours[1]);
+        } else {
+            el.className = 'open-status closed';
+            el.textContent = '🔴 Fermé · réouvre demain';
+        }
+    }
+
+    updateOpenStatus();
+    setInterval(updateOpenStatus, 60000);
+
+    /* ---------- Toggle thème jour/nuit ---------- */
+    var themeToggle = document.getElementById('themeToggle');
+    var THEME_KEY = 'atelierduweb_theme';
+
+    function applyTheme(mode) {
+        document.documentElement.setAttribute('data-theme', mode);
+        if (themeToggle) themeToggle.textContent = mode === 'dark' ? '☀️' : '🌙';
+    }
+
+    var savedTheme = null;
+    try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) { /* best effort */ }
+    applyTheme(savedTheme || 'auto');
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+            var current = document.documentElement.getAttribute('data-theme');
+            var isDark = current === 'dark' ||
+                (current === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            applyTheme(isDark ? 'light' : 'dark');
+            try { localStorage.setItem(THEME_KEY, isDark ? 'light' : 'dark'); } catch (e) { /* best effort */ }
+        });
+    }
+
     var loading = document.getElementById('dashLoading');
     if (!loading) return;
 
@@ -78,6 +144,8 @@
         renderPrintsDue();
         renderAnalytics(visitsToday, monthly, yearly);
         renderChart();
+        renderHeatmap();
+        renderStatusDonut();
     }
 
     function renderAlerts(expired, visitsToday) {
@@ -302,6 +370,92 @@
     }
 
     if (annualReportBtn) annualReportBtn.addEventListener('click', buildAnnualReport);
+
+    /* ============ Heatmap fréquentation (12 semaines) ============ */
+
+    function renderHeatmap() {
+        var hm = document.getElementById('heatmap');
+        if (!hm) return;
+        var rows = ADWDatabase.queryAll(
+            "SELECT visit_date, COUNT(*) c FROM visits WHERE visit_date >= date('now', '-83 days') GROUP BY visit_date");
+        var byDay = {};
+        rows.forEach(function (r) { byDay[r.visit_date] = r.c; });
+
+        var max = 1;
+        rows.forEach(function (r) { if (r.c > max) max = r.c; });
+
+        var today = new Date();
+        var todayDow = today.getDay();
+        var start = new Date(today);
+        start.setDate(start.getDate() - 83);
+        while (start.getDay() !== 1) start.setDate(start.getDate() - 1);
+
+        var frag = document.createDocumentFragment();
+        var d = new Date(start);
+        var todayIso = today.toISOString().slice(0, 10);
+        while (d <= today) {
+            var iso = d.toISOString().slice(0, 10);
+            var c = byDay[iso] || 0;
+            var lvl = c === 0 ? '' : (c <= max * 0.25 ? 'l1' : (c <= max * 0.5 ? 'l2' : (c <= max * 0.75 ? 'l3' : 'l4')));
+            var cell = document.createElement('span');
+            cell.className = 'heat-cell ' + lvl + (iso === todayIso ? ' today' : '');
+            cell.title = d.toLocaleDateString('fr-BE') + ' : ' + c + ' visite' + (c > 1 ? 's' : '');
+            frag.appendChild(cell);
+            d.setDate(d.getDate() + 1);
+        }
+        hm.innerHTML = '';
+        hm.appendChild(frag);
+        hm.setAttribute('aria-label', 'Carte de chaleur de la fréquentation quotidienne sur 12 semaines');
+    }
+
+    /* ============ Donut statuts sociaux ============ */
+
+    var STATUS_COLORS = {
+        cpas: '#2F9BE4',
+        actiris: '#6C5CE7',
+        travailleur: '#18A55F',
+        etudiant: '#EFA02C',
+        pensionne: '#E8734A',
+        mutuelle: '#B57BD6',
+        interim: '#4ECDC4',
+        enfant: '#95A5B8'
+    };
+    var STATUS_NAMES = {
+        cpas: 'CPAS / Orbem', actiris: 'Actiris', travailleur: 'Travailleur.se',
+        etudiant: 'Étudiant', pensionne: 'Pensionné', mutuelle: 'Mutuelle',
+        interim: 'Intérim', enfant: 'Enfant'
+    };
+
+    function renderStatusDonut() {
+        var donut = document.getElementById('statusDonut');
+        var legend = document.getElementById('statusDonutLegend');
+        if (!donut || !legend) return;
+        var rows = ADWDatabase.queryAll(
+            "SELECT social_status, COUNT(*) c FROM members WHERE social_status IS NOT NULL AND social_status != '' GROUP BY social_status ORDER BY c DESC");
+        var total = 0;
+        rows.forEach(function (r) { total += r.c; });
+        if (!total) {
+            donut.style.background = 'var(--bg)';
+            legend.innerHTML = '<li class="form-hint">Renseignez les statuts sociaux pour voir la répartition.</li>';
+            return;
+        }
+        var stops = [];
+        var acc = 0;
+        rows.forEach(function (r) {
+            var from = (acc / total) * 100;
+            acc += r.c;
+            var to = (acc / total) * 100;
+            var color = STATUS_COLORS[r.social_status] || '#95A5B8';
+            stops.push(color + ' ' + from + '% ' + to + '%');
+        });
+        donut.style.background = 'conic-gradient(' + stops.join(', ') + ')';
+        legend.innerHTML = rows.slice(0, 6).map(function (r) {
+            var color = STATUS_COLORS[r.social_status] || '#95A5B8';
+            return '<li><span class="donut-dot" style="background:' + color + '"></span>' +
+                escapeHtml(STATUS_NAMES[r.social_status] || r.social_status) +
+                ' <strong>' + Math.round((r.c / total) * 100) + ' %</strong></li>';
+        }).join('');
+    }
 
     /* ============ Graphique des visites ============ */
 
