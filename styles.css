@@ -285,6 +285,17 @@ main {
     background: var(--green-light); padding: 0.12rem 0.5rem; border-radius: 999px; margin-left: 0.3rem;
 }
 
+/* Zone analyses : 2 colonnes, carte Impressions = 1 colonne,
+   graphique Visites = 2 colonnes (pleine largeur) */
+#analyticsSection {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem;
+    margin-bottom: 1.4rem;
+}
+
+#analyticsSection .chart-card { grid-column: 1 / -1; }
+
 /* ============ Cartes ============ */
 .stats-container {
     display: grid;
@@ -697,6 +708,7 @@ main {
     main { padding: 1.1rem 1rem 2rem; }
 
     .stats-container { grid-template-columns: 1fr; }
+    #analyticsSection { grid-template-columns: 1fr; }
     .kpi-grid { grid-template-columns: 1fr 1fr; }
     .members-grid { grid-template-columns: 1fr; }
 
