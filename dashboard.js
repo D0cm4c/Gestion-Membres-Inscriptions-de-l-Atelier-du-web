@@ -121,6 +121,8 @@
     function renderPrintsDue() {
         var list = document.getElementById('printsDueList');
         var totalEl = document.getElementById('printsDueTotal');
+        var section = document.getElementById('printsDueSection');
+        if (section) section.removeAttribute('hidden');
         if (!list) return;
         var rows = ADWDatabase.queryAll(
             'SELECT m.id, m.first_name, m.last_name, m.member_no, ' +
