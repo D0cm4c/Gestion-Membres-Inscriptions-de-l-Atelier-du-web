@@ -724,6 +724,18 @@
         if (e.key === 'Escape' && importModal && !importModal.hidden) closeImport();
     });
 
+    var demoBtn = document.getElementById('demoBtn');
+    if (demoBtn) {
+        demoBtn.addEventListener('click', function () {
+            if (!window.ADWDemo) return;
+            if (!confirm('Charger 20 membres fictifs de démonstration ?')) return;
+            ADWDemo.loadDemo(ADWDatabase).then(function (count) {
+                render();
+                showToast('🧪 ' + count + ' membres de démo chargés', 'success');
+            });
+        });
+    }
+
     ADWDatabase.init().then(function () {
         loading.hidden = true;
         render();
