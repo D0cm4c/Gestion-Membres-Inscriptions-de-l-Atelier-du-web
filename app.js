@@ -188,14 +188,17 @@
             '<div class="list-cell dates-cell">' + statusBadge(member) + '</div>';
     }
 
+    var RENDER_CAP = 200;
+
     function render() {
         var members = getMembers();
         grid.className = currentView === 'list' ? 'members-list' : 'members-grid';
         grid.innerHTML = '';
         emptyState.hidden = members.length > 0;
         membersCount.textContent = members.length + ' membre' + (members.length > 1 ? 's' : '');
+        var shown = members.slice(0, RENDER_CAP);
 
-        members.forEach(function (member) {
+        shown.forEach(function (member) {
             var expired = isExpired(member);
             var item = document.createElement('div');
             item.className = (currentView === 'list' ? 'member-row' : 'member-card') + (expired ? ' expired' : '');
@@ -228,6 +231,18 @@
             item.appendChild(actions);
             grid.appendChild(item);
         });
+
+        if (members.length > RENDER_CAP) {
+            var more = document.createElement('div');
+            more.className = 'empty-state';
+            more.style.border = 'none';
+            more.style.boxShadow = 'none';
+            more.innerHTML = '<p>' + (members.length - RENDER_CAP) + ' membre' + (members.length - RENDER_CAP > 1 ? 's' : '') +
+                ' supplémentaire' + (members.length - RENDER_CAP > 1 ? 's' : '') +
+                ' non affiché' + (members.length - RENDER_CAP > 1 ? 's' : '') +
+                ' — affinez la recherche ou le tri.</p>';
+            grid.appendChild(more);
+        }
     }
 
     /* ---------- Fiche détail ---------- */

@@ -157,6 +157,21 @@
         },
 
         persist: function () {
+            var self = this;
+            if (this._persistTimer) clearTimeout(this._persistTimer);
+            return new Promise(function (resolve) {
+                self._persistTimer = setTimeout(function () {
+                    self._persistTimer = null;
+                    saveToIndexedDB(self.idb, self.db.export()).then(resolve, resolve);
+                }, 250);
+            });
+        },
+
+        flush: function () {
+            if (this._persistTimer) {
+                clearTimeout(this._persistTimer);
+                this._persistTimer = null;
+            }
             return saveToIndexedDB(this.idb, this.db.export());
         },
 
@@ -180,6 +195,10 @@
     };
 
     Database.nextMemberNo = function () { return nextMemberNo(this.db); };
+
+    window.addEventListener('beforeunload', function () {
+        try { Database.flush(); } catch (e) { /* best effort */ }
+    });
 
     window.ADWDatabase = Database;
 })();
