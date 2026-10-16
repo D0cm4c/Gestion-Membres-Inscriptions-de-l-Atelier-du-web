@@ -124,17 +124,21 @@
         if (!list) return;
         var rows = ADWDatabase.queryAll(
             'SELECT m.id, m.first_name, m.last_name, m.member_no, ' +
-            'COALESCE((SELECT SUM(amount) FROM prints p WHERE p.member_id = m.id AND paid = 0), 0) AS balance ' +
+            'COALESCE((SELECT SUM(amount) FROM prints p WHERE p.member_id = m.id AND paid = 0), 0) AS balance, ' +
+            '(SELECT MAX(print_date) FROM prints p WHERE p.member_id = m.id AND paid = 0) AS last_print ' +
             'FROM members m ' +
             'WHERE (SELECT SUM(amount) FROM prints p WHERE p.member_id = m.id AND paid = 0) > 0 ' +
-            'ORDER BY balance DESC LIMIT 3');
+            'ORDER BY last_print DESC, balance DESC LIMIT 3');
         var total = one('SELECT COALESCE(SUM(amount), 0) v FROM prints WHERE paid = 0');
         var count = one('SELECT COUNT(DISTINCT member_id) v FROM prints WHERE paid = 0');
 
         if (rows.length) {
             list.innerHTML = rows.map(function (r) {
+                var d = new Date(r.last_print);
+                var label = isNaN(d.getTime()) ? r.last_print : d.toLocaleDateString('fr-BE');
                 return '<li><span class="rv-name">#' + escapeHtml(r.member_no) + ' ' +
                     escapeHtml(r.first_name) + ' ' + escapeHtml(r.last_name) + '</span>' +
+                    '<span class="rv-date">' + escapeHtml(label) + '</span>' +
                     '<span class="badge badge-sub-none">' + r.balance.toFixed(2).replace('.', ',') + ' €</span></li>';
             }).join('');
         } else {
