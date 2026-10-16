@@ -109,6 +109,46 @@
             </div>
         </section>
 
+        <section class="stats-container" id="analyticsSection" aria-label="Analyses croisées">
+            <div class="stat-card">
+                <h2>🔥 Occupation des postes</h2>
+                <div class="occupancy-bar" role="img" id="occupancyBar"
+                    aria-label="Taux d'occupation des postes du jour"></div>
+                <ul style="list-style:none;">
+                    <li><strong id="occupancyToday">—</strong></li>
+                    <li class="form-hint" id="occupancyHint"></li>
+                </ul>
+            </div>
+
+            <div class="stat-card">
+                <h2>📉 Rétention des inscrits</h2>
+                <ul style="list-style:none;">
+                    <li><strong>Habitués (5+ visites) :</strong> <span id="retRegulars">—</span></li>
+                    <li><strong>One-shot (1 visite) :</strong> <span id="retOneshot">—</span></li>
+                    <li><strong>Inscrits sans aucune visite :</strong> <span id="retNever">—</span></li>
+                    <li><strong>Silencieux (60+ jours sans visite) :</strong> <span id="retSilent">—</span></li>
+                </ul>
+                <p class="form-hint">Les silencieux sont des candidats à la relance.</p>
+            </div>
+
+            <div class="stat-card">
+                <h2>🧭 Profil des usagers</h2>
+                <ul style="list-style:none;" id="profileList"></ul>
+                <p class="form-hint" id="profileHint"></p>
+            </div>
+
+            <div class="stat-card">
+                <h2>💰 Revenus consolidés ce mois</h2>
+                <ul style="list-style:none;">
+                    <li><strong>Abonnements actifs :</strong> <span id="revSubscriptions">—</span></li>
+                    <li><strong>Visites payantes :</strong> <span id="revVisits">—</span></li>
+                    <li><strong>Impressions en attente :</strong> <span id="revPrintsDue">—</span></li>
+                    <li><strong>Total potentiel :</strong> <span id="revTotal">—</span></li>
+                </ul>
+                <p class="form-hint" id="revHint"></p>
+            </div>
+        </section>
+
         <section class="stats-container" id="printsDueSection" aria-label="Impressions à solder">
             <div class="stat-card prints-due-card">
                 <h2>🖨️ Impressions à solder</h2>

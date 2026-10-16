@@ -71,6 +71,7 @@
         renderAlerts(expired, visitsToday);
         renderRecentVisits();
         renderPrintsDue();
+        renderAnalytics(visitsToday, monthly, yearly);
         renderChart();
     }
 
@@ -116,6 +117,77 @@
         } else {
             recentList.innerHTML = '<li class="form-hint" style="list-style:none;padding:0.5rem 0;">Aucune visite enregistrée — pointez une visite depuis le bouton « ✅ Pointer une visite ».</li>';
         }
+    }
+
+    var PCS = 21;
+
+    function eur(v) {
+        return v.toFixed(2).replace('.', ',') + ' \u20AC';
+    }
+
+    function renderAnalytics(visitsToday, monthly, yearly) {
+        var section = document.getElementById('analyticsSection');
+        if (section) section.removeAttribute('hidden');
+
+        /* --- 1. Occupation --- */
+        var occPct = Math.min(100, Math.round((visitsToday / PCS) * 100));
+        var ob = document.getElementById('occupancyBar');
+        if (ob) {
+            var segs = '';
+            for (var i = 0; i < PCS; i++) {
+                segs += '<span class="pc-seg' + (i < visitsToday ? ' busy' : '') + '" title="Poste ' + (i + 1) + (i < visitsToday ? ' : occup\u00e9' : ' : libre') + '"></span>';
+            }
+            ob.innerHTML = segs;
+            ob.setAttribute('aria-label', visitsToday + ' postes occup\u00e9s sur ' + PCS + ' (' + occPct + ' %)');
+        }
+        setText('occupancyToday', visitsToday + ' / ' + PCS + ' postes occup\u00e9s (' + occPct + ' %)');
+        var avg = one("SELECT COUNT(*) v FROM visits WHERE visit_date > date('now', '-7 days')");
+        setText('occupancyHint', 'Moyenne 7 derniers jours : ' + Math.round(avg / 7) + ' visites/jour');
+
+        /* --- 2. Rétention --- */
+        var perMember = ADWDatabase.queryAll(
+            'SELECT m.id, ' +
+            '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visits, ' +
+            '(SELECT MAX(visit_date) FROM visits v WHERE v.member_id = m.id) AS last_visit ' +
+            'FROM members m');
+        var regulars = 0, oneshot = 0, never = 0, silent = 0;
+        var totalVisits = 0;
+        perMember.forEach(function (r) {
+            totalVisits += r.visits;
+            if (r.visits >= 5) regulars++;
+            else if (r.visits === 1) oneshot++;
+            else if (r.visits === 0) never++;
+            if (r.visits > 0 && r.last_visit && r.last_visit < new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10)) silent++;
+        });
+        var regularVisits = perMember.filter(function (r) { return r.visits >= 5; }).reduce(function (s, r) { return s + r.visits; }, 0);
+        setText('retRegulars', regulars + ' membres (' + (totalVisits ? Math.round((regularVisits / totalVisits) * 100) : 0) + ' % des visites)');
+        setText('retOneshot', String(oneshot));
+        setText('retNever', String(never));
+        setText('retSilent', String(silent));
+
+        /* --- 3. Profil socio-spatial --- */
+        var byCp = ADWDatabase.queryAll(
+            "SELECT postal_code, COUNT(*) c FROM members WHERE postal_code IS NOT NULL AND postal_code != '' GROUP BY postal_code ORDER BY c DESC LIMIT 4");
+        var totalCp = one("SELECT COUNT(*) v FROM members WHERE postal_code IS NOT NULL AND postal_code != ''");
+        var sg = one("SELECT COUNT(*) v FROM members WHERE postal_code IN ('1000','1020','1030','1040','1050','1060','1070','1080','1090','1100','1120','1130','1140','1150','1160','1170','1180','1190','1200','1210')");
+        var pl = document.getElementById('profileList');
+        if (pl) {
+            pl.innerHTML = byCp.map(function (r) {
+                var pct = totalCp ? Math.round((r.c / totalCp) * 100) : 0;
+                return '<li><strong>' + escapeHtml(r.postal_code) + '</strong> : ' + r.c + ' membres (' + pct + ' %)</li>';
+            }).join('') || '<li class="form-hint">Aucun code postal renseign\u00e9.</li>';
+        }
+        setText('profileHint', totalCp ? Math.round((sg / totalCp) * 100) + ' % des usagers viennent de la R\u00e9gion de Bruxelles-Capitale' : 'Renseignez les codes postaux pour activer cette analyse.');
+
+        /* --- 4. Revenus consolidés --- */
+        var subRevenue = (monthly || 0) * 3 + (yearly || 0) * 30;
+        var visitRevenue = one("SELECT COALESCE(SUM(amount), 0) v FROM visits WHERE strftime('%Y-%m', visit_date) = strftime('%Y-%m', 'now')");
+        var printsDue = one('SELECT COALESCE(SUM(amount), 0) v FROM prints WHERE paid = 0');
+        setText('revSubscriptions', monthly + ' mensuels + ' + yearly + ' annuels = ' + eur(subRevenue));
+        setText('revVisits', eur(visitRevenue));
+        setText('revPrintsDue', eur(printsDue));
+        setText('revTotal', eur(subRevenue + visitRevenue));
+        setText('revHint', 'Impressions en attente incluses : ' + eur(subRevenue + visitRevenue + printsDue));
     }
 
     function renderPrintsDue() {

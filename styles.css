@@ -1042,6 +1042,29 @@ main {
     margin-top: 0.6rem;
 }
 
+/* ============ Occupation 21 PC ============ */
+.occupancy-bar {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    margin: 0.5rem 0 0.9rem;
+}
+
+.pc-seg {
+    flex: 1 1 18px;
+    min-width: 18px;
+    height: 22px;
+    border-radius: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    transition: background 0.2s;
+}
+
+.pc-seg.busy {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-hover) 100%);
+    border-color: var(--accent-hover);
+}
+
 /* ============ Check-in rapide ============ */
 .checkin-results {
     list-style: none;
