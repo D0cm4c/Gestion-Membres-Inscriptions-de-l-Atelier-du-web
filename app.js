@@ -4,6 +4,11 @@
     var PREFS_KEY = 'atelierduweb_members_prefs';
     var VISIT_PRICE = 1;
 
+    var todayDateEl = document.getElementById('todayDate');
+    if (todayDateEl) {
+        todayDateEl.textContent = new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
     var grid = document.getElementById('membersGrid');
     if (!grid) return;
 

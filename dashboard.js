@@ -1,6 +1,11 @@
 (function () {
     'use strict';
 
+    var todayDateEl = document.getElementById('todayDate');
+    if (todayDateEl) {
+        todayDateEl.textContent = new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
     var loading = document.getElementById('dashLoading');
     if (!loading) return;
 

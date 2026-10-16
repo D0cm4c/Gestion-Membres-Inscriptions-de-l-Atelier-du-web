@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=8">
+    <link rel="stylesheet" href="styles.css?v=9">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -12,36 +12,42 @@
 <body>
     <a class="skip-link" href="#main">Aller au contenu principal</a>
 
-    <header class="site-header">
-        <div class="header-inner">
-            <a class="brand" href="index.html">
-                <span class="brand-mark" aria-hidden="true">AW</span>
-                <span>
-                    <span class="brand-name">Atelier du Web</span>
-                    <span class="brand-sub">Espace Public Numérique</span>
-                </span>
-            </a>
-            <div class="search-bar">
-                <span class="search-icon" aria-hidden="true">🔍</span>
-                <label for="siteSearch" style="position:absolute;left:-9999px">Rechercher</label>
-                <input type="text" id="siteSearch" placeholder="Rechercher sur atelierduweb.be...">
-            </div>
+    <div class="app-layout">
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">AW</span>
+            <span class="brand-text">
+                <span class="brand-name">Atelier du Web</span>
+                <span class="brand-sub">EPN · Saint-Gilles</span>
+            </span>
+        </a>
+        <nav class="side-nav" aria-label="Navigation principale">
+            <span class="side-section">Général</span>
+            <a href="index.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
+            <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
+            <span class="side-section">Espace</span>
+            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
+            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+    <header class="topbar">
+        <h1 class="topbar-title">Tableau de bord</h1>
+        <p class="topbar-date" id="todayDate"></p>
+        <div class="search-bar">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <label for="siteSearch" style="position:absolute;left:-9999px">Rechercher</label>
+            <input type="text" id="siteSearch" placeholder="Rechercher sur atelierduweb.be...">
         </div>
     </header>
 
-    <nav class="site-nav" aria-label="Navigation principale">
-        <div class="nav-inner">
-            <a href="index.html" class="active" aria-current="page">🏠 Tableau de bord</a>
-            <a href="membres.html">👥 Membres</a>
-            <a href="#">🎓 Formations</a>
-            <a href="#">📅 Salles</a>
-        </div>
-    </nav>
-
     <main id="main">
         <section class="hero">
-            <h1>Bienvenue à l'Atelier du Web 👋</h1>
-            <p>Le tableau de bord de votre espace public numérique : membres, abonnements et visites en un coup d'œil.</p>
+            <p class="hero-lead">Vue d'ensemble de votre espace public numérique : membres, abonnements et visites en un coup d'œil.</p>
             <div class="hero-actions">
                 <button class="btn btn-primary" id="quickCheckinBtn">✅ Pointer une visite</button>
                 <button class="btn btn-primary" id="quickPrintBtn">🖨️ Impression</button>
@@ -189,8 +195,10 @@
         </section>
     </main>
 
+    </div>
+    </div>
     <footer class="site-footer">
-        <p>© 2024 Atelier du Web — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
 
     <!-- Check-in rapide -->
@@ -226,7 +234,7 @@
     </div>
 
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=8"></script>
-    <script src="dashboard.js?v=8"></script>
+    <script src="db.js?v=9"></script>
+    <script src="dashboard.js?v=9"></script>
 </body>
 </html>
