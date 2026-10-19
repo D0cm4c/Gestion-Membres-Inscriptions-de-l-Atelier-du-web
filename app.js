@@ -769,6 +769,13 @@
     ADWDatabase.init().then(function () {
         loading.hidden = true;
         render();
+        // Lien direct vers une fiche : membres.html#member=<id>
+        var m = location.hash.match(/^#member=(.+)$/);
+        if (m) {
+            openDetail(decodeURIComponent(m[1]));
+            // Nettoie le hash pour ne pas rouvrir la fiche au rechargement
+            history.replaceState(null, '', location.pathname + location.search);
+        }
     }).catch(function (err) {
         loading.hidden = true;
         emptyState.hidden = false;

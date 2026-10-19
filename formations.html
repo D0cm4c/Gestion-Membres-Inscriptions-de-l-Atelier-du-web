@@ -428,11 +428,13 @@
             attendees.forEach(function (m) {
                 var li = document.createElement('div');
                 li.className = 'checkin-item done';
+                var ficheUrl = 'membres.html#member=' + encodeURIComponent(m.id);
                 li.innerHTML =
                     '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
-                    '<div style="flex:1;min-width:0;"><strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
+                    '<a href="' + ficheUrl + '" style="flex:1;min-width:0;text-decoration:none;color:inherit;" title="Ouvrir la fiche membre">' +
+                    '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
                     (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
-                    '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + '</div></div>' +
+                    '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">voir la fiche →</span></div></a>' +
                     '<button class="btn btn-danger btn-small f-unregister" data-mid="' + esc(m.id) + '" title="Désinscrire">✕</button>';
                 attendeeList.appendChild(li);
             });
