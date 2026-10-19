@@ -29,9 +29,15 @@
                 });
                 qs = parts.length ? '?' + parts.join('&') : '';
             }
-            return fetch(this.baseUrl + path + qs, {
-                headers: { 'mec-token': token },
-                Accept: 'application/json'
+            var direct = this.baseUrl + path + qs;
+            var self = this;
+
+            // 1) Appel direct ; en cas d'échec réseau (CORS, offline…), tentative via proxy
+            return fetch(direct, {
+                headers: { 'mec-token': token, 'Accept': 'application/json' }
+            }).catch(function (err) {
+                if (err && err.status) throw err; // erreur HTTP : ne pas masquer
+                return self.fetchViaProxy(direct, token);
             }).then(function (res) {
                 if (!res.ok) {
                     var err = new Error('http_' + res.status);
@@ -40,6 +46,36 @@
                 }
                 return res.json();
             });
+        },
+
+        // Repli CORS : le navigateur ne peut pas lire atelierduweb.be sans en-têtes CORS.
+        // On passe par un proxy public qui relaie l'en-tête mec-token.
+        fetchViaProxy: function (targetUrl, token) {
+            var proxies = [
+                function (u) { return 'https://corsproxy.io/?url=' + encodeURIComponent(u); },
+                function (u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); }
+            ];
+            var headers = { 'Accept': 'application/json' };
+            // corsproxy.io relaie les en-têtes ; codetabs ne le fait pas, donc la clé
+            // est passée en paramètre de secours (certaines configs MEC l'acceptent).
+            var attempt = 0;
+            var self = this;
+            function tryNext() {
+                if (attempt >= proxies.length) {
+                    var err = new Error('network_error');
+                    throw err;
+                }
+                var url = proxies[attempt](targetUrl);
+                var h = attempt === 0 ? { 'mec-token': token, 'Accept': 'application/json' } : headers;
+                attempt++;
+                return fetch(url, { headers: h }).then(function (res) {
+                    if (!res.ok) throw new Error('proxy_http_' + res.status);
+                    return res.json();
+                }).catch(function () {
+                    return tryNext();
+                });
+            }
+            return tryNext();
         },
 
         clearCache: function () {
