@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formations — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=12">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">AW</span>
+            <span class="brand-text">
+                <span class="brand-name">Atelier du Web</span>
+                <span class="brand-sub">EPN · Saint-Gilles</span>
+            </span>
+        </a>
+        <nav class="side-nav" aria-label="Navigation principale">
+            <span class="side-section">Général</span>
+            <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
+            <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
+            <span class="side-section">Espace</span>
+            <a href="formations.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
+            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+    <header class="topbar">
+        <h1 class="topbar-title">Formations</h1>
+        <p class="topbar-date" id="todayDate"></p>
+        <div class="search-bar">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <label for="searchInput" style="position:absolute;left:-9999px">Rechercher une formation</label>
+            <input type="text" id="searchInput" placeholder="Rechercher une formation...">
+        </div>
+    </header>
+
+    <main id="main">
+        <section class="filters-bar" aria-label="Filtres et tri">
+            <div class="filter-group">
+                <div class="segmented" role="group" aria-label="Filtrer par période">
+                    <button class="seg-btn active" data-period="upcoming">À venir</button>
+                    <button class="seg-btn" data-period="all">Toutes</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label for="monthSelect">Mois</label>
+                <select id="monthSelect">
+                    <option value="">Tous les mois</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="catSelect">Catégorie</label>
+                <select id="catSelect">
+                    <option value="">Toutes</option>
+                </select>
+            </div>
+            <span class="members-count" id="eventsCount" aria-live="polite"></span>
+            <button class="btn btn-secondary btn-small" id="refreshBtn">🔄 Actualiser</button>
+        </section>
+
+        <div id="mecStatus" class="empty-state" role="status">
+            <p>⏳ Chargement des formations depuis atelierduweb.be…</p>
+        </div>
+
+        <section id="eventsGrid" class="members-grid" aria-label="Liste des formations"></section>
+
+        <div class="empty-state" id="emptyState" hidden>
+            <p>Aucune formation trouvée.</p>
+        </div>
+
+        <div class="modal-overlay" id="tokenModal" hidden>
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tokenTitle">
+                <h3 id="tokenTitle">🔑 Clé API M.E. Calendar</h3>
+                <div class="form-group">
+                    <label for="tokenInput">Clé API (mec-token)</label>
+                    <input type="password" id="tokenInput" placeholder="Collez votre clé API MEC..." autocomplete="off">
+                    <p class="form-hint">La clé est enregistrée uniquement dans ce navigateur (localStorage) et envoyée uniquement à atelierduweb.be.</p>
+                </div>
+                <div class="form-error" id="tokenError" hidden></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="tokenCancelBtn">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="tokenSaveBtn">Enregistrer et charger</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    </div>
+    </div>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="mec.js?v=12"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var grid = document.getElementById('eventsGrid');
+        var statusBox = document.getElementById('mecStatus');
+        var emptyState = document.getElementById('emptyState');
+        var countEl = document.getElementById('eventsCount');
+        var searchInput = document.getElementById('searchInput');
+        var monthSelect = document.getElementById('monthSelect');
+        var catSelect = document.getElementById('catSelect');
+        var tokenModal = document.getElementById('tokenModal');
+        var tokenInput = document.getElementById('tokenInput');
+        var tokenError = document.getElementById('tokenError');
+
+        var events = [];
+        var filtered = [];
+        var period = 'upcoming';
+        var today = new Date();
+        var todayStr = today.toISOString().slice(0, 10);
+
+        document.getElementById('todayDate').textContent = today.toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        function esc(s) {
+            var d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML;
+        }
+
+        function status(msg) {
+            statusBox.hidden = !msg;
+            if (msg) statusBox.querySelector('p').textContent = msg;
+        }
+
+        function fillSelects() {
+            var months = {};
+            var cats = {};
+            events.forEach(function (ev) {
+                if (ev.startDate) {
+                    var m = ev.startDate.slice(0, 7);
+                    months[m] = true;
+                }
+                (ev.categories || []).forEach(function (c) { cats[c] = true; });
+            });
+            var mKeys = Object.keys(months).sort();
+            mKeys.forEach(function (m) {
+                var d = new Date(m + '-01T12:00:00');
+                var opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = d.toLocaleDateString('fr-BE', { month: 'long', year: 'numeric' });
+                monthSelect.appendChild(opt);
+            });
+            Object.keys(cats).sort().forEach(function (c) {
+                var opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                catSelect.appendChild(opt);
+            });
+        }
+
+        function applyFilters() {
+            var q = searchInput.value.trim().toLowerCase();
+            var month = monthSelect.value;
+            var cat = catSelect.value;
+            filtered = events.filter(function (ev) {
+                if (period === 'upcoming' && ev.startDate && ev.startDate < todayStr) return false;
+                if (month && ev.startDate && ev.startDate.slice(0, 7) !== month) return false;
+                if (cat && (ev.categories || []).indexOf(cat) === -1) return false;
+                if (q) {
+                    var hay = (ev.title + ' ' + (ev.excerpt || '') + ' ' + (ev.categories || []).join(' ')).toLowerCase();
+                    if (hay.indexOf(q) === -1) return false;
+                }
+                return true;
+            });
+            render();
+        }
+
+        function badge(ev) {
+            var html = '';
+            if (ev.labels && ev.labels.length) {
+                ev.labels.forEach(function (l) { html += '<span class="badge badge-new">' + esc(l) + '</span>'; });
+            }
+            return html;
+        }
+
+        function render() {
+            grid.innerHTML = '';
+            emptyState.hidden = filtered.length > 0;
+            countEl.textContent = filtered.length + ' formation' + (filtered.length > 1 ? 's' : '');
+            var byDate = {};
+            filtered.forEach(function (ev) {
+                var d = ev.startDate || '—';
+                (byDate[d] = byDate[d] || []).push(ev);
+            });
+            Object.keys(byDate).sort().forEach(function (dateKey) {
+                byDate[dateKey].forEach(function (ev) {
+                    var dateLabel = dateKey !== '—' ? new Date(dateKey + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Date à confirmer';
+                    var card = document.createElement('article');
+                    card.className = 'member-card';
+                    var url = ev.url || 'https://atelierduweb.be/nos-formations-et-ateliers/';
+                    card.innerHTML =
+                        '<div class="member-head">' +
+                        '<div><h3 class="member-name">' + esc(ev.title) + '</h3>' +
+                        '<p class="member-meta">📅 ' + esc(dateLabel) + (ev.timeLabel ? ' · ' + esc(ev.timeLabel) : '') + '</p>' +
+                        (ev.location ? '<p class="member-meta">📍 ' + esc(ev.location) + '</p>' : '') +
+                        '</div></div>' +
+                        (ev.excerpt ? '<p class="member-sub">' + esc(ev.excerpt) + '</p>' : '') +
+                        '<div class="member-tags">' + badge(ev) +
+                        (ev.categories || []).map(function (c) { return '<span class="tag">' + esc(c) + '</span>'; }).join('') +
+                        '</div>' +
+                        '<div class="card-actions">' +
+                        '<a class="btn btn-primary btn-small" href="' + esc(url) + '" target="_blank" rel="noopener">Voir / Réserver</a>' +
+                        '</div>';
+                    grid.appendChild(card);
+                });
+            });
+        }
+
+        function loadEvents() {
+            if (!window.ADWMec.getToken()) {
+                openTokenModal();
+                return;
+            }
+            status('⏳ Chargement des formations depuis atelierduweb.be…');
+            grid.innerHTML = '';
+            emptyState.hidden = true;
+            window.ADWMec.load().then(function (data) {
+                events = data || [];
+                status('');
+                fillSelects();
+                applyFilters();
+            }).catch(function (err) {
+                if (err && (err.message === 'missing_token' || err.status === 401 || err.status === 403 || err.status === 500)) {
+                    status('');
+                    openTokenModal('Clé API invalide ou manquante. Vérifiez la clé MEC (Réglages MEC → API).');
+                } else {
+                    status('⚠️ Impossible de charger les formations. Vérifiez votre connexion, puis cliquez sur « Actualiser ».');
+                }
+            });
+        }
+
+        function openTokenModal(msg) {
+            if (msg) {
+                tokenError.textContent = msg;
+                tokenError.hidden = false;
+            } else {
+                tokenError.hidden = true;
+            }
+            tokenInput.value = window.ADWMec.getToken();
+            tokenModal.hidden = false;
+            tokenInput.focus();
+        }
+
+        document.getElementById('tokenCancelBtn').addEventListener('click', function () {
+            tokenModal.hidden = true;
+            if (!events.length) status('ℹ️ Saisissez une clé API pour afficher les formations.');
+        });
+
+        document.getElementById('tokenSaveBtn').addEventListener('click', function () {
+            var t = tokenInput.value.trim();
+            if (!t) {
+                tokenError.textContent = 'La clé ne peut pas être vide.';
+                tokenError.hidden = false;
+                return;
+            }
+            window.ADWMec.setToken(t);
+            window.ADWMec.clearCache();
+            tokenModal.hidden = true;
+            loadEvents();
+        });
+
+        document.getElementById('refreshBtn').addEventListener('click', function () {
+            window.ADWMec.clearCache();
+            loadEvents();
+        });
+
+        document.querySelectorAll('[data-period]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('[data-period]').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                period = btn.getAttribute('data-period');
+                applyFilters();
+            });
+        });
+
+        searchInput.addEventListener('input', applyFilters);
+        monthSelect.addEventListener('change', applyFilters);
+        catSelect.addEventListener('change', applyFilters);
+
+        loadEvents();
+    })();
+    </script>
+</body>
+</html>
