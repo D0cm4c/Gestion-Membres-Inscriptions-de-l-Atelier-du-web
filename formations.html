@@ -28,6 +28,8 @@
             <span class="side-section">Espace</span>
             <a href="formations.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
             <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+            <span class="side-section">Système</span>
+            <a href="parametres.html"><span class="nav-ico" aria-hidden="true">⚙️</span> Paramètres</a>
         </nav>
         <div class="sidebar-footer">
             <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
@@ -43,6 +45,7 @@
             <label for="searchInput" style="position:absolute;left:-9999px">Rechercher une formation</label>
             <input type="text" id="searchInput" placeholder="Rechercher une formation...">
         </div>
+        <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌙</button>
     </header>
 
     <main id="main">
@@ -89,6 +92,7 @@
     </footer>
 
     <script src="mec.js?v=13"></script>
+    <script src="theme.js?v=13"></script>
     <script>
     (function () {
         'use strict';
