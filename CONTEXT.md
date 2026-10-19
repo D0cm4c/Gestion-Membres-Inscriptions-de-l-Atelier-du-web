@@ -3,7 +3,11 @@
 > Ce fichier sert de **mémoire entre les sessions** d'assistance (IA/agents).
 > Toute session qui travaille sur ce dépôt **doit lire ce fichier en premier** et le **mettre à jour** en fin de travail (décisions, état, leçons).
 
-## 🎯 Projet
+## 🎯 Objectif du projet
+
+Être une **application en ligne** (utilisée depuis le navigateur par l'équipe de l'Atelier du Web) avec une **base de données SQLite**. Étapes : 1️⃣ app 100 % statique en ligne (GitHub Pages) avec SQLite sql.js dans le navigateur → 2️⃣ brancher un hébergement avec BDD SQLite partagée entre postes. Voir README pour l'état détaillé.
+
+## 🎯 Périmètre fonctionnel
 
 Système de gestion des membres du cyberespace (25 ordis, accès sur inscription) et des inscrits aux formations de l'**Atelier du Web** ([atelierduweb.be](https://atelierduweb.be)).
 Outil en 3 parties principales : **fiches formations**, **fiches membres**, **calendrier/fiches des 2 salles de formation**.
@@ -64,3 +68,8 @@ En cours / ouvert :
 1. Lire ce fichier et le README.
 2. Vérifier `git log`, les PRs ouvertes et `git status` avant de toucher au code.
 3. À la fin de la session : **mettre à jour ce fichier** (état, décisions, leçons) dans la même PR que le travail livré.
+
+## 🔧 Autonomie de livraison
+
+- Les sessions d'assistance **commitent et poussent elles-mêmes** sur des branches de travail (`vibe/…`) et ouvrent des PRs — pas besoin de demander une validation à chaque étape.
+- La **fusion dans `main` reste manuelle** (faite par le propriétaire depuis GitHub) : la fusion via CLI est bloquée sur ce dépôt.
