@@ -15,8 +15,12 @@ Contrainte de design : correspondre au design du site atelierduweb.be.
 
 ## 🏗️ Architecture (décisions figées)
 
-- **100 % statique**, hébergé sur GitHub Pages : [d0cm4c.github.io/Gestion-Membres-Inscriptions-de-l-Atelier-du-web](https://d0cm4c.github.io/Gestion-Membres-Inscriptions-de-l-Atelier-du-web/)
-- **Pas de backend possible** : toute la logique tourne côté navigateur.
+- ⚠️ **⚠️ LE PROJET GITHUB PAGES EST UNE MAQUETTE. Le projet final tournera avec une vraie base SQLite (backend).**
+  - Toutes les décisions de schéma, de requêtes SQL et de flux de données doivent être **compatibles avec une migration vers SQLite réel** : schéma SQL standard, requêtes paramétrées, pas d'API propriétaire navigateur dans la logique métier.
+  - Le sql.js/IndexedDB actuel est le **substrat temporaire** : le même code SQL doit pouvoir tourner sur un serveur SQLite (better-sqlite3, etc.) avec le minimum de réécriture.
+  - Les données saisies dans la maquette ne sont PAS définitives (mais le schéma, lui, doit être bon dès maintenant).
+- **100 % statique (pour la maquette)**, hébergé sur GitHub Pages : [d0cm4c.github.io/Gestion-Membres-Inscriptions-de-l-Atelier-du-web](https://d0cm4c.github.io/Gestion-Membres-Inscriptions-de-l-Atelier-du-web/)
+- **Pas de backend possible (dans la maquette)** : toute la logique tourne côté navigateur.
 - **BDD : SQLite via sql.js (WebAssembly, v1.15.0 dans `vendor/`)**, persistée dans IndexedDB (`db.js`). Schéma SQL standard → migration possible vers un vrai backend sans réécriture.
 - Migration automatique des anciennes données localStorage → SQLite.
 - Frontend **sans framework** : HTML5, CSS3, JS vanilla. Police : Public Sans.
@@ -48,6 +52,11 @@ Fait :
   - Lien « 🎓 Formations » activé dans la sidebar de toutes les pages.
 
 En cours / ouvert :
+- **⚠️ MAQUETTE vs FINAL — décisions utilisateur (session oct. 2026) pour la synchro des inscriptions MEC :**
+  1. **Refusé** : clé/secret public dans le JS pour exposer les inscriptions (point sécurité du 19/10). À revoir avec l'hébergeur/DPO — la synchro bookings devra passer par une voie non publique (idéalement le backend SQLite final, ou un endpoint protégé non exposé côté client).
+  2. **Auto-rattachement sur email exact : OK**, MAIS avec notification obligatoire (journal d'actions + centre de notification/écran de validation pour tout ce qui est automatique).
+  3. **Réservation annulée côté site → suppression automatique côté app**, MAIS avec notification (jamais silencieuse).
+  → Conception générale : **toute action automatique doit être notifiée et journalisée** ; tout rattachement non certain (nom/prénom sans email exact) passe par l'écran de validation humaine.
 - **Organisateur & lieu** : non exposés par l'API WP publique. Snippet `register_rest_field` fourni à l'utilisateur (organisateur + lieu via `mec_organizer_id`/`mec_location_id` postmeta) — **en attente de la réponse de l'hébergeur** pour installation. Une fois en place : ajouter le champ dans `mec.js` (`_fields` + affichage dans le pied de carte) et Actualiser.
 - Feuille de route restante : fiches formations détaillées (tarifs, participants) et calendrier des 2 salles.
 
