@@ -79,21 +79,7 @@
             <p>Aucune formation trouvée.</p>
         </div>
 
-        <div class="modal-overlay" id="tokenModal" hidden>
-            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tokenTitle">
-                <h3 id="tokenTitle">🔑 Clé API M.E. Calendar</h3>
-                <div class="form-group">
-                    <label for="tokenInput">Clé API (mec-token)</label>
-                    <input type="password" id="tokenInput" placeholder="Collez votre clé API MEC..." autocomplete="off">
-                    <p class="form-hint">La clé est enregistrée uniquement dans ce navigateur (localStorage) et envoyée uniquement à atelierduweb.be.</p>
-                </div>
-                <div class="form-error" id="tokenError" hidden></div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" id="tokenCancelBtn">Annuler</button>
-                    <button type="button" class="btn btn-primary" id="tokenSaveBtn">Enregistrer et charger</button>
-                </div>
-            </div>
-        </div>
+        <p class="form-hint" id="dataSource" style="padding:0 1.5rem;"></p>
     </main>
 
     </div>
@@ -114,9 +100,7 @@
         var searchInput = document.getElementById('searchInput');
         var monthSelect = document.getElementById('monthSelect');
         var catSelect = document.getElementById('catSelect');
-        var tokenModal = document.getElementById('tokenModal');
-        var tokenInput = document.getElementById('tokenInput');
-        var tokenError = document.getElementById('tokenError');
+        var dataSource = document.getElementById('dataSource');
 
         var events = [];
         var filtered = [];
@@ -224,57 +208,19 @@
         }
 
         function loadEvents() {
-            if (!window.ADWMec.getToken()) {
-                openTokenModal();
-                return;
-            }
             status('⏳ Chargement des formations depuis atelierduweb.be…');
             grid.innerHTML = '';
             emptyState.hidden = true;
             window.ADWMec.load().then(function (data) {
                 events = data || [];
                 status('');
+                dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be (actualisées toutes les 15 min).';
                 fillSelects();
                 applyFilters();
             }).catch(function (err) {
-                if (err && (err.message === 'missing_token' || err.status === 401 || err.status === 403 || err.status === 500)) {
-                    status('');
-                    openTokenModal('Clé API invalide ou manquante. Vérifiez la clé MEC (Réglages MEC → API).');
-                } else {
-                    status('⚠️ Impossible de charger les formations. Vérifiez votre connexion, puis cliquez sur « Actualiser ».');
-                }
+                status('⚠️ Impossible de charger les formations. Vérifiez votre connexion, puis cliquez sur « Actualiser ».');
             });
         }
-
-        function openTokenModal(msg) {
-            if (msg) {
-                tokenError.textContent = msg;
-                tokenError.hidden = false;
-            } else {
-                tokenError.hidden = true;
-            }
-            tokenInput.value = window.ADWMec.getToken();
-            tokenModal.hidden = false;
-            tokenInput.focus();
-        }
-
-        document.getElementById('tokenCancelBtn').addEventListener('click', function () {
-            tokenModal.hidden = true;
-            if (!events.length) status('ℹ️ Saisissez une clé API pour afficher les formations.');
-        });
-
-        document.getElementById('tokenSaveBtn').addEventListener('click', function () {
-            var t = tokenInput.value.trim();
-            if (!t) {
-                tokenError.textContent = 'La clé ne peut pas être vide.';
-                tokenError.hidden = false;
-                return;
-            }
-            window.ADWMec.setToken(t);
-            window.ADWMec.clearCache();
-            tokenModal.hidden = true;
-            loadEvents();
-        });
 
         document.getElementById('refreshBtn').addEventListener('click', function () {
             window.ADWMec.clearCache();
