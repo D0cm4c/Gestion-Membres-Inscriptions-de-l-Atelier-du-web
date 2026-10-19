@@ -97,6 +97,7 @@
                 <div id="attendeeList" class="checkin-results"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="attendeeCloseBtn">Fermer</button>
+                    <button type="button" class="btn btn-secondary" id="attendeeExportBtn">📤 Exporter CSV</button>
                     <a class="btn btn-primary" id="attendeeBookBtn" target="_blank" rel="noopener">Réserver sur le site</a>
                 </div>
             </div>
@@ -469,6 +470,35 @@
         attendeeSearch.addEventListener('input', function () { searchMembers(attendeeSearch.value); });
         document.getElementById('attendeeCloseBtn').addEventListener('click', function () { attendeeModal.hidden = true; });
         attendeeModal.addEventListener('click', function (e) { if (e.target === attendeeModal) attendeeModal.hidden = true; });
+
+        // Export CSV des inscrits à la formation courante
+        document.getElementById('attendeeExportBtn').addEventListener('click', function () {
+            var f = window.ADWDatabase.getFormation(currentFormationId);
+            var attendees = window.ADWDatabase.getFormationAttendees(currentFormationId);
+            if (!attendees.length) return;
+            function csv(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }
+            var rows = [];
+            rows.push(['Formation', csv(f.title)].join(';'));
+            rows.push(['Date', csv(f.date_text || f.start_date || '')].join(';'));
+            rows.push(['Horaires', csv(f.time_label || '')].join(';'));
+            rows.push(['Exporté le', csv(new Date().toLocaleString('fr-BE'))].join(';'));
+            rows.push('');
+            rows.push(['N°', 'Prénom', 'Nom', 'Email', 'Téléphone', 'Inscrit le'].map(csv).join(';'));
+            attendees.forEach(function (m) {
+                rows.push([
+                    m.member_no || '', m.first_name, m.last_name,
+                    m.email || '', m.phone || '',
+                    m.registered_at ? m.registered_at.slice(0, 10) : ''
+                ].map(csv).join(';'));
+            });
+            var blob = new Blob(['\ufeff' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            var slug = (f.title || 'formation').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+            a.download = 'inscrits-' + slug + '.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
 
         // ============ Initialisation ============
         window.ADWDatabase.init().then(function (D) {
