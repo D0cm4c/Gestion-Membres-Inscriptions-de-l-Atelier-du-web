@@ -58,6 +58,7 @@ En cours / ouvert :
   3. **Réservation annulée côté site → suppression automatique côté app**, MAIS avec notification (jamais silencieuse).
   → Conception générale : **toute action automatique doit être notifiée et journalisée** ; tout rattachement non certain (nom/prénom sans email exact) passe par l'écran de validation humaine.
 - **Organisateur & lieu** : non exposés par l'API WP publique. Snippet `register_rest_field` fourni à l'utilisateur (organisateur + lieu via `mec_organizer_id`/`mec_location_id` postmeta) — **en attente de la réponse de l'hébergeur** pour installation. Une fois en place : ajouter le champ dans `mec.js` (`_fields` + affichage dans le pied de carte) et Actualiser.
+- **Responsive mobile (nov. 2026)** : bouton ☰ dans la topbar, sidebar transformée en tiroir coulissant ≤ 860px (overlay, touche Échap, clic sur un lien = fermeture, fermeture auto au retour desktop — nouveau `nav.js` chargé sur les 4 pages). Boutons d'action/filtres empilés pleine largeur et tapables, recherche et modales adaptées, cache-busting passé en v14. **Desktop inchangé** : tout est dans des `@media` uniquement.
 - Feuille de route restante : fiches formations détaillées (tarifs, participants) et calendrier des 2 salles.
 
 ## 🧠 Leçons apprises (méthodes qui ont marché)
@@ -69,7 +70,8 @@ En cours / ouvert :
 5. Données réelles tôt = bugs d'échelle trouvés que les tests unitaires ne trouvent pas.
 6. **API tierce : chercher la voie publique standard avant l'API officielle.** L'API MEC officielle (header `mec-token`) était bloquée par CORS + exposait une clé côté client ; le type custom `mec-events` de l'API WP publique a résolu les deux problèmes d'un coup. Toujours tester le namespace `wp/v2` d'abord.
 7. **Parser les données affichées du site cible comme format de référence** : les extraits FR structurés (« ⏳ Durée : … 📅 Dates : … ⏰ Horaires : … ») sont une source fiable quand les postmeta ne sont pas exposés. Tester le parseur sur les 2-3 formats réellement utilisés (node + mock de `document`).
-8. **Attendre la validation visuelle du client avant de verrouiller un design** : la version « liste » a été refusée, la version « cartes avec bordures » validée. Itérer vite, committer les états validés.
+8. **Attendre la validation visuelle du client avant de verrouiller un design** : la version « liste » a été refusée, la version « cartes avec bordures » validée. Itérer vite, commetter les états validés.
+9. **Ne jamais casser le desktop validé** : encapsuler tout travail responsive dans des `@media` (≤ 860px ici) sans toucher aux règles desktop — le design desktop est validé par le client et ne doit pas bouger.
 
 ## 📜 Historique des PRs
 
