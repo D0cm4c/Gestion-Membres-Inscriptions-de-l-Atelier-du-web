@@ -16,6 +16,8 @@
         6: [9.5, 12]     // samedi
     };
 
+    var MOBILE = window.matchMedia('(max-width: 860px)');
+
     function updateOpenStatus() {
         var el = document.getElementById('openStatus');
         if (!el) return;
@@ -23,10 +25,12 @@
         var day = now.getDay();
         var t = now.getHours() + now.getMinutes() / 60;
         var hours = OPENING_HOURS[day];
+        var short = MOBILE.matches;
 
         if (!hours) {
             el.className = 'open-status closed';
-            el.textContent = '🔴 Fermé aujourd’hui';
+            el.textContent = '🔴 Fermé';
+            el.title = 'Fermé aujourd’hui';
             return;
         }
         var fmt = function (h) {
@@ -36,14 +40,23 @@
         };
         if (t < hours[0]) {
             el.className = 'open-status closed';
-            el.textContent = '🟡 Ouverture à ' + fmt(hours[0]);
+            el.textContent = short ? '🟡 ' + fmt(hours[0]) : '🟡 Ouverture à ' + fmt(hours[0]);
+            el.title = 'Ouverture à ' + fmt(hours[0]);
         } else if (t < hours[1]) {
             el.className = 'open-status open';
-            el.textContent = '🟢 Ouvert · ferme à ' + fmt(hours[1]);
+            el.textContent = short ? '🟢 Ouvert' : '🟢 Ouvert · ferme à ' + fmt(hours[1]);
+            el.title = 'Ouvert · ferme à ' + fmt(hours[1]);
         } else {
             el.className = 'open-status closed';
-            el.textContent = '🔴 Fermé · réouvre demain';
+            el.textContent = short ? '🔴 Fermé' : '🔴 Fermé · réouvre demain';
+            el.title = 'Fermé · réouvre demain';
         }
+    }
+
+    if (MOBILE.addEventListener) {
+        MOBILE.addEventListener('change', updateOpenStatus);
+    } else if (MOBILE.addListener) {
+        MOBILE.addListener(updateOpenStatus);
     }
 
     updateOpenStatus();
