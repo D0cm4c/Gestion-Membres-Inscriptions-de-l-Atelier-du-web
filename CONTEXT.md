@@ -50,6 +50,13 @@ Fait :
   - UI : cartes groupées par mois, bandeau dégradé coloré **par catégorie** (palette déterministe, hash du nom → 10 tons), bloc date (jour+mois), champs durée/horaires propres, tags colorés, pastille de couleur sur les en-têtes de mois, mode sombre.
   - Filtres : à venir/toutes, mois, catégorie + recherche. Liens directs vers la réservation sur atelierduweb.be.
   - Lien « 🎓 Formations » activé dans la sidebar de toutes les pages.
+- **Inscriptions aux formations (session oct. 2026)** : synchronisées dans la base SQLite —
+  - Tables : `formations` (sync flux → DB, event_id MEC = clé naturelle, retrait auto des disparues), `formations_members` (inscriptions locales, UNIQUE(formation_id, member_id)).
+  - Modale d'inscription par formation (👥 sur les cartes) : recherche membre, inscription/désinscription, compteur en direct, **export CSV** (BOM UTF-8, séparateur `;`, en-tête formation/date/horaires, slug accentué).
+  - **Champ « n° de membre » à ajouter côté MEC** (booking form) — décision utilisateur : c'est le match le plus fort pour la synchro des inscriptions du site.
+- **Centre de notifications (toutes les pages)** : `notifications.js` — bouton 🔔 + badge non-lues dans la topbar, journal persistant (table `notifications`), API `ADWNotifications.push(type, message, sévérité)`. Règle : **toute action automatique est notifiée et journalisée**.
+- **Écran de validation des inscriptions du site** (page Formations, bouton 📥) : file des `bookings_remote` non traités avec matching hiérarchique — 1) n° de membre exact → auto notifié, 2) email exact (LOWER) → auto notifié, 3) nom+prénom → candidats + validation humaine (jamais auto), 4) sinon création de membre (n° auto). Bouton démo 🧪 pour la maquette (3 résas simulées). **La vraie synchro se fera côté serveur** (décision sécurité : pas de clé publique) — le schéma et le flux sont prêts.
+- **Page membre dédiée `membre.html?id=...`** : fiche complète en page (URL partageable, titre d'onglet dynamique, bouton retour), avec formations + visites. Les liens « voir la fiche » (modale inscriptions) pointent dessus. `membres.html#member=<id>` ouvre toujours la modale (compat ascendante).
 
 En cours / ouvert :
 - **⚠️ MAQUETTE vs FINAL — décisions utilisateur (session oct. 2026) pour la synchro des inscriptions MEC :**
@@ -57,7 +64,7 @@ En cours / ouvert :
   2. **Auto-rattachement sur email exact : OK**, MAIS avec notification obligatoire (journal d'actions + centre de notification/écran de validation pour tout ce qui est automatique).
   3. **Réservation annulée côté site → suppression automatique côté app**, MAIS avec notification (jamais silencieuse).
   → Conception générale : **toute action automatique doit être notifiée et journalisée** ; tout rattachement non certain (nom/prénom sans email exact) passe par l'écran de validation humaine.
-- **Organisateur & lieu** : non exposés par l'API WP publique. Snippet `register_rest_field` fourni à l'utilisateur (organisateur + lieu via `mec_organizer_id`/`mec_location_id` postmeta) — **en attente de la réponse de l'hébergeur** pour installation. Une fois en place : ajouter le champ dans `mec.js` (`_fields` + affichage dans le pied de carte) et Actualiser.
+- **Organisateur & lieu** : non exposés par l'API WP publique. Snippet `register_rest_field` fourni à l'utilisateur (organisateur + lieu via `mec_organizer_id`/`mec_location_id` postmeta) — **en attente de la réponse de l'hébergeur** pour installation. Une fois en place : ajouter le champ dans `mec.js` (`_fields` + affichage dans le pied de carte) et Actualiser. *(Un snippet combiné organisateur+lieu+bookings a aussi été proposé — voir discussion sécurité : la partie bookings ne doit PAS être exposée publiquement.)*
 - **Responsive mobile (nov. 2026)** : bouton ☰ dans la topbar, sidebar transformée en tiroir coulissant ≤ 860px (overlay, touche Échap, clic sur un lien = fermeture, fermeture auto au retour desktop — nouveau `nav.js` chargé sur les 4 pages). Boutons d'action/filtres empilés pleine largeur et tapables, recherche et modales adaptées, cache-busting passé en v14. **Desktop inchangé** : tout est dans des `@media` uniquement.
 - Feuille de route restante : fiches formations détaillées (tarifs, participants) et calendrier des 2 salles.
 
@@ -72,6 +79,8 @@ En cours / ouvert :
 7. **Parser les données affichées du site cible comme format de référence** : les extraits FR structurés (« ⏳ Durée : … 📅 Dates : … ⏰ Horaires : … ») sont une source fiable quand les postmeta ne sont pas exposés. Tester le parseur sur les 2-3 formats réellement utilisés (node + mock de `document`).
 8. **Attendre la validation visuelle du client avant de verrouiller un design** : la version « liste » a été refusée, la version « cartes avec bordures » validée. Itérer vite, commetter les états validés.
 9. **Ne jamais casser le desktop validé** : encapsuler tout travail responsive dans des `@media` (≤ 860px ici) sans toucher aux règles desktop — le design desktop est validé par le client et ne doit pas bouger.
+10. **Anticiper la migration SQLite-serveur dans chaque décision** : le projet Pages est une MAQUETTE — schémas SQL standards, requêtes paramétrées, logique métier découplée des API navigateur. Les décisions de flux (synchro, matching) sont pensées pour tourner côté serveur ensuite.
+11. **La validation humaine est le garde-fou des automatismes** : hiérarchie de matching avec seuil de certitude (id > email > nom), tout ce qui est certain s'automatise mais se journalise, tout ce qui est incertain passe par l'humain. Le champ « n° de membre » saisi par l'usager lui-même lors de la réservation renforce le maillon le plus fort.
 
 ## 📜 Historique des PRs
 
@@ -82,6 +91,7 @@ En cours / ouvert :
 5. Abonnements, visites, n° auto, refonte design accessible — fusionnée (tests 48/48)
 6. dashboard temps réel + README — fusionnée (tests 15/15)
 7. Formations M.E. Calendar — draft ouvert puis **fusionnée directement sur `main`** à la demande de l'utilisateur (commits `d7378eb` → `03a8e4e`) : page + API MEC officielle, puis refactor vers API WP publique, puis design cartes/mois, puis couleurs par catégorie.
+8. Suite formations (oct. 2026, livré directement sur `main`) : inscriptions en base + modale + export CSV (`fed0e8a`), formations sur fiche membre (`db13583`), horaires/durée parsés proprement + filtrage events passés/trashed (`6ef0cf5`), centre de notifications + écran de validation des inscriptions du site + schéma bookings_remote (`fb87835`), page membre dédiée (`d57e02d`).
 
 ## 📌 Règle pour toute future session
 
