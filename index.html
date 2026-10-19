@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=13">
+    <link rel="stylesheet" href="styles.css?v=14">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
                 <span class="brand-sub">EPN · Saint-Gilles</span>
             </span>
         </a>
-        <nav class="side-nav" aria-label="Navigation principale">
+        <nav class="side-nav" aria-label="Navigation principale" id="sidebarNav">
             <span class="side-section">Général</span>
             <a href="index.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
             <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
@@ -38,7 +38,8 @@
 
     <div class="app-main">
     <header class="topbar">
-        <h1 class="topbar-title">Tableau de bord</h1>
+        <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="sidebarNav" aria-label="Ouvrir la navigation">☰</button>
+    <h1 class="topbar-title">Tableau de bord</h1>
         <p class="topbar-date" id="todayDate"></p>
         <span class="open-status" id="openStatus" role="status" aria-live="polite"></span>
         <div class="search-bar">
@@ -254,7 +255,8 @@
     </div>
 
     <script src="vendor/sql-wasm.js"></script>
-    <script src="theme.js?v=13"></script>
+    <script src="theme.js?v=14"></script>
+    <script src="nav.js?v=1"></script>
     <script src="db.js?v=14"></script>
     <script src="notifications.js?v=1"></script>
     <script src="dashboard.js?v=13"></script>
