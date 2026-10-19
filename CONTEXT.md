@@ -74,6 +74,8 @@ En cours / ouvert :
 
 ## 📌 Règle pour toute future session
 
+> Voir aussi la **check-list obligatoire de fin de session** dans `AGENTS.md` : toute PR doit être précédée de la mise à jour de ce fichier quand l état, les décisions ou les leçons ont changé.
+
 1. Lire ce fichier et le README.
 2. Vérifier `git log`, les PRs ouvertes et `git status` avant de toucher au code.
 3. À la fin de la session : **mettre à jour ce fichier** (état, décisions, leçons) dans la même PR que le travail livré.
