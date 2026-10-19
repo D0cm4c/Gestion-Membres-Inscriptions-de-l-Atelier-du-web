@@ -13,11 +13,13 @@
         return (d.textContent || '').trim();
     }
 
-    // Parse une date française du type "le lundi 23 novembre", "Les 08 et 10 décembre 2026"
+    // Parse une date française : "le lundi 23 novembre", "Les 08 et 10 décembre 2026",
+    // "Les 15, 16, 22, 23 juin de 13h30 à 16h30" (on coupe avant "de 13h")
     function parseFrDate(text) {
         if (!text) return null;
+        var clean = text.replace(/\s+de\s+\d{1,2}\s?h.*$/i, '').trim();
         var months = { janvier: 1, 'février': 2, fevrier: 2, mars: 3, avril: 4, mai: 5, juin: 6, juillet: 7, 'août': 8, aout: 8, septembre: 9, octobre: 10, novembre: 11, 'décembre': 12, decembre: 12 };
-        var m = text.toLowerCase().match(/(\d{1,2})(?:\s*(?:et|,|-)\s*\d{1,2})*\s+([a-zéû\d]+)\s*(\d{4})?/);
+        var m = clean.toLowerCase().match(/(\d{1,2})(?:\s*(?:et|,|-)\s*\d{1,2})*\s+([a-zéû\d]+)\s*(\d{4})?/);
         if (!m) return null;
         var day = parseInt(m[1], 10);
         var month = months[m[2]];
@@ -59,20 +61,13 @@
             if (mDur) out.duration = mDur[1].trim();
             var mDate = clean.match(/Dates?\s*:\s*([^⏰]+)/);
             if (mDate) out.dateText = mDate[1].trim();
-            var mTime = clean.match(/Horaires?\s*:\s*([^\n]+?)(?=Votre|Vous|Allez|Venez|Lors|Pour|$)/);
-            if (mTime) out.timeText = mTime[1].trim();
-            else {
-                mTime = clean.match(/Horaires?\s*:\s*(De\s*[\dh]+\s*[àa]\s*[\dh]+)/i);
-                if (mTime) out.timeText = mTime[1].trim();
-            }
-            // Formats alternatifs : "1 demie – journée", "⏰ de 13h30 à 16h30"
+            // Horaires : ne capturer QUE la plage horaire (h/mm), jamais le texte après
+            var mTime = clean.match(/(?:[Dd]e\s*)?(\d{1,2}\s?h\s?\d{0,2})\s*[àa\-–]\s*(\d{1,2}\s?h\s?\d{0,2})/);
+            if (mTime) out.timeText = 'De ' + mTime[1].replace(/\s/g, '') + ' à ' + mTime[2].replace(/\s/g, '');
+            // Formats alternatifs : "1 demie – journée", "5 Matinées"…
             if (!out.duration) {
-                var mDurAlt = clean.match(/(?:^|\s)(\d\s*(?:demie|matin[ée]e|apr[èe]s-midi|journ[ée]e|soir[ée]e|heure[s]?)[^📅⏰]*)/i);
+                var mDurAlt = clean.match(/(?:^|\s)(\d\s*(?:demie|matin[ée]e|apr[èe]s-midi|journ[ée]e|soir[ée]e|heure[s]?)[^📅⏰\n]{0,20})/i);
                 if (mDurAlt) out.duration = mDurAlt[1].trim().replace(/\s+/g, ' ');
-            }
-            if (!out.timeText) {
-                var mTimeAlt = clean.match(/(?:[⏰:]\s*)?(de\s*[\dh]+\s*[àa]\s*[\dh]+)/i);
-                if (mTimeAlt) out.timeText = mTimeAlt[1].trim();
             }
             if (!out.dateText) {
                 var mDateAlt = clean.match(/(?:le |les )?(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\s+\d{1,2}(?:\s*(?:et|,|-)\s*\d{1,2})*\s+[a-zéû\d]+\s*(?:\d{4})?/i);
@@ -102,6 +97,8 @@
                 }).then(function (items) {
                     if (!Array.isArray(items) || !items.length) return events;
                     items.forEach(function (item) {
+                        // Ignorer les événements mis à la corbeille ou sans lien de formation
+                        if (!item.link || item.link.indexOf('__trashed') !== -1) return;
                         var excerptText = stripHtml(item.excerpt && item.excerpt.rendered);
                         var fields = Mec.parseExcerptFields(excerptText);
                         events.push({
@@ -122,6 +119,11 @@
                 });
             }
             return page(1).then(function (evs) {
+                // Ne garder que les événements dont la date de début est >= aujourd'hui
+                var todayStr = new Date().toISOString().slice(0, 10);
+                evs = evs.filter(function (ev) {
+                    return ev.startDate && ev.startDate >= todayStr;
+                });
                 return self.resolveCategories(evs);
             });
         },
