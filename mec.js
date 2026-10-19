@@ -26,6 +26,8 @@
         return year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
     }
 
+    // Extrait durée / dates / horaires depuis l'extrait structuré du site
+    // Format : "⏳ Durée : 1 Matinée 📅 Dates : le lundi 23 novembre ⏰ Horaires : De 13h30 à 16h30 …"
     var Mec = {
         clearCache: function () {
             try { localStorage.removeItem(CACHE_KEY); } catch (e) { /* ignore */ }
@@ -47,6 +49,46 @@
             } catch (e) { /* quota : ignore */ }
         },
 
+        // Extrait durée / dates / horaires depuis l'extrait structuré du site
+        // Format : "⏳ Durée : 1 Matinée 📅 Dates : le lundi 23 novembre ⏰ Horaires : De 13h30 à 16h30 …"
+        parseExcerptFields: function (text) {
+            var out = { duration: '', dateText: '', timeText: '', startDate: '', description: '' };
+            if (!text) return out;
+            var clean = text.replace(/Lire la suite.*$/, '').trim();
+            var mDur = clean.match(/Dur[ée]e\s*:\s*([^📅⏰]+)/);
+            if (mDur) out.duration = mDur[1].trim();
+            var mDate = clean.match(/Dates?\s*:\s*([^⏰]+)/);
+            if (mDate) out.dateText = mDate[1].trim();
+            var mTime = clean.match(/Horaires?\s*:\s*([^\n]+?)(?=Votre|Vous|Allez|Venez|Lors|Pour|$)/);
+            if (mTime) out.timeText = mTime[1].trim();
+            else {
+                mTime = clean.match(/Horaires?\s*:\s*(De\s*[\dh]+\s*[àa]\s*[\dh]+)/i);
+                if (mTime) out.timeText = mTime[1].trim();
+            }
+            // Formats alternatifs : "1 demie – journée", "⏰ de 13h30 à 16h30"
+            if (!out.duration) {
+                var mDurAlt = clean.match(/(?:^|\s)(\d\s*(?:demie|matin[ée]e|apr[èe]s-midi|journ[ée]e|soir[ée]e|heure[s]?)[^📅⏰]*)/i);
+                if (mDurAlt) out.duration = mDurAlt[1].trim().replace(/\s+/g, ' ');
+            }
+            if (!out.timeText) {
+                var mTimeAlt = clean.match(/(?:[⏰:]\s*)?(de\s*[\dh]+\s*[àa]\s*[\dh]+)/i);
+                if (mTimeAlt) out.timeText = mTimeAlt[1].trim();
+            }
+            if (!out.dateText) {
+                var mDateAlt = clean.match(/(?:le |les )?(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\s+\d{1,2}(?:\s*(?:et|,|-)\s*\d{1,2})*\s+[a-zéû\d]+\s*(?:\d{4})?/i);
+                if (mDateAlt) out.dateText = mDateAlt[0].trim();
+            }
+            out.startDate = parseFrDate(out.dateText) || '';
+            // La description = le texte restant après les trois champs
+            var desc = clean;
+            if (mDur) desc = desc.replace(mDur[0], '');
+            if (mDate) desc = desc.replace(mDate[0], '');
+            if (out.timeText) desc = desc.replace('Horaires : ' + out.timeText, '').replace(/Horaires?\s*:\s*/, '');
+            desc = desc.replace(/[⏳📅⏰☀]/g, ' ').replace(/\s+/g, ' ').trim();
+            out.description = desc;
+            return out;
+        },
+
         // Source 1 : API REST publique WordPress (CORS OK par défaut, pas de clé)
         fetchViaWpRest: function () {
             var self = this;
@@ -61,17 +103,16 @@
                     if (!Array.isArray(items) || !items.length) return events;
                     items.forEach(function (item) {
                         var excerptText = stripHtml(item.excerpt && item.excerpt.rendered);
-                        var dateMatch = excerptText.match(/[📅\s]*[Dd]ates?\s*:\s*([^⏰]+)/);
-                        var dateText = dateMatch ? dateMatch[1] : '';
-                        var timeMatch = excerptText.match(/[⏰\s]*Horaires?\s*:\s*([^A-Za-zÀ-ÿ]+)/);
-                        var timeText = timeMatch ? timeMatch[1] : '';
+                        var fields = Mec.parseExcerptFields(excerptText);
                         events.push({
                             id: item.id,
                             title: stripHtml(item.title && item.title.rendered),
                             url: item.link,
-                            excerpt: excerptText.split('Lire la suite')[0].trim(),
-                            startDate: parseFrDate(dateText) || item.date.slice(0, 10),
-                            timeLabel: timeText.trim(),
+                            excerpt: fields.description,
+                            duration: fields.duration,
+                            startDate: fields.startDate || '',
+                            dateText: fields.dateText,
+                            timeLabel: fields.timeText,
                             categories: item.mec_category || [],
                             raw: item
                         });

@@ -1025,3 +1025,51 @@ main {
 .tag { background: var(--blue-light); color: var(--blue); font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 999px; }
 .badge-new { background: var(--green-light); color: var(--green); font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 999px; }
 .member-sub { color: var(--text-soft); font-size: 0.88rem; margin-top: 0.45rem; }
+
+/* ============ Formations : mise en page par mois ============ */
+.month-group { margin-bottom: 1.6rem; }
+.month-header {
+    display: flex; align-items: baseline; gap: 0.7rem;
+    margin: 1.4rem 0 0.9rem;
+    font-size: 1.05rem; font-weight: 800; color: var(--primary);
+    text-transform: capitalize;
+}
+.month-header::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border);
+}
+.month-header .month-count {
+    font-size: 0.78rem; font-weight: 600; color: var(--text-soft);
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 0.1rem 0.6rem; border-radius: 999px;
+}
+.event-card {
+    display: flex; gap: 1rem; align-items: stretch;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.event-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.event-date-block {
+    flex-shrink: 0; width: 64px; text-align: center;
+    background: var(--accent-light); color: var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 0.45rem 0.3rem;
+    display: flex; flex-direction: column; justify-content: center;
+}
+.event-date-block .day { font-size: 1.45rem; font-weight: 800; line-height: 1.1; }
+.event-date-block .mon { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.event-date-block.no-date { background: var(--bg); color: var(--text-soft); font-size: 0.72rem; font-weight: 600; }
+.event-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.event-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+.event-time { font-size: 0.82rem; font-weight: 600; color: var(--text-soft); margin-bottom: 0.35rem; }
+.event-excerpt {
+    font-size: 0.87rem; color: var(--text-soft);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.event-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: auto; padding-top: 0.6rem; }
+.event-footer .spacer { flex: 1; }
