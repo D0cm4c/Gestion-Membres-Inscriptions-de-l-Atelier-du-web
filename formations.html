@@ -83,6 +83,24 @@
         </div>
 
         <p class="form-hint" id="dataSource" style="padding:0 1.5rem;"></p>
+
+        <!-- Modale inscription membres -->
+        <div class="modal-overlay" id="attendeeModal" hidden>
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="attendeeTitle">
+                <h3 id="attendeeTitle">Inscriptions à la formation</h3>
+                <div class="form-group">
+                    <label for="attendeeSearch">Rechercher un membre</label>
+                    <input type="text" id="attendeeSearch" placeholder="Nom, prénom ou n° de membre..." autocomplete="off">
+                    <div id="attendeeResults" class="checkin-results" style="margin-top:0.6rem;" hidden></div>
+                </div>
+                <h4 style="font-size:0.95rem;margin:1rem 0 0.5rem;">Membres inscrits (<span id="attendeeCount">0</span>)</h4>
+                <div id="attendeeList" class="checkin-results"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="attendeeCloseBtn">Fermer</button>
+                    <a class="btn btn-primary" id="attendeeBookBtn" target="_blank" rel="noopener">Réserver sur le site</a>
+                </div>
+            </div>
+        </div>
     </main>
 
     </div>
@@ -91,6 +109,8 @@
         <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
 
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js?v=14"></script>
     <script src="mec.js?v=14"></script>
     <script src="theme.js?v=13"></script>
     <script>
@@ -107,6 +127,8 @@
         var dataSource = document.getElementById('dataSource');
 
         var events = [];
+        var db = null;
+        var formationRows = {}; // event_id -> row DB (avec id interne + inscrits)
         var filtered = [];
         var period = 'upcoming';
         var today = new Date();
@@ -237,6 +259,7 @@
                     var dateInfo = ev.dateText || weekday;
                     var mainCat = (ev.categories && ev.categories.length) ? ev.categories[0] : '';
                     var tone = mainCat ? toneFor(mainCat) : -1;
+                    var row = formationRows[String(ev.id)] || null;
 
                     var li = document.createElement('article');
                     li.className = 'f-card';
@@ -264,6 +287,7 @@
                         }).join('') +
                         badge(ev) +
                         '<span class="spacer"></span>' +
+                        (row ? '<button class="btn btn-secondary btn-small f-register-btn" data-fid="' + esc(row.id) + '" title="Inscrire des membres">👥 <span class="f-count">' + row.attendee_count + '</span></button>' : '') +
                         '<a class="btn btn-primary btn-small" href="' + esc(url) + '" target="_blank" rel="noopener">Voir / Réserver</a>' +
                         '</div>' +
                         '</div>';
@@ -279,11 +303,47 @@
             emptyState.hidden = true;
             window.ADWMec.load().then(function (data) {
                 events = data || [];
+                // Synchronise dans la base SQLite (mise à jour / ajout / retrait)
+                if (db) {
+                    var count = window.ADWDatabase.syncFormations(events);
+                    // Recharge depuis la DB pour avoir les ids internes + compte d'inscrits
+                    var rows = window.ADWDatabase.listFormations();
+                    formationRows = {};
+                    rows.forEach(function (r) { formationRows[r.event_id] = r; });
+                    dataSource.textContent = events.length + ' formations synchronisées avec la base locale (' + count + ' à jour).';
+                } else {
+                    dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
+                }
                 status('');
-                dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be (actualisées toutes les 15 min).';
                 fillSelects();
                 applyFilters();
             }).catch(function (err) {
+                // Repli : afficher depuis la DB si le flux est inaccessible
+                if (db) {
+                    var rows = window.ADWDatabase.listFormations();
+                    if (rows.length) {
+                        events = rows.map(function (r) {
+                            return {
+                                id: r.event_id,
+                                title: r.title,
+                                url: r.url,
+                                excerpt: r.excerpt,
+                                duration: r.duration,
+                                startDate: r.start_date || '',
+                                dateText: r.date_text,
+                                timeLabel: r.time_label,
+                                categories: (r.categories || '').split(', ').filter(Boolean)
+                            };
+                        });
+                        formationRows = {};
+                        rows.forEach(function (r) { formationRows[r.event_id] = r; });
+                        status('');
+                        dataSource.textContent = events.length + ' formations (base locale — flux inaccessible).';
+                        fillSelects();
+                        applyFilters();
+                        return;
+                    }
+                }
                 status('⚠️ Impossible de charger les formations. Vérifiez votre connexion, puis cliquez sur « Actualiser ».');
             });
         }
@@ -306,7 +366,117 @@
         monthSelect.addEventListener('change', applyFilters);
         catSelect.addEventListener('change', applyFilters);
 
-        loadEvents();
+        // ============ Inscriptions membres ============
+        var attendeeModal = document.getElementById('attendeeModal');
+        var attendeeSearch = document.getElementById('attendeeSearch');
+        var attendeeResults = document.getElementById('attendeeResults');
+        var attendeeList = document.getElementById('attendeeList');
+        var attendeeCountEl = document.getElementById('attendeeCount');
+        var attendeeTitle = document.getElementById('attendeeTitle');
+        var attendeeBookBtn = document.getElementById('attendeeBookBtn');
+        var currentFormationId = null;
+
+        grid.addEventListener('click', function (e) {
+            var btn = e.target.closest('.f-register-btn');
+            if (!btn || !db) return;
+            openAttendeeModal(btn.getAttribute('data-fid'));
+        });
+
+        function openAttendeeModal(fid) {
+            currentFormationId = fid;
+            var f = window.ADWDatabase.getFormation(fid);
+            if (!f) return;
+            attendeeTitle.textContent = 'Inscriptions — ' + f.title;
+            attendeeBookBtn.href = f.url || 'https://atelierduweb.be/nos-formations-et-ateliers/';
+            attendeeSearch.value = '';
+            attendeeResults.hidden = true;
+            attendeeResults.innerHTML = '';
+            refreshAttendeeList();
+            attendeeModal.hidden = false;
+            attendeeSearch.focus();
+        }
+
+        function refreshAttendeeList() {
+            var attendees = window.ADWDatabase.getFormationAttendees(currentFormationId);
+            attendeeCountEl.textContent = attendees.length;
+            attendeeList.innerHTML = attendees.length ? '' : '<p class="form-hint">Aucun membre inscrit pour l\u2019instant.</p>';
+            attendees.forEach(function (m) {
+                var li = document.createElement('div');
+                li.className = 'checkin-item done';
+                li.innerHTML =
+                    '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
+                    '<div style="flex:1;min-width:0;"><strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
+                    (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
+                    '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + '</div></div>' +
+                    '<button class="btn btn-danger btn-small f-unregister" data-mid="' + esc(m.id) + '" title="Désinscrire">✕</button>';
+                attendeeList.appendChild(li);
+            });
+        }
+
+        attendeeList.addEventListener('click', function (e) {
+            var btn = e.target.closest('.f-unregister');
+            if (!btn) return;
+            window.ADWDatabase.unregisterMemberFromFormation(currentFormationId, btn.getAttribute('data-mid'));
+            refreshAttendeeList();
+            updateCardCount(currentFormationId);
+            searchMembers('');
+        });
+
+        function searchMembers(q) {
+            q = (q || '').trim().toLowerCase();
+            if (!q) { attendeeResults.hidden = true; return; }
+            var members = window.ADWDatabase.queryAll(
+                'SELECT id, first_name, last_name, member_no, email FROM members WHERE (first_name LIKE ? OR last_name LIKE ? OR CAST(member_no AS TEXT) LIKE ?) ORDER BY last_name LIMIT 8',
+                ['%' + q + '%', '%' + q + '%', '%' + q + '%']
+            );
+            // Exclure les déjà inscrits
+            var attendees = window.ADWDatabase.getFormationAttendees(currentFormationId);
+            var registered = {};
+            attendees.forEach(function (a) { registered[a.id] = true; });
+            attendeeResults.innerHTML = '';
+            attendeeResults.hidden = members.length === 0;
+            members.forEach(function (m) {
+                if (registered[m.id]) return;
+                var li = document.createElement('div');
+                li.className = 'checkin-item';
+                li.innerHTML =
+                    '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
+                    '<div style="flex:1;min-width:0;"><strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
+                    (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') + '</div>' +
+                    '<button class="btn btn-primary btn-small f-register" data-mid="' + esc(m.id) + '">Inscrire</button>';
+                attendeeResults.appendChild(li);
+            });
+        }
+
+        attendeeResults.addEventListener('click', function (e) {
+            var btn = e.target.closest('.f-register');
+            if (!btn) return;
+            window.ADWDatabase.registerMemberToFormation(currentFormationId, btn.getAttribute('data-mid'));
+            attendeeSearch.value = '';
+            attendeeResults.hidden = true;
+            refreshAttendeeList();
+            updateCardCount(currentFormationId);
+        });
+
+        function updateCardCount(fid) {
+            var row = window.ADWDatabase.getFormation(fid);
+            var btn = grid.querySelector('.f-register-btn[data-fid="' + fid + '"]');
+            if (btn && row) btn.querySelector('.f-count').textContent = row.attendee_count !== undefined ? row.attendee_count : (function () {
+                return window.ADWDatabase.getFormationAttendees(fid).length;
+            })();
+        }
+
+        attendeeSearch.addEventListener('input', function () { searchMembers(attendeeSearch.value); });
+        document.getElementById('attendeeCloseBtn').addEventListener('click', function () { attendeeModal.hidden = true; });
+        attendeeModal.addEventListener('click', function (e) { if (e.target === attendeeModal) attendeeModal.hidden = true; });
+
+        // ============ Initialisation ============
+        window.ADWDatabase.init().then(function (D) {
+            db = D;
+            loadEvents();
+        }).catch(function () {
+            loadEvents(); // mode dégradé sans DB (affichage seul)
+        });
     })();
     </script>
 </body>
