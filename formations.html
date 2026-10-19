@@ -587,7 +587,7 @@
                         '<span class="badge badge-ok">✅ auto (' + esc(match.method === 'member_no' ? 'n° membre' : 'email') + ')</span>';
                 } else if (match.candidates && match.candidates.length) {
                     // Candidats : validation humaine
-                    li.innerHTML = head + '<div style="flex-basis:100%;display:flex;gap:0.4rem;flex-wrap:wrap;padding-top:0.4rem;">';
+                    li.innerHTML = head + '<div class="bk-actions">';
                     var wrap2 = li.querySelector('div:last-child');
                     match.candidates.slice(0, 3).forEach(function (cand) {
                         var cb = document.createElement('button');
