@@ -1118,3 +1118,47 @@ main {
 }
 .f-card-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: auto; }
 .f-card-foot .spacer { flex: 1; }
+
+/* ============ Formations : couleurs par catégorie ============ */
+/* Palette : chaque catégorie reçoit une couleur déterministe (hash du nom) */
+.f-card[data-tone="0"]  .f-card-banner { background: linear-gradient(135deg, #0F3D5C, #1B5A7F); }
+.f-card[data-tone="1"]  .f-card-banner { background: linear-gradient(135deg, #6C5CE7, #8B7BF0); }
+.f-card[data-tone="2"]  .f-card-banner { background: linear-gradient(135deg, #2F9BE4, #5AB6F2); }
+.f-card[data-tone="3"]  .f-card-banner { background: linear-gradient(135deg, #18A55F, #2FC77A); }
+.f-card[data-tone="4"]  .f-card-banner { background: linear-gradient(135deg, #E8734A, #F58F68); }
+.f-card[data-tone="5"]  .f-card-banner { background: linear-gradient(135deg, #B26A00, #D98A1F); }
+.f-card[data-tone="6"]  .f-card-banner { background: linear-gradient(135deg, #D8434B, #E86A72); }
+.f-card[data-tone="7"]  .f-card-banner { background: linear-gradient(135deg, #7A5230, #9A6B42); }
+.f-card[data-tone="8"]  .f-card-banner { background: linear-gradient(135deg, #556B2F, #74894A); }
+.f-card[data-tone="9"]  .f-card-banner { background: linear-gradient(135deg, #4A4E69, #6B7094); }
+
+/* Le tag de la catégorie principale prend le même ton, les tags secondaires restent bleus */
+.f-card .tag-tone-0  { background: #E4EFF6; color: #0F3D5C; }
+.f-card .tag-tone-1  { background: #EEEBFB; color: #5548C8; }
+.f-card .tag-tone-2  { background: #E4F2FC; color: #1F6FA0; }
+.f-card .tag-tone-3  { background: #E2F6EC; color: #0F7A44; }
+.f-card .tag-tone-4  { background: #FDEEE7; color: #C25530; }
+.f-card .tag-tone-5  { background: #FFF3E0; color: #8F5600; }
+.f-card .tag-tone-6  { background: #FBE7E8; color: #B03038; }
+.f-card .tag-tone-7  { background: #F3ECE5; color: #5E3F22; }
+.f-card .tag-tone-8  { background: #EFF4E4; color: #3F521E; }
+.f-card .tag-tone-9  { background: #E9EAF1; color: #3A3E5C; }
+
+/* Mode sombre : garder des pastels lisibles */
+:root[data-theme="dark"] .f-card .tag-tone-0  { background: #14273A; color: #74B8EE; }
+:root[data-theme="dark"] .f-card .tag-tone-1  { background: #221C3E; color: #A79BF5; }
+:root[data-theme="dark"] .f-card .tag-tone-2  { background: #14273A; color: #74B8EE; }
+:root[data-theme="dark"] .f-card .tag-tone-3  { background: #12291D; color: #4FCE8F; }
+:root[data-theme="dark"] .f-card .tag-tone-4  { background: #371C1E; color: #F2837B; }
+:root[data-theme="dark"] .f-card .tag-tone-5  { background: #2A200E; color: #EBB368; }
+:root[data-theme="dark"] .f-card .tag-tone-6  { background: #371C1E; color: #F2837B; }
+:root[data-theme="dark"] .f-card .tag-tone-7  { background: #2A1F14; color: #C89B6A; }
+:root[data-theme="dark"] .f-card .tag-tone-8  { background: #1A2412; color: #A5C26B; }
+:root[data-theme="dark"] .f-card .tag-tone-9  { background: #1C1E2B; color: #9CA0C4; }
+
+/* Pastille de catégorie devant les titres de mois (couleur de la 1re carte du mois) */
+.month-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 0.4rem;
+    vertical-align: baseline;
+}
