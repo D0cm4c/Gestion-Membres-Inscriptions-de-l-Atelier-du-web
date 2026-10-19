@@ -428,7 +428,7 @@
             attendees.forEach(function (m) {
                 var li = document.createElement('div');
                 li.className = 'checkin-item done';
-                var ficheUrl = 'membres.html#member=' + encodeURIComponent(m.id);
+                var ficheUrl = 'membre.html?id=' + encodeURIComponent(m.id);
                 li.innerHTML =
                     '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
                     '<a href="' + ficheUrl + '" style="flex:1;min-width:0;text-decoration:none;color:inherit;" title="Ouvrir la fiche membre">' +

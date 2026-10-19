@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiche membre — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=13">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">AW</span>
+            <span class="brand-text">
+                <span class="brand-name">Atelier du Web</span>
+                <span class="brand-sub">EPN · Saint-Gilles</span>
+            </span>
+        </a>
+        <nav class="side-nav" aria-label="Navigation principale">
+            <span class="side-section">Général</span>
+            <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
+            <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
+            <span class="side-section">Espace</span>
+            <a href="formations.html"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
+            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+    <header class="topbar">
+        <a class="btn btn-secondary btn-small" href="membres.html">← Retour aux membres</a>
+        <h1 class="topbar-title" id="pageTitle">Fiche membre</h1>
+        <p class="topbar-date" id="todayDate"></p>
+        <span id="notifCenter" style="display:inline-flex;margin-left:auto;"></span>
+        <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌗</button>
+    </header>
+
+    <main id="main">
+        <div class="empty-state" id="loadingState">
+            <p>⏳ Chargement de la fiche…</p>
+        </div>
+        <div id="memberContent" hidden></div>
+        <div class="empty-state" id="notFoundState" hidden>
+            <p>Membre introuvable.</p>
+            <div class="action-buttons" style="justify-content:center;">
+                <a class="btn btn-primary" href="membres.html">← Retour aux membres</a>
+            </div>
+        </div>
+    </main>
+
+    </div>
+    </div>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js?v=14"></script>
+    <script src="theme.js?v=13"></script>
+    <script src="notifications.js?v=1"></script>
+    <script src="postal-codes.js?v=13"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var loading = document.getElementById('loadingState');
+        var content = document.getElementById('memberContent');
+        var notFound = document.getElementById('notFoundState');
+        var pageTitle = document.getElementById('pageTitle');
+
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        function formatDate(v) {
+            if (!v) return '—';
+            var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!m) return v;
+            return m[3] + '/' + m[2] + '/' + m[1];
+        }
+
+        var GENDER_LABELS = { F: 'Femme', M: 'Homme', X: 'Autre / Non-binaire' };
+        var STATUS_LABELS = {
+            travailleur: 'Travailleur.se', interim: 'Intérim', actiris: 'Actiris',
+            mutuelle: 'Mutuelle', cpas: 'CPAS', pensionne: 'Pensionné.e',
+            etudiant: 'Étudiant.e', enfant: 'Enfant'
+        };
+        var SUB_LABELS = {
+            none: { label: 'Aucun abo', badge: 'badge-sub-none' },
+            monthly: { label: 'Abo mensuel · 3 €', badge: 'badge-sub-monthly' },
+            yearly: { label: 'Abo annuel · 30 €', badge: 'badge-sub-yearly' }
+        };
+
+        function isExpired(m) {
+            if (!m.end_date) return false;
+            return m.end_date < new Date().toISOString().slice(0, 10);
+        }
+
+        function render(member) {
+            var visits = ADWDatabase.queryAll(
+                'SELECT * FROM visits WHERE member_id = ? ORDER BY visit_date DESC, created_at DESC LIMIT 30', [member.id]);
+            var formations = [];
+            try { formations = ADWDatabase.getMemberFormations(member.id) || []; } catch (e) { formations = []; }
+
+            pageTitle.textContent = member.first_name + ' ' + member.last_name;
+            document.title = member.first_name + ' ' + member.last_name + ' — Atelier du Web';
+
+            var s = SUB_LABELS[member.subscription] || SUB_LABELS.none;
+            var expired = isExpired(member);
+
+            var html = '<div class="detail-head">' +
+                    '<div class="member-avatar">' + esc(((member.first_name || '?')[0] || '') + ((member.last_name || '')[0] || '')) + '</div>' +
+                    '<div><div class="member-name">' + esc(member.first_name) + ' ' + esc(member.last_name) + '</div>' +
+                    '<div class="member-no-detail">N° de membre : <strong>' + (member.member_no || '—') + '</strong></div>' +
+                    '<div class="member-badges">' +
+                        '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>' +
+                        '<span class="badge ' + s.badge + '">' + s.label + '</span>' +
+                    '</div></div>' +
+                '</div>' +
+                '<dl class="detail-list">' +
+                    '<div><dt>Âge</dt><dd>' + (member.age ? esc(member.age) + ' ans' : 'Non renseigné') + '</dd></div>' +
+                    '<div><dt>Genre</dt><dd>' + (member.gender ? esc(GENDER_LABELS[member.gender] || member.gender) : 'Non renseigné') + '</dd></div>' +
+                    '<div><dt>Code postal</dt><dd>' + (member.postal_code
+                        ? esc(member.postal_code) + (typeof ADW_POSTAL_CODES !== 'undefined' && ADW_POSTAL_CODES.some(function (p) { return p[0] === member.postal_code; }) ? ' — ' + esc(ADW_POSTAL_CODES.filter(function (p) { return p[0] === member.postal_code; })[0][1]) : '')
+                        : 'Non renseigné') + '</dd></div>' +
+                    '<div><dt>Statut social</dt><dd>' + (member.social_status ? esc(STATUS_LABELS[member.social_status] || member.social_status) : 'Non renseigné') + '</dd></div>' +
+                    (member.email ? '<div><dt>Email</dt><dd><a href="mailto:' + esc(member.email) + '">' + esc(member.email) + '</a></dd></div>' : '') +
+                    (member.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + esc(member.phone.replace(/\s/g, '')) + '">' + esc(member.phone) + '</a></dd></div>' : '') +
+                    (member.address ? '<div><dt>Adresse</dt><dd>' + esc(member.address) + '</dd></div>' : '') +
+                    '<div><dt>Inscription</dt><dd>du ' + esc(formatDate(member.start_date)) + ' au ' + esc(formatDate(member.end_date)) + '</dd></div>' +
+                '</dl>';
+
+            // Formations
+            html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
+                '<h4>🎓 Formations <span class="members-count">' + formations.length + '</span></h4>';
+            if (formations.length) {
+                html += '<ul class="visits-list">';
+                formations.forEach(function (f) {
+                    html += '<li><span>🎓 ' + esc(f.title) +
+                        (f.time_label ? ' · <span class="form-hint">' + esc(f.time_label) + '</span>' : '') +
+                        ' · <span class="form-hint">📅 ' + (f.start_date ? esc(formatDate(f.start_date)) : 'date à confirmer') + '</span></span>' +
+                        (f.url ? '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">voir</a>' : '') +
+                        '</li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="form-hint">Aucune inscription à une formation. <a href="formations.html">Inscrire à une formation →</a></p>';
+            }
+            html += '</div>';
+
+            // Visites
+            html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
+                '<h4>Historique des visites <span class="members-count">' + member.visit_count + ' au total</span></h4>';
+            if (visits.length) {
+                html += '<ul class="visits-list">';
+                visits.forEach(function (v) {
+                    html += '<li><span>📅 ' + esc(formatDate(v.visit_date)) + '</span>' +
+                        (member.subscription === 'none'
+                            ? '<span class="badge badge-sub-none">' + v.amount.toFixed(2).replace('.', ',') + ' € payé</span>'
+                            : '<span class="badge badge-ok">incluse (abonnement)</span>') + '</li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="form-hint">Aucune visite enregistrée pour le moment.</p>';
+            }
+            html += '</div>';
+
+            content.innerHTML = html;
+            content.hidden = false;
+            loading.hidden = true;
+        }
+
+        ADWDatabase.init().then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
+            var id = null;
+            var m = location.search.match(/[?&]id=([^&]+)/) || location.hash.match(/^#member=(.+)$/);
+            if (m) id = decodeURIComponent(m[1]);
+            if (!id) {
+                loading.hidden = true;
+                notFound.hidden = false;
+                notFound.querySelector('p').textContent = 'Aucun membre spécifié dans l\'URL.';
+                return;
+            }
+            var rows = ADWDatabase.queryAll(
+                'SELECT m.*, ' +
+                '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visit_count, ' +
+                '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = m.id AND paid = 0) AS print_balance ' +
+                'FROM members m WHERE m.id = ?', [id]);
+            if (!rows.length) {
+                loading.hidden = true;
+                notFound.hidden = false;
+                return;
+            }
+            render(rows[0]);
+        }).catch(function (err) {
+            loading.hidden = true;
+            notFound.hidden = false;
+            notFound.querySelector('p').textContent = 'Erreur de chargement de la base : ' + err.message;
+        });
+    })();
+    </script>
+</body>
+</html>
