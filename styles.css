@@ -1163,3 +1163,19 @@ main {
     border-radius: 50%; margin-right: 0.4rem;
     vertical-align: baseline;
 }
+
+/* ============ Centre de notifications ============ */
+.notif-btn { position: relative; }
+.notif-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: var(--danger); color: #fff;
+    font-size: 0.66rem; font-weight: 800;
+    min-width: 18px; height: 18px;
+    border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 2px 6px rgba(216, 67, 75, 0.5);
+}
+.notif-ico { font-size: 1.1rem; flex-shrink: 0; }
+.notif-ico.sev-success { }
+.notif-ico.sev-danger { }

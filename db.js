@@ -140,6 +140,36 @@
             'FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE' +
             ')'
         );
+        db.run(
+            'CREATE TABLE IF NOT EXISTS notifications (' +
+            'id TEXT PRIMARY KEY,' +
+            'type TEXT NOT NULL,' +       // sync_formations | auto_link | auto_unlink | awaiting_validation | member_created | info | error
+            'severity TEXT NOT NULL DEFAULT \'info\',' + // info | success | warning | danger
+            'message TEXT NOT NULL,' +
+            'details TEXT,' +              // JSON optionnel
+            'is_read INTEGER DEFAULT 0,' +
+            'created_at TEXT DEFAULT (datetime(\'now\'))' +
+            ')'
+        );
+        db.run(
+            'CREATE TABLE IF NOT EXISTS bookings_remote (' +
+            'id TEXT PRIMARY KEY,' +      // id de réservation MEC (clé naturelle)
+            'event_id TEXT,' +
+            'member_no INTEGER,' +         // champ optionnel saisi par l'usager (n° de membre)
+            'first_name TEXT,' +
+            'last_name TEXT,' +
+            'email TEXT,' +
+            'booked_at TEXT,' +           // date de réservation côté site
+            'status TEXT,' +              // statut MEC (confirmed/pending/canceled…)
+            'synced_at TEXT,' +
+            'processed INTEGER DEFAULT 0,' +  // 0 = à traiter, 1 = traité (rattaché/créé/ignoré)
+            'processed_action TEXT,' +      // linked | created | ignored | auto_linked
+            'processed_at TEXT,' +
+            'local_member_id TEXT' +       // membre rattaché dans l'app
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_notif_unread ON notifications(is_read, created_at)');
+        db.run('CREATE INDEX IF NOT EXISTS idx_booking_unprocessed ON bookings_remote(processed, booked_at)');
         var cols = {};
         var res = db.exec('PRAGMA table_info(members)');
         if (res.length) {
@@ -314,6 +344,110 @@
             'FROM formations_members fm JOIN formations f ON f.id = fm.formation_id ' +
             'WHERE fm.member_id = ? ORDER BY f.start_date ASC', [memberId]
         );
+    };
+
+    // ============ Notifications (journal des actions) ============
+
+    Database.notify = function (type, message, severity, details) {
+        var nid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        this.run(
+            'INSERT INTO notifications (id, type, severity, message, details) VALUES (?, ?, ?, ?, ?)',
+            [nid, type, severity || 'info', message, details ? JSON.stringify(details) : null]
+        );
+        return nid;
+    };
+
+    Database.listNotifications = function (limit) {
+        limit = limit || 50;
+        return this.queryAll('SELECT * FROM notifications ORDER BY created_at DESC, id DESC LIMIT ' + parseInt(limit, 10));
+    };
+
+    Database.unreadNotificationsCount = function () {
+        var rows = this.queryAll('SELECT COUNT(*) AS c FROM notifications WHERE is_read = 0');
+        return rows.length ? rows[0].c : 0;
+    };
+
+    Database.markAllNotificationsRead = function () {
+        this.run('UPDATE notifications SET is_read = 1 WHERE is_read = 0');
+    };
+
+    Database.clearNotifications = function () {
+        this.run('DELETE FROM notifications');
+    };
+
+    // ============ Bookings distants (sync MEC) ============
+
+    Database.upsertBookings = function (bookings) {
+        // bookings : [{ id, event_id, member_no, first_name, last_name, email, booked_at, status }]
+        var self = this;
+        var now = new Date().toISOString();
+        var added = 0, updated = 0;
+        bookings.forEach(function (b) {
+            var existing = self.queryAll('SELECT id FROM bookings_remote WHERE id = ?', [String(b.id)]);
+            if (existing.length) {
+                self.db.run(
+                    'UPDATE bookings_remote SET event_id = ?, member_no = ?, first_name = ?, last_name = ?, email = ?, booked_at = ?, status = ?, synced_at = ? WHERE id = ?',
+                    [String(b.event_id || ''), b.member_no || null, b.first_name || '', b.last_name || '', b.email || '', b.booked_at || '', b.status || '', now, String(b.id)]
+                );
+                updated++;
+            } else {
+                self.db.run(
+                    'INSERT INTO bookings_remote (id, event_id, member_no, first_name, last_name, email, booked_at, status, synced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [String(b.id), String(b.event_id || ''), b.member_no || null, b.first_name || '', b.last_name || '', b.email || '', b.booked_at || '', b.status || '', now]
+                );
+                added++;
+            }
+        });
+        this.persist();
+        return { added: added, updated: updated };
+    };
+
+    Database.listUnprocessedBookings = function () {
+        return this.queryAll('SELECT * FROM bookings_remote WHERE processed = 0 ORDER BY booked_at ASC');
+    };
+
+    Database.markBookingProcessed = function (bookingId, action, localMemberId) {
+        this.run(
+            'UPDATE bookings_remote SET processed = 1, processed_action = ?, processed_at = ?, local_member_id = ? WHERE id = ?',
+            [action, new Date().toISOString(), localMemberId || null, String(bookingId)]
+        );
+    };
+
+    // Matching : hiérarchie n° membre > email > nom/prénom
+    Database.matchBookingToMember = function (booking) {
+        // 1. n° de membre exact (le plus fort)
+        if (booking.member_no) {
+            var byNo = this.queryAll(
+                'SELECT * FROM members WHERE member_no = ? LIMIT 2', [Number(booking.member_no)]
+            );
+            if (byNo.length === 1) {
+                return { member: byNo[0], method: 'member_no', certain: true };
+            }
+        }
+        // 2. email exact (insensible à la casse)
+        if (booking.email) {
+            var byEmail = this.queryAll(
+                'SELECT * FROM members WHERE LOWER(email) = LOWER(?) LIMIT 2', [booking.email]
+            );
+            if (byEmail.length === 1) {
+                return { member: byEmail[0], method: 'email', certain: true };
+            }
+            if (byEmail.length > 1) {
+                return { candidates: byEmail, method: 'email', certain: false };
+            }
+        }
+        // 3. nom + prénom normalisés → candidats (jamais certain)
+        var norm = function (s) {
+            return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+        };
+        var candidates = this.queryAll(
+            'SELECT * FROM members WHERE LOWER(last_name) = ? AND LOWER(first_name) = ?',
+            [norm(booking.last_name), norm(booking.first_name)]
+        );
+        if (candidates.length) {
+            return { candidates: candidates, method: 'name', certain: false };
+        }
+        return { method: 'none', certain: false };
     };
 
     window.addEventListener('beforeunload', function () {

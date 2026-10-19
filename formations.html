@@ -45,6 +45,7 @@
             <label for="searchInput" style="position:absolute;left:-9999px">Rechercher une formation</label>
             <input type="text" id="searchInput" placeholder="Rechercher une formation...">
         </div>
+        <span id="notifCenter" style="display:inline-flex;"></span>
         <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌙</button>
     </header>
 
@@ -69,6 +70,7 @@
                 </select>
             </div>
             <span class="members-count" id="eventsCount" aria-live="polite"></span>
+            <button class="btn btn-secondary btn-small" id="bookingsBtn">📥 Inscriptions du site <span class="badge badge-full" id="bookingsPendingBadge" hidden>0</span></button>
             <button class="btn btn-secondary btn-small" id="refreshBtn">🔄 Actualiser</button>
         </section>
 
@@ -83,6 +85,20 @@
         </div>
 
         <p class="form-hint" id="dataSource" style="padding:0 1.5rem;"></p>
+
+        <!-- Modale validation des inscriptions du site -->
+        <div class="modal-overlay" id="bookingsModal" hidden>
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingsTitle" style="max-width:720px;">
+                <h3 id="bookingsTitle">📥 Inscriptions venant du site</h3>
+                <p class="form-hint">Chaque réservation est comparée aux membres : par <strong>n° de membre</strong>, puis <strong>email</strong>, puis <strong>nom/prénom</strong>. Les rattachements certains sont automatiques (notifiés) ; les autres demandent ta validation.</p>
+                <div id="bookingsQueue" class="checkin-results"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary btn-small" id="bookingsDemoBtn">🧪 Charger 3 résas de démo</button>
+                    <span style="flex:1"></span>
+                    <button type="button" class="btn btn-primary" id="bookingsCloseBtn">Fermer</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Modale inscription membres -->
         <div class="modal-overlay" id="attendeeModal" hidden>
@@ -114,6 +130,7 @@
     <script src="db.js?v=14"></script>
     <script src="mec.js?v=14"></script>
     <script src="theme.js?v=13"></script>
+    <script src="notifications.js?v=1"></script>
     <script>
     (function () {
         'use strict';
@@ -312,6 +329,11 @@
                     formationRows = {};
                     rows.forEach(function (r) { formationRows[r.event_id] = r; });
                     dataSource.textContent = events.length + ' formations synchronisées avec la base locale (' + count + ' à jour).';
+                    if (window.ADWNotifications) {
+                        window.ADWNotifications.push('sync_formations',
+                            '🔄 Synchro formations : ' + events.length + ' formation(s) synchronisée(s) depuis atelierduweb.be',
+                            'info');
+                    }
                 } else {
                     dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
                 }
@@ -500,9 +522,176 @@
             URL.revokeObjectURL(a.href);
         });
 
+        // ============ File de validation des inscriptions du site ============
+        var bookingsModal = document.getElementById('bookingsModal');
+        var bookingsQueue = document.getElementById('bookingsQueue');
+        var bookingsPendingBadge = document.getElementById('bookingsPendingBadge');
+
+        document.getElementById('bookingsBtn').addEventListener('click', function () {
+            if (!db) return;
+            renderBookingsQueue();
+            bookingsModal.hidden = false;
+        });
+        document.getElementById('bookingsCloseBtn').addEventListener('click', function () { bookingsModal.hidden = true; });
+        bookingsModal.addEventListener('click', function (e) { if (e.target === bookingsModal) bookingsModal.hidden = true; });
+
+        function updateBookingsBadge() {
+            var pending = window.ADWDatabase.listUnprocessedBookings().length;
+            bookingsPendingBadge.textContent = pending;
+            bookingsPendingBadge.hidden = pending === 0;
+        }
+
+        function bookingCardLabel(eventId) {
+            var f = formationRows[eventId];
+            return f ? f.title : 'Formation inconnue (n° ' + eventId + ')';
+        }
+
+        function processBookingAuto(b, member, method) {
+            var f = formationRows[b.event_id];
+            if (f) {
+                window.ADWDatabase.registerMemberToFormation(f.id, member.id);
+                window.ADWDatabase.markBookingProcessed(b.id, 'auto_linked', member.id);
+                window.ADWNotifications.push('auto_link',
+                    '✅ ' + member.first_name + ' ' + member.last_name + ' rattaché·e automatiquement à « ' + f.title + ' » (match ' + method + ')',
+                    'success', { booking: b.id, member: member.id });
+            } else {
+                window.ADWDatabase.markBookingProcessed(b.id, 'ignored');
+                window.ADWNotifications.push('awaiting_validation',
+                    '⚠️ Réservation de ' + b.first_name + ' ' + b.last_name + ' ignorée : formation inconnue (n° ' + b.event_id + ')',
+                    'warning');
+            }
+        }
+
+        function renderBookingsQueue() {
+            var queue = window.ADWDatabase.listUnprocessedBookings();
+            updateBookingsBadge();
+            bookingsQueue.innerHTML = queue.length ? '' : '<p class="form-hint" style="padding:1rem;">Aucune inscription en attente. Les nouvelles réservations du site apparaîtront ici après synchronisation.</p>';
+            queue.forEach(function (b) {
+                var match = window.ADWDatabase.matchBookingToMember(b);
+                var li = document.createElement('div');
+                li.className = 'checkin-item';
+                li.style.flexWrap = 'wrap';
+
+                var head = '<div style="flex:1;min-width:0;"><strong>' + esc(b.last_name.toUpperCase() + ' ' + b.first_name) + '</strong>' +
+                    (b.member_no ? ' <span class="member-no">#' + esc(b.member_no) + '</span>' : '') +
+                    '<div class="form-hint">' + esc(b.email || 'pas d\'email') + ' · 🎓 ' + esc(bookingCardLabel(b.event_id)) +
+                    ' · ' + esc((b.booked_at || '').slice(0, 10)) + (b.status ? ' · ' + esc(b.status) : '') + '</div></div>';
+
+                if (match.certain && match.member) {
+                    // Auto : rattaché d'office, mais affiché pour transparence + action annulable
+                    processBookingAuto(b, match.member, match.method);
+                    li.classList.add('done');
+                    li.innerHTML = head +
+                        '<span class="badge badge-ok">✅ auto (' + esc(match.method === 'member_no' ? 'n° membre' : 'email') + ')</span>';
+                } else if (match.candidates && match.candidates.length) {
+                    // Candidats : validation humaine
+                    li.innerHTML = head + '<div style="flex-basis:100%;display:flex;gap:0.4rem;flex-wrap:wrap;padding-top:0.4rem;">';
+                    var wrap2 = li.querySelector('div:last-child');
+                    match.candidates.slice(0, 3).forEach(function (cand) {
+                        var cb = document.createElement('button');
+                        cb.className = 'btn btn-secondary btn-small';
+                        cb.innerHTML = '🔗 ' + esc(cand.first_name + ' ' + cand.last_name) + (cand.member_no ? ' #' + cand.member_no : '');
+                        cb.addEventListener('click', function () {
+                            var f = formationRows[b.event_id];
+                            if (f) {
+                                window.ADWDatabase.registerMemberToFormation(f.id, cand.id);
+                                window.ADWDatabase.markBookingProcessed(b.id, 'linked', cand.id);
+                                window.ADWNotifications.push('auto_link',
+                                    '🔗 ' + cand.first_name + ' ' + cand.last_name + ' rattaché·e à « ' + f.title + ' » (validation manuelle)',
+                                    'success');
+                            }
+                            renderBookingsQueue();
+                            applyFilters();
+                        });
+                        wrap2.appendChild(cb);
+                    });
+                    var ig = document.createElement('button');
+                    ig.className = 'btn btn-danger btn-small';
+                    ig.textContent = '⏭ Ignorer';
+                    ig.addEventListener('click', function () {
+                        window.ADWDatabase.markBookingProcessed(b.id, 'ignored');
+                        renderBookingsQueue();
+                    });
+                    wrap2.appendChild(ig);
+                    var nw = document.createElement('button');
+                    nw.className = 'btn btn-primary btn-small';
+                    nw.textContent = '➕ Nouveau membre';
+                    nw.addEventListener('click', function () {
+                        var newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                        var memberNo = window.ADWDatabase.nextMemberNo();
+                        window.ADWDatabase.run(
+                            'INSERT INTO members (id, first_name, last_name, email, start_date, member_no) VALUES (?, ?, ?, ?, ?, ?)',
+                            [newId, b.first_name || '', b.last_name || '', b.email || '', (b.booked_at || '').slice(0, 10), memberNo]
+                        );
+                        var f = formationRows[b.event_id];
+                        if (f) {
+                            window.ADWDatabase.registerMemberToFormation(f.id, newId);
+                            window.ADWNotifications.push('member_created',
+                                '➕ Nouveau membre créé : ' + b.first_name + ' ' + b.last_name + ' (#' + memberNo + ') et inscrit à « ' + f.title + ' »',
+                                'success');
+                        }
+                        window.ADWDatabase.markBookingProcessed(b.id, 'created', newId);
+                        renderBookingsQueue();
+                        applyFilters();
+                    });
+                    wrap2.appendChild(nw);
+                } else {
+                    // Aucun match : proposer création directe
+                    li.innerHTML = head +
+                        '<button class="btn btn-primary btn-small bk-create" data-bid="' + esc(b.id) + '">➕ Créer le membre et inscrire</button>' +
+                        '<button class="btn btn-danger btn-small bk-ignore" data-bid="' + esc(b.id) + '">⏭ Ignorer</button>';
+                }
+                bookingsQueue.appendChild(li);
+            });
+        }
+
+        bookingsQueue.addEventListener('click', function (e) {
+            var createBtn = e.target.closest('.bk-create');
+            var ignoreBtn = e.target.closest('.bk-ignore');
+            if (!createBtn && !ignoreBtn) return;
+            var bid = (createBtn || ignoreBtn).getAttribute('data-bid');
+            var b = window.ADWDatabase.queryAll('SELECT * FROM bookings_remote WHERE id = ?', [bid])[0];
+            if (!b) return;
+            if (ignoreBtn) {
+                window.ADWDatabase.markBookingProcessed(bid, 'ignored');
+            } else {
+                var newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                var memberNo = window.ADWDatabase.nextMemberNo();
+                window.ADWDatabase.run(
+                    'INSERT INTO members (id, first_name, last_name, email, start_date, member_no) VALUES (?, ?, ?, ?, ?, ?)',
+                    [newId, b.first_name || '', b.last_name || '', b.email || '', (b.booked_at || '').slice(0, 10), memberNo]
+                );
+                var f = formationRows[b.event_id];
+                if (f) {
+                    window.ADWDatabase.registerMemberToFormation(f.id, newId);
+                    window.ADWNotifications.push('member_created',
+                        '➕ Nouveau membre créé : ' + b.first_name + ' ' + b.last_name + ' (#' + memberNo + ') et inscrit à « ' + f.title + ' »',
+                        'success');
+                }
+                window.ADWDatabase.markBookingProcessed(bid, 'created', newId);
+            }
+            renderBookingsQueue();
+            applyFilters();
+        });
+
+        // Démo : simule des résas venant du site (maquette — remplacé par la vraie synchro côté serveur)
+        document.getElementById('bookingsDemoBtn').addEventListener('click', function () {
+            var demoBookings = [
+                { id: 'demo-1001', event_id: Object.keys(formationRows)[0] || '1', member_no: null, first_name: 'Sophie', last_name: 'Lemaire', email: 'sophie.lemaire@test.be', booked_at: '2026-10-18 10:12:00', status: 'confirmed' },
+                { id: 'demo-1002', event_id: Object.keys(formationRows)[1] || Object.keys(formationRows)[0] || '1', member_no: 1001, first_name: 'Jean', last_name: 'Dupont', email: 'jean@test.be', booked_at: '2026-10-18 11:45:00', status: 'confirmed' },
+                { id: 'demo-1003', event_id: Object.keys(formationRows)[0] || '1', member_no: null, first_name: 'Ahmed', last_name: 'Benali', email: 'ahmed.benali@test.be', booked_at: '2026-10-19 09:03:00', status: 'pending' }
+            ];
+            var r = window.ADWDatabase.upsertBookings(demoBookings);
+            window.ADWNotifications.push('info',
+                '📥 ' + r.added + ' réservation(s) récupérée(s) du site (' + r.updated + ' mise(s) à jour)',
+                'info');
+            renderBookingsQueue();
+        });
+
         // ============ Initialisation ============
         window.ADWDatabase.init().then(function (D) {
             db = D;
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
             loadEvents();
         }).catch(function () {
             loadEvents(); // mode dégradé sans DB (affichage seul)
