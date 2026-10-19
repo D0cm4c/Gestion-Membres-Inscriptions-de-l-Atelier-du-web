@@ -1266,6 +1266,8 @@ main {
 
 /* ============ Centre de notifications ============ */
 .notif-btn { position: relative; }
+#notifList .checkin-item { align-items: flex-start; }
+#notifList .checkin-item .badge { flex-shrink: 0; }
 .notif-badge {
     position: absolute; top: -4px; right: -4px;
     background: var(--danger); color: #fff;
@@ -1276,6 +1278,15 @@ main {
     padding: 0 4px;
     box-shadow: 0 2px 6px rgba(216, 67, 75, 0.5);
 }
-.notif-ico { font-size: 1.1rem; flex-shrink: 0; }
-.notif-ico.sev-success { }
-.notif-ico.sev-danger { }
+.notif-ico {
+    font-size: 1.05rem; flex-shrink: 0;
+    width: 26px; height: 26px;
+    display: inline-flex; align-items: center; justify-content: center;
+    line-height: 1;
+    border-radius: 8px;
+    margin-top: 0.1rem;
+}
+.notif-ico.sev-success { background: var(--success-bg); }
+.notif-ico.sev-warning { background: var(--warning-bg); }
+.notif-ico.sev-danger { background: var(--danger-bg); }
+.notif-ico.sev-info { background: var(--info-bg); }
