@@ -920,15 +920,21 @@ main {
         border-radius: 20px 20px 0 0;
         animation: sheet-up 0.22s ease;
     }
-    .modal h3 { font-size: 1.12rem; }
+    .modal h3 { font-size: 1.12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .modal-actions { flex-wrap: wrap; margin-top: 1rem; }
     .modal-actions .btn { flex: 1 1 100%; justify-content: center; }
 
     /* Éléments des listes (inscriptions site, notifications, pointage) */
     .checkin-item { padding: 0.7rem 0.8rem; gap: 0.55rem; }
     .checkin-item .btn { flex: 1 1 100%; justify-content: center; }
+    .checkin-item .btn.f-unregister { flex: 0 0 auto; margin-left: auto; }
+    .checkin-item .btn.f-register { flex: 0 0 auto; }
+    .modal .checkin-results { max-height: 32vh; }
     .bk-actions { display: flex; gap: 0.45rem; flex-wrap: wrap; flex-basis: 100%; padding-top: 0.5rem; }
     .bk-actions .btn { flex: 1 1 100%; }
+
+    /* Saisie : 16px pour éviter le zoom auto iOS au focus */
+    .form-group input, .form-group select, .search-bar input, .filters-bar select { font-size: 16px; }
 
     /* Boutons et filtres : empilés et tapables */
     .hero-actions { display: grid; grid-template-columns: 1fr; gap: 0.6rem; }
@@ -963,7 +969,6 @@ main {
 
     .form-row { flex-direction: column; gap: 0; }
     .subscription-options { grid-template-columns: 1fr; }
-    .checkin-results { max-height: 40vh; }
     .donut-wrap { flex-direction: column; align-items: center; }
 }
 
