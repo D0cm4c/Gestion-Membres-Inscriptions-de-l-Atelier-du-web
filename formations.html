@@ -73,7 +73,7 @@
             <p>⏳ Chargement des formations depuis atelierduweb.be…</p>
         </div>
 
-        <section id="eventsGrid" style="display:flex;flex-direction:column;gap:0.7rem;" aria-label="Liste des formations"></section>
+        <section id="eventsGrid" aria-label="Liste des formations"></section>
 
         <div class="empty-state" id="emptyState" hidden>
             <p>Aucune formation trouvée.</p>
@@ -204,41 +204,47 @@
                 }
                 group.appendChild(header);
 
+                var wrap = document.createElement('div');
+                wrap.className = 'month-cards';
+                group.appendChild(wrap);
+
                 byMonth[monthKey].forEach(function (ev) {
                     var url = ev.url || 'https://atelierduweb.be/nos-formations-et-ateliers/';
-                    var day = '', mon = '';
+                    var day = '', mon = '', weekday = '', timeShort = ev.timeLabel || '';
                     if (ev.startDate) {
                         var d = new Date(ev.startDate + 'T12:00:00');
                         day = d.getDate();
                         mon = d.toLocaleDateString('fr-BE', { month: 'short' }).replace('.', '');
+                        weekday = d.toLocaleDateString('fr-BE', { weekday: 'long' });
                     }
-                    var weekday = ev.startDate ? new Date(ev.startDate + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'long' }) : '';
-                    var dateFull = ev.dateText || (ev.startDate ? weekday : '');
+                    var dateInfo = ev.dateText || weekday;
 
                     var li = document.createElement('article');
-                    li.className = 'event-card';
+                    li.className = 'f-card';
                     li.innerHTML =
-                        '<div class="event-date-block' + (ev.startDate ? '' : ' no-date') + '">' +
+                        '<div class="f-card-banner' + (ev.startDate ? '' : ' no-date') + '">' +
+                        '<div class="f-card-date">' +
                         (ev.startDate
                             ? '<span class="day">' + day + '</span><span class="mon">' + esc(mon) + '</span>'
-                            : '<span class="mon">date à<br>confirmer</span>') +
+                            : 'date à confirmer') +
                         '</div>' +
-                        '<div class="event-body">' +
-                        '<h3 class="event-title">' + esc(ev.title) + '</h3>' +
-                        '<p class="event-time">' +
-                        (dateFull ? '📅 ' + esc(dateFull) : '') +
-                        (ev.timeLabel ? ' · ⏰ ' + esc(ev.timeLabel) : '') +
-                        (ev.duration ? ' · ⏳ ' + esc(ev.duration) : '') +
-                        '</p>' +
-                        (ev.excerpt ? '<p class="event-excerpt">' + esc(ev.excerpt) + '</p>' : '') +
-                        '<div class="event-footer">' +
+                        '<div class="f-card-dateinfo">' +
+                        (dateInfo ? '<div class="f-card-weekday">' + esc(dateInfo) + '</div>' : '') +
+                        '<div class="f-card-time">' + (timeShort ? esc(timeShort) : '') + '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="f-card-body">' +
+                        '<h3 class="f-card-title">' + esc(ev.title) + '</h3>' +
+                        (ev.duration ? '<div class="f-card-meta"><span>⏳ ' + esc(ev.duration) + '</span></div>' : '') +
+                        (ev.excerpt ? '<p class="f-card-desc">' + esc(ev.excerpt) + '</p>' : '') +
+                        '<div class="f-card-foot">' +
                         (ev.categories || []).map(function (c) { return '<span class="tag">' + esc(c) + '</span>'; }).join('') +
                         badge(ev) +
                         '<span class="spacer"></span>' +
                         '<a class="btn btn-primary btn-small" href="' + esc(url) + '" target="_blank" rel="noopener">Voir / Réserver</a>' +
                         '</div>' +
                         '</div>';
-                    group.appendChild(li);
+                    wrap.appendChild(li);
                 });
                 grid.appendChild(group);
             });
