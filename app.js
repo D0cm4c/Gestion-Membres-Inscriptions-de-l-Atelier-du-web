@@ -333,6 +333,31 @@
         }
         html += '</div>';
 
+        // Formations du membre (inscriptions)
+        var memberFormations = [];
+        try {
+            memberFormations = ADWDatabase.getMemberFormations(id) || [];
+        } catch (e) { memberFormations = []; }
+        html += '<div class="detail-prints">' +
+            '<div class="chart-header">' +
+                '<h4>🎓 Formations <span class="members-count">' + memberFormations.length + '</span></h4>' +
+            '</div>';
+        if (memberFormations.length) {
+            html += '<ul class="visits-list">';
+            memberFormations.forEach(function (f) {
+                var dLabel = f.start_date ? escapeHtml(formatDate(f.start_date)) : 'date à confirmer';
+                html += '<li><span>🎓 ' + escapeHtml(f.title) +
+                    (f.time_label ? ' · <span class="form-hint">' + escapeHtml(f.time_label) + '</span>' : '') +
+                    ' · <span class="form-hint">📅 ' + dLabel + '</span></span>' +
+                    (f.url ? '<a href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">voir</a>' : '') +
+                    '</li>';
+            });
+            html += '</ul>';
+        } else {
+            html += '<p class="form-hint">Aucune inscription à une formation. <a href="formations.html">Inscrire à une formation →</a></p>';
+        }
+        html += '</div>';
+
         var balance = member.print_balance || 0;
         html += '<div class="detail-prints">' +
             '<div class="chart-header">' +
