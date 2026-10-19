@@ -29,7 +29,7 @@ Contrainte de design : correspondre au design du site atelierduweb.be.
 - Livraison : **PRs petites et ciblées** (une fonctionnalité = une PR), fusionnées dans `main` via GitHub.
 - Vérifications minimales par PR : `node --check` sur les JS modifiés + validation de la structure HTML.
 - **Tests fonctionnels en sandbox** (jsdom + sql.js réel) avant chaque PR quand la logique est testable — c'est la méthode qui a trouvé le plus de bugs (35/35, 48/48, 15/15 assertions).
-- ⚠️ **Cache navigateur sur Pages** : incrémenter le cache-busting des assets (actuellement v5+) à chaque changement de JS/CSS, sinon les visiteurs voient l'ancienne version.
+- ⚠️ **Cache navigateur sur Pages** : incrémenter le cache-busting des assets (actuellement v12+) à chaque changement de JS/CSS, sinon les visiteurs voient l'ancienne version.
 
 ## 📦 État actuel (nov. 2026)
 
@@ -39,11 +39,17 @@ Fait :
 - Import XML Access : **3 806 membres réels** importés avec mappings ; `db.js` tient la charge.
 - Page Paramètres (`parametres.html`) + thème partagé sur toutes les pages.
 - 20 membres fictifs de démonstration.
+- **Formations (`formations.html`) — fusionnées sur `main`** :
+  - **Source de données : API REST publique WordPress** `wp-json/wp/v2/mec-events` (pas de clé, CORS OK nativement via `rest_send_cors_headers`). Fallback RSS `feed/` si l'API est désactivée.
+  - ⚠️ Décision importante : l'API officielle M.E. Calendar (`wp-json/mec/v1.0`, header `mec-token`) a été **abandonnée** — elle exige un header custom qui déclenche un preflight CORS non géré par WordPress, et la clé fuite dans le client. Voir leçon n°6.
+  - Module `mec.js` : fetch paginé (per_page 100), cache localStorage 15 min, parseur d'extraits FR (« ⏳ Durée / 📅 Dates / ⏰ Horaires » → champs séparés, 3 formats couverts dont « Les 08 et 10 décembre 2026 »), résolution des catégories `mec_category` (IDs → noms).
+  - UI : cartes groupées par mois, bandeau dégradé coloré **par catégorie** (palette déterministe, hash du nom → 10 tons), bloc date (jour+mois), champs durée/horaires propres, tags colorés, pastille de couleur sur les en-têtes de mois, mode sombre.
+  - Filtres : à venir/toutes, mois, catégorie + recherche. Liens directs vers la réservation sur atelierduweb.be.
+  - Lien « 🎓 Formations » activé dans la sidebar de toutes les pages.
 
 En cours / ouvert :
-- **PR #7 (draft, branche `vibe/formations-mec`)** : page `formations.html` + `mec.js` — intégration des formations via l'API REST M.E. Calendar (`wp-json/mec/v1.0`, header `mec-token`, clé stockée uniquement dans le navigateur).
-  - ⚠️ Non vérifiée en sandbox (header auth impossible hors navigateur). **À tester : CORS depuis d0cm4c.github.io** — si blocage, prévoir un proxy ou servir depuis atelierduweb.be.
-- Feuille de route restante : fiches formations (tarifs, dates, participants) et calendrier des 2 salles.
+- **Organisateur & lieu** : non exposés par l'API WP publique. Snippet `register_rest_field` fourni à l'utilisateur (organisateur + lieu via `mec_organizer_id`/`mec_location_id` postmeta) — **en attente de la réponse de l'hébergeur** pour installation. Une fois en place : ajouter le champ dans `mec.js` (`_fields` + affichage dans le pied de carte) et Actualiser.
+- Feuille de route restante : fiches formations détaillées (tarifs, participants) et calendrier des 2 salles.
 
 ## 🧠 Leçons apprises (méthodes qui ont marché)
 
@@ -52,6 +58,9 @@ En cours / ouvert :
 3. Brancher les features sur les **vraies données** dès que possible (dashboard sur la vraie BDD ; import des 3 806 membres réels a révélé un bug de perf et un bug de migration `member_no`).
 4. Traiter les bugs bloquants dans une PR dédiée **avant** les améliorations.
 5. Données réelles tôt = bugs d'échelle trouvés que les tests unitaires ne trouvent pas.
+6. **API tierce : chercher la voie publique standard avant l'API officielle.** L'API MEC officielle (header `mec-token`) était bloquée par CORS + exposait une clé côté client ; le type custom `mec-events` de l'API WP publique a résolu les deux problèmes d'un coup. Toujours tester le namespace `wp/v2` d'abord.
+7. **Parser les données affichées du site cible comme format de référence** : les extraits FR structurés (« ⏳ Durée : … 📅 Dates : … ⏰ Horaires : … ») sont une source fiable quand les postmeta ne sont pas exposés. Tester le parseur sur les 2-3 formats réellement utilisés (node + mock de `document`).
+8. **Attendre la validation visuelle du client avant de verrouiller un design** : la version « liste » a été refusée, la version « cartes avec bordures » validée. Itérer vite, committer les états validés.
 
 ## 📜 Historique des PRs
 
@@ -61,7 +70,7 @@ En cours / ouvert :
 4. UX : validation, préférences, toasts, export CSV — fusionnée (tests 35/35)
 5. Abonnements, visites, n° auto, refonte design accessible — fusionnée (tests 48/48)
 6. dashboard temps réel + README — fusionnée (tests 15/15)
-7. Formations M.E. Calendar via API REST — **draft ouvert** (`vibe/formations-mec`)
+7. Formations M.E. Calendar — draft ouvert puis **fusionnée directement sur `main`** à la demande de l'utilisateur (commits `d7378eb` → `03a8e4e`) : page + API MEC officielle, puis refactor vers API WP publique, puis design cartes/mois, puis couleurs par catégorie.
 
 ## 📌 Règle pour toute future session
 
