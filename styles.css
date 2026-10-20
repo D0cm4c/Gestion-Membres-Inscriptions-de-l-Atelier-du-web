@@ -1400,3 +1400,48 @@ main {
     transition: transform 0.12s, box-shadow 0.12s;
 }
 .room-planning a.slot-busy:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+/* Planning salles : couleurs par salle + mise en évidence des créneaux */
+.room-planning th.room-h.room-0 { background: #0F3D5C; }
+.room-planning th.room-h.room-1 { background: #6C5CE7; }
+.room-planning th.room-h.room-2 { background: #18A55F; }
+.room-planning td.slot-cell.room-0 { background: #F0F5FA; }
+.room-planning td.slot-cell.room-1 { background: #F4F2FD; }
+.room-planning td.slot-cell.room-2 { background: #EFF9F3; }
+/* créneaux mis en évidence */
+.room-planning th.slot-am {
+    background: linear-gradient(180deg, rgba(242,196,77,0.35), rgba(242,196,77,0.15)) !important;
+    color: #7A5A00; font-weight: 800;
+    border-left: 3px solid #F2C44D;
+}
+.room-planning th.slot-pm {
+    background: linear-gradient(180deg, rgba(47,155,228,0.3), rgba(47,155,228,0.12)) !important;
+    color: #14567E; font-weight: 800;
+    border-left: 3px solid #2F9BE4;
+}
+.room-planning td.slot-cell.busy.room-0 { background: #E1EBF5; }
+.room-planning td.slot-cell.busy.room-1 { background: #E8E4FB; }
+.room-planning td.slot-cell.busy.room-2 { background: #DFF2E8; }
+/* weekend + colonnes salle : le fond weekend reste visible en transparence */
+.room-planning tr.weekend td.slot-cell.room-0 { background: #EBF0F6; }
+.room-planning tr.weekend td.slot-cell.room-1 { background: #EDEAF8; }
+.room-planning tr.weekend td.slot-cell.room-2 { background: #E8F3ED; }
+
+/* Jour et créneau actuels */
+.room-planning tr.today td { background: inherit; }
+.room-planning tr.today .day-cell::before { content: ''; }
+.room-planning td.slot-cell.now {
+    outline: 3px solid var(--accent) !important;
+    outline-offset: -3px;
+    background: var(--accent-light) !important;
+    position: relative;
+}
+.room-planning td.slot-cell.now::after {
+    content: '▶ maintenant';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 800; color: var(--accent);
+    letter-spacing: 0.3px;
+    pointer-events: none;
+}
+.room-planning tr.today .day-cell { background: var(--accent-light); }

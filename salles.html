@@ -113,10 +113,15 @@
         }
         var TONE_SOLID = ['#0F3D5C', '#6C5CE7', '#2F9BE4', '#18A55F', '#E8734A', '#B26A00', '#D8434B', '#7A5230', '#556B2F', '#4A4E69'];
 
+        // Format ISO local (YYYY-MM-DD) — toISOString() decalerait d'un jour en UTC+1/+2 !
+        function isoLocal(d) {
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
         function monthBounds(d) {
             var start = new Date(d.getFullYear(), d.getMonth(), 1);
             var end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-            return [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)];
+            return [isoLocal(start), isoLocal(end)];
         }
 
         function mainCatOf(categories) {
@@ -151,40 +156,48 @@
             });
 
             var daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
-            var todayStr = new Date().toISOString().slice(0, 10);
+            var todayStr = isoLocal(new Date());
             var occupied = 0;
 
             var html = '<table class="room-planning"><thead><tr><th style="text-align:left;">Jour</th>';
-            rooms.forEach(function (r) {
-                html += '<th colspan="2">' + esc(r.name) + '</th>';
+            rooms.forEach(function (r, ri) {
+                html += '<th colspan="2" class="room-h room-' + ri + '">' + esc(r.name) + '</th>';
             });
             html += '</tr><tr><th></th>';
-            rooms.forEach(function () {
-                html += '<th class="slot-h">Matin</th><th class="slot-h">A-midi</th>';
+            rooms.forEach(function (r, ri) {
+                html += '<th class="slot-h slot-am room-' + ri + '">☀️ Matin</th><th class="slot-h slot-pm room-' + ri + '">🕐 A-midi</th>';
             });
             html += '</tr></thead><tbody>';
 
             for (var day = 1; day <= daysInMonth; day++) {
                 var d = new Date(view.getFullYear(), view.getMonth(), day);
-                var dateStr = d.toISOString().slice(0, 10);
+                var dateStr = isoLocal(d);
                 var weekday = d.getDay(); // 0=dim, 6=sam
                 var isWeekend = weekday === 0 || weekday === 6;
                 var isToday = dateStr === todayStr;
+                // Creneau actuel (si aujourd'hui et dans la plage 9h30-16h30)
+                var nowH = new Date().getHours() + new Date().getMinutes() / 60;
+                var currentSlot = null;
+                if (isToday) {
+                    if (nowH >= 9.5 && nowH < 12.5) currentSlot = 'AM';
+                    else if (nowH >= 13.5 && nowH < 16.5) currentSlot = 'PM';
+                }
                 var dayLabel = d.toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric' });
 
                 html += '<tr class="' + (isWeekend ? 'weekend' : '') + (isToday ? ' today' : '') + '">';
                 html += '<td class="day-cell' + (isWeekend ? ' muted' : '') + '">' + (isToday ? '<strong>● </strong>' : '') + esc(dayLabel) + '</td>';
 
-                rooms.forEach(function (r) {
+                rooms.forEach(function (r, ri) {
                     ['AM', 'PM'].forEach(function (slot) {
                         var cell = byCell[dateStr + '|' + r.id + '|' + slot];
+                        var colClass = ' room-' + ri + (currentSlot === slot ? ' now' : '');
                         if (cell) {
                             occupied++;
                             var tone = cell.cat ? toneFor(cell.cat) : -1;
                             var bg = tone >= 0 ? TONE_SOLID[tone] : 'var(--primary)';
-                            html += '<td class="slot-cell busy"><a href="formation.html?id=' + encodeURIComponent(cell.event_id) + '" class="slot-busy" style="background:' + bg + ';" title="' + esc(cell.title) + '">' + esc(shortTitle(cell.title)) + '</a></td>';
+                            html += '<td class="slot-cell busy' + colClass + '"><a href="formation.html?id=' + encodeURIComponent(cell.event_id) + '" class="slot-busy" style="background:' + bg + ';" title="' + esc(cell.title) + '">' + esc(shortTitle(cell.title)) + '</a></td>';
                         } else {
-                            html += '<td class="slot-cell' + (isWeekend ? ' muted' : '') + '"></td>';
+                            html += '<td class="slot-cell' + colClass + (isWeekend ? ' muted' : '') + '"></td>';
                         }
                     });
                 });
@@ -255,6 +268,8 @@
         window.ADWDatabase.init().then(function () {
             if (window.ADWNotifications) window.ADWNotifications.refresh();
             render();
+            // Le creneau actuel change en cours de journee : re-render chaque minute
+            setInterval(render, 60000);
         }).catch(function () {
             planningWrap.innerHTML = '<div class="empty-state"><p>Erreur de chargement de la base.</p></div>';
         });
