@@ -413,6 +413,58 @@
         );
     };
 
+    // ============ Miroir : réservation annulée côté site → retrait local notifié ============
+    // Règles décidées avec l'utilisateur (oct. 2026) :
+    //  - booking traité (linked/auto_linked/created) + statut canceled → retirer l'inscription locale,
+    //    notifier, et remettre processed = 0 (pour ne pas ressusciter l'inscription au re-match)
+    //  - booking non traité + statut canceled → marquer traité-ignoré (ne pollue pas la file)
+    //  Retourne la liste des retraits effectués pour notification groupée.
+    Database.applyMirror = function () {
+        var self = this;
+        var removals = [];
+        var resetIds = [];
+        var canceledProcessed = this.queryAll(
+            "SELECT * FROM bookings_remote WHERE processed = 1 AND processed_action != 'ignored' AND UPPER(status) IN ('CANCELED', 'CANCELLED', 'TRASH', 'REJECTED')"
+        );
+        canceledProcessed.forEach(function (b) {
+            if (b.local_member_id) {
+                // Retrouve l'inscription locale (formation via event_id)
+                var formation = self.queryAll('SELECT id, title FROM formations WHERE event_id = ?', [String(b.event_id)]);
+                var member = self.queryAll('SELECT id, first_name, last_name FROM members WHERE id = ?', [b.local_member_id]);
+                if (formation.length && member.length) {
+                    self.db.run('DELETE FROM formations_members WHERE formation_id = ? AND member_id = ?', [formation[0].id, member[0].id]);
+                    removals.push({
+                        memberName: member[0].first_name + ' ' + member[0].last_name,
+                        formationTitle: formation[0].title,
+                        bookingId: b.id
+                    });
+                }
+            }
+            // Le booking redevient non-traité ; s'il est réimporté plus tard,
+            // il repassera dans la file sans jamais ressusciter une inscription annulée.
+            self.db.run(
+                'UPDATE bookings_remote SET processed = 0, processed_action = NULL, processed_at = NULL, local_member_id = NULL WHERE id = ?',
+                [String(b.id)]
+            );
+            resetIds.push(String(b.id));
+        });
+        // Non traités mais annulés côté site → ignorés (ne pas polluer la file de validation).
+        // On exclut ceux qu'on vient de reseter (sinon ils seraient re-capturés immédiatement).
+        if (resetIds.length) {
+            var placeholders = resetIds.map(function () { return '?'; }).join(', ');
+            this.db.run(
+                "UPDATE bookings_remote SET processed = 1, processed_action = 'ignored', processed_at = datetime('now') WHERE processed = 0 AND id NOT IN (" + placeholders + ") AND UPPER(status) IN ('CANCELED', 'CANCELLED', 'TRASH', 'REJECTED')",
+                resetIds
+            );
+        } else {
+            this.db.run(
+                "UPDATE bookings_remote SET processed = 1, processed_action = 'ignored', processed_at = datetime('now') WHERE processed = 0 AND UPPER(status) IN ('CANCELED', 'CANCELLED', 'TRASH', 'REJECTED')"
+            );
+        }
+        if (removals.length) this.persist();
+        return removals;
+    };
+
     // Matching : hiérarchie n° membre > email > nom/prénom
     Database.matchBookingToMember = function (booking) {
         // 1. n° de membre exact (le plus fort)

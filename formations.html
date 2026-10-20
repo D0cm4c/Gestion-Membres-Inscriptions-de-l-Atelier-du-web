@@ -128,7 +128,7 @@
     </footer>
 
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=14"></script>
+    <script src="db.js?v=15"></script>
     <script src="mec.js?v=14"></script>
     <script src="theme.js?v=14"></script>
     <script src="nav.js?v=1"></script>
@@ -326,6 +326,13 @@
                 // Synchronise dans la base SQLite (mise à jour / ajout / retrait)
                 if (db) {
                     var count = window.ADWDatabase.syncFormations(events);
+                    // Miroir des inscriptions : réservations annulées côté site → retraits locaux notifiés
+                    var removals = window.ADWDatabase.applyMirror();
+                    removals.forEach(function (r) {
+                        window.ADWNotifications.push('auto_unlink',
+                            '🗑 Inscription retirée : ' + r.memberName + ' — « ' + r.formationTitle + ' » (réservation annulée sur le site)',
+                            'warning');
+                    });
                     // Recharge depuis la DB pour avoir les ids internes + compte d'inscrits
                     var rows = window.ADWDatabase.listFormations();
                     formationRows = {};
@@ -333,8 +340,8 @@
                     dataSource.textContent = events.length + ' formations synchronisées avec la base locale (' + count + ' à jour).';
                     if (window.ADWNotifications) {
                         window.ADWNotifications.push('sync_formations',
-                            '🔄 Synchro formations : ' + events.length + ' formation(s) synchronisée(s) depuis atelierduweb.be',
-                            'info');
+                            '🔄 Synchro formations : ' + events.length + ' formation(s) synchronisée(s) depuis atelierduweb.be' + (removals.length ? ' · ' + removals.length + ' inscription(s) retirée(s) (annulations site)' : ''),
+                            removals.length ? 'warning' : 'info');
                     }
                 } else {
                     dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
