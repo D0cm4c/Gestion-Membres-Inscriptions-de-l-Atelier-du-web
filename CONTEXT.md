@@ -93,6 +93,7 @@ En cours / ouvert :
 12. **Résumer et faire valider avant de pousser** : présenter le résumé de chaque action (fichiers, but, impact) et obtenir l'aval explicite de l'utilisateur avant commit/push — l'utilisateur garde le contrôle du dépôt.
 13. **Le préfill peut remplacer le tracking** : quand l'app fournit elle-même les données du formulaire distant (n° de membre), la donnée revient avec la réservation → le matching automatique fait la réconciliation. Pas besoin d'un système de vérification que personne n'utiliserait.
 14. **Modale pour le parcours rapide, page pour le lien profond** : dans une liste de gestion (inscrits), l'aperçu en modale évite la navigation ; la page dédiée reste pour le partage/deep-linking.
+15. **Sidebar et topbar partagées = risque de divergence** : chaque page duplique la sidebar/topbar en dur. Toute modification sur une page (nouveau lien, nouvelle section) DOIT être suivie d'une passe de vérification sur TOUTES les pages (grep : compter les sections, comparer les href, vérifier les composants topbar — cartouche, notifCenter, thème). Les bugs de ce type (section « Système » dupliquée sur 5 pages en 2 occurrences distinctes, liens désactivés alors que la page existe, notifications absentes d'une page) ne se voient qu'à l'audit systématique.
 
 ## 📜 Historique des PRs
 
@@ -113,6 +114,7 @@ En cours / ouvert :
 2. Vérifier `git log`, les PRs ouvertes et `git status` avant de toucher au code.
 3. À la fin de la session : **mettre à jour ce fichier** (état, décisions, leçons) dans la même PR que le travail livré.
 4. **Avant tout commit/push : résumer l'action (fichiers, but) et attendre la validation explicite de l'utilisateur.** Jamais de push automatique en fin de tâche.
+5. **Après tout changement de sidebar ou topbar sur une page : passer toutes les pages en revue** (sections, liens, composants) — la mise en page est dupliquée page par page, donc une modification localisée crée des divergences invisibles. Audit rapide : `for f in *.html; do grep -c 'side-section' $f; done` + comparaison des href de chaque nav.
 
 ## 🔧 Autonomie de livraison
 
