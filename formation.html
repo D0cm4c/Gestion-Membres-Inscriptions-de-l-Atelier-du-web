@@ -196,7 +196,7 @@
             var html = '';
 
             // Bandeau (couleur de la catégorie)
-            html += '<div class="hero"' + bannerStyle + ' style="border-radius:var(--radius);padding:1.4rem 1.6rem;color:#fff;margin-bottom:1.3rem;">' +
+            html += '<div class="hero"' + bannerStyle + ' style="border-radius:var(--radius);padding:1.4rem 1.6rem;color:#fff;margin-bottom:1.3rem;position:relative;">' +
                 '<h2 style="color:#fff;font-size:1.35rem;font-weight:800;letter-spacing:-0.4px;margin-bottom:0.5rem;">' + esc(f.title) + '</h2>' +
                 '<p style="opacity:0.92;font-size:0.95rem;">' +
                 (f.date_text || (f.start_date ? formatDate(f.start_date) : 'date à confirmer')) +
@@ -204,6 +204,9 @@
                 (f.duration ? ' · ' + esc(f.duration) : '') +
                 '</p>' +
                 '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button></div>' +
+                '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1rem;bottom:0.9rem;font-size:1.9rem;" href="#inscrits" title="Voir les inscrits">' +
+                '<span class="f-count-num" style="font-size:2.2rem;">' + attendees.length + '</span>' +
+                '<span class="f-count-lbl">inscrit' + (attendees.length > 1 ? 's' : '') + '</span></a>' +
                 '</div>';
 
             // Détails structurés (organisateur/lieu/tarif remplis dès que les snippets répondront)
@@ -216,26 +219,18 @@
                 '<li><strong>📍 Lieu :</strong> ' + esc(f.location || 'à confirmer') + '</li>' +
                 '<li><strong>👤 Organisateur :</strong> ' + esc(f.organizer || 'à confirmer') + '</li>' +
                 '</ul></div>' +
-                '<div class="stat-card"><h3>🗂 Catégories</h3>' +
-                (cats.length ? '<ul>' + cats.map(function (c) {
-                    var t = toneFor(c);
-                    return '<li><span class="month-dot" style="display:inline-block;background:' + TONE_SOLID[t] + ';margin-right:0.4rem;"></span>' + esc(c) + '</li>';
-                }).join('') + '</ul>' : '<p class="form-hint">Aucune catégorie.</p>') +
+                '<div class="stat-card"><h3>📝 Description</h3>' + (f.excerpt
+                    ? '<p style="font-size:0.95rem;color:var(--text);">' + esc(f.excerpt) + '</p>' +
+                      (f.url ? '<p class="form-hint" style="margin-top:0.6rem;"><a href="' + esc(f.url) + '" target="_blank" rel="noopener">Voir la page complète sur atelierduweb.be →</a></p>' : '')
+                    : '<p class="form-hint">Pas de description.</p>') +
                 '</div>' +
                 '<div class="stat-card" id="roomCard"><h3>📝 Salle & séances</h3>' +
                 roomCardHtml(f) +
                 '</div>' +
                 '</div>';
 
-            // Description
-            if (f.excerpt) {
-                html += '<div class="stat-card" style="margin-bottom:1.3rem;"><h3>📝 Description</h3><p style="font-size:0.95rem;color:var(--text);">' + esc(f.excerpt) + '</p>' +
-                    (f.url ? '<p class="form-hint" style="margin-top:0.6rem;"><a href="' + esc(f.url) + '" target="_blank" rel="noopener">Voir la page complète sur atelierduweb.be →</a></p>' : '') +
-                    '</div>';
-            }
-
             // Inscriptions (miroir)
-            html += '<div class="stat-card"><h3>👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>';
+            html += '<div class="stat-card" id="inscrits"><h3>👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>';
             if (attendees.length) {
                 html += '<ul class="checkin-results" style="display:flex;flex-direction:column;">';
                 attendees.forEach(function (m) {
@@ -252,6 +247,15 @@
                 html += '<p class="form-hint">Aucun membre inscrit pour l\u2019instant. Les inscriptions réalisées sur le site apparaîtront ici après synchronisation (bouton 📥 dans la page Formations).</p>';
             }
             html += '</div>';
+
+
+            // Catégories (bloc sous la grille)
+            html += '<div class="stats-container" style="margin-bottom:1.3rem;"><div class="stat-card"><h3>🗂 Catégories</h3>' +
+                (cats.length ? '<ul style="display:flex;gap:0.4rem;list-style:none;flex-wrap:wrap;">' + cats.map(function (c) {
+                    var t = toneFor(c);
+                    return '<li><span class="tag" style="background:' + TONE_SOLID[t] + ';color:#fff;"><span class="month-dot" style="display:inline-block;background:rgba(255,255,255,0.6);margin-right:0.35rem;"></span>' + esc(c) + '</span></li>';
+                }).join('') + '</ul>' : '<p class="form-hint">Aucune catégorie.</p>') +
+                '</div></div>';
 
             content.innerHTML = html;
             attachRoomLogic(f);
