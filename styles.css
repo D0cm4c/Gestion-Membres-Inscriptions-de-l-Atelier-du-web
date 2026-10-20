@@ -1217,7 +1217,7 @@ main {
     font-size: 0.86rem; color: var(--text-soft); margin-bottom: 0.6rem;
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-.f-card-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: auto; }
+.f-card-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
 .f-card-foot .spacer { flex: 1; }
 
 /* ============ Formations : couleurs par catégorie ============ */
@@ -1315,11 +1315,13 @@ main {
 .f-card-count .f-count-lbl { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.85; }
 .f-card-count.has-attendees { background: rgba(255, 255, 255, 0.30); }
 
-/* Bouton Réserver : fixe en bas de carte, pleine largeur */
+/* Bouton Réserver : ancre en bas de carte, pleine largeur, colle aux bords */
 .f-card-book {
-    display: flex; width: 100%;
-    margin: 0.6rem -1rem -0.9rem; /* deborde sur le padding de la carte jusqu'aux bords */
-    padding-top: 0.6rem; padding-bottom: 0.6rem;
+    display: flex; width: calc(100% + 2rem); /* compense le padding horizontal du body */
+    margin: 0.7rem -1rem 0;                  /* debord gauche/droite, PAS en bas (la carte garde son padding) */
+    margin-bottom: -0.9rem;                  /* compense le padding bas de la carte pour coller au bord */
+    padding-top: 0.65rem; padding-bottom: 0.65rem;
     border-radius: 0 0 var(--radius) var(--radius);
     justify-content: center;
+    margin-top: auto;                        /* pousse le bouton en bas meme si la description est courte */
 }
