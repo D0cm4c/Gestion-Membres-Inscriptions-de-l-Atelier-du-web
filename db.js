@@ -182,6 +182,29 @@
         if (!fcols.location) {
             db.run('ALTER TABLE formations ADD COLUMN location TEXT');
         }
+        if (!fcols.room_id) {
+            db.run('ALTER TABLE formations ADD COLUMN room_id TEXT');
+        }
+        db.run(
+            'CREATE TABLE IF NOT EXISTS rooms (' +
+            'id TEXT PRIMARY KEY,' +
+            'name TEXT NOT NULL,' +
+            'capacity INTEGER,' +
+            'sort_order INTEGER DEFAULT 0,' +
+            'created_at TEXT DEFAULT (datetime(\'now\'))' +
+            ')'
+        );
+        db.run(
+            'CREATE TABLE IF NOT EXISTS formation_dates (' +
+            'id TEXT PRIMARY KEY,' +
+            'formation_id TEXT NOT NULL,' +
+            'date TEXT NOT NULL,' +
+            'slot TEXT NOT NULL CHECK (slot IN (\'AM\', \'PM\')),' +
+            'UNIQUE(formation_id, date, slot),' +
+            'FOREIGN KEY (formation_id) REFERENCES formations(id) ON DELETE CASCADE' +
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_fdates ON formation_dates(date, slot)');
         db.run(
             'CREATE TABLE IF NOT EXISTS suggestions (' +
             'id TEXT PRIMARY KEY,' +
@@ -217,6 +240,14 @@
             db.run('ALTER TABLE members ADD COLUMN social_status TEXT');
         }
         db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_members_no ON members(member_no)');
+        // Salles par defaut (premier chargement seulement)
+        var roomCount = db.exec('SELECT COUNT(*) FROM rooms');
+        if (!roomCount.length || roomCount[0].values[0][0] === 0) {
+            db.run("INSERT INTO rooms (id, name, capacity, sort_order) VALUES ('room-grande', 'Grande salle', 15, 1)");
+            db.run("INSERT INTO rooms (id, name, capacity, sort_order) VALUES ('room-petite', 'Petite salle', 8, 2)");
+            db.run("INSERT INTO rooms (id, name, capacity, sort_order) VALUES ('room-cyber', 'Cyber-espace', 25, 3)");
+        }
+
         var missing = db.exec("SELECT id FROM members WHERE member_no IS NULL");
         if (missing.length) {
             var used = {};
@@ -306,19 +337,30 @@
         events.forEach(function (ev) {
             var existing = self.queryAll('SELECT id FROM formations WHERE event_id = ?', [String(ev.id)]);
             var categories = (ev.categories || []).join(', ');
+            var formationId;
             if (existing.length) {
+                formationId = existing[0].id;
                 db.run(
                     'UPDATE formations SET title = ?, start_date = ?, date_text = ?, time_label = ?, duration = ?, excerpt = ?, url = ?, categories = ?, synced_at = ? WHERE event_id = ?',
                     [ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null, now, String(ev.id)]
                 );
-                keptIds.push(existing[0].values[0][0]);
             } else {
-                var fid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                formationId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
                 db.run(
                     'INSERT INTO formations (id, event_id, title, start_date, date_text, time_label, duration, excerpt, url, categories, synced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [fid, String(ev.id), ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null, now]
+                    [formationId, String(ev.id), ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null, now]
                 );
-                keptIds.push(fid);
+            }
+            keptIds.push(formationId);
+            // Dates + creneaux pour le planning des salles
+            if (ev.dates && ev.dates.length) {
+                var slot = ev.slot || 'AM';
+                db.run('DELETE FROM formation_dates WHERE formation_id = ?', [formationId]);
+                ev.dates.forEach(function (d) {
+                    var did = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                    db.run('INSERT OR IGNORE INTO formation_dates (id, formation_id, date, slot) VALUES (?, ?, ?, ?)',
+                        [did, formationId, d, slot]);
+                });
             }
         });
         // Supprime les formations disparues du flux (et leurs inscriptions via CASCADE)
@@ -437,6 +479,65 @@
             'UPDATE bookings_remote SET processed = 1, processed_action = ?, processed_at = ?, local_member_id = ? WHERE id = ?',
             [action, new Date().toISOString(), localMemberId || null, String(bookingId)]
         );
+    };
+
+    // ============ Salles & planning ============
+
+    Database.listRooms = function () {
+        return this.queryAll('SELECT * FROM rooms ORDER BY sort_order ASC, name ASC');
+    };
+
+    Database.setFormationRoom = function (formationId, roomId) {
+        this.run('UPDATE formations SET room_id = ? WHERE id = ?', [roomId || null, formationId]);
+    };
+
+    // Dates+creneaux d'une formation (re-calculables depuis date_text/time_label)
+    Database.setFormationDates = function (formationId, dates) {
+        // dates : [{ date: '2026-12-08', slot: 'AM' }]
+        var self = this;
+        this.db.run('DELETE FROM formation_dates WHERE formation_id = ?', [formationId]);
+        dates.forEach(function (d) {
+            var did = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+            self.db.run('INSERT INTO formation_dates (id, formation_id, date, slot) VALUES (?, ?, ?, ?)',
+                [did, formationId, d.date, d.slot]);
+        });
+        this.persist();
+    };
+
+    Database.getFormationDates = function (formationId) {
+        return this.queryAll('SELECT date, slot FROM formation_dates WHERE formation_id = ? ORDER BY date ASC', [formationId]);
+    };
+
+    // Grille du mois : toutes les occupations (date, slot, room) avec la formation
+    Database.getRoomPlanning = function (monthStart, monthEnd) {
+        return this.queryAll(
+            'SELECT fd.date, fd.slot, fd.formation_id AS fid, f.title, f.event_id, f.categories ' +
+            'FROM formation_dates fd JOIN formations f ON f.id = fd.formation_id ' +
+            'WHERE fd.date >= ? AND fd.date <= ? ' +
+            'ORDER BY fd.date ASC, fd.slot ASC', [monthStart, monthEnd]);
+    };
+
+    // Conflits : meme salle x meme date x meme creneau
+    Database.getRoomConflicts = function (formationId, roomId) {
+        var dates = this.getFormationDates(formationId);
+        if (!dates.length || !roomId) return [];
+        var conflicts = [];
+        var self = this;
+        dates.forEach(function (d) {
+            var rows = self.queryAll(
+                'SELECT fd.formation_id AS fid, f.title, fd.date, fd.slot ' +
+                'FROM formation_dates fd JOIN formations f ON f.id = fd.formation_id ' +
+                'WHERE f.room_id = ? AND fd.date = ? AND fd.slot = ? AND fd.formation_id != ?',
+                [roomId, d.date, d.slot, formationId]);
+            conflicts = conflicts.concat(rows);
+        });
+        return conflicts;
+    };
+
+    Database.formationsWithoutRoom = function () {
+        return this.queryAll(
+            "SELECT f.*, (SELECT COUNT(*) FROM formation_dates fd WHERE fd.formation_id = f.id) AS date_count " +
+            "FROM formations f WHERE f.room_id IS NULL ORDER BY f.start_date ASC");
     };
 
     // ============ Suggestions ============

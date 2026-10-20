@@ -15,17 +15,27 @@
 
     // Parse une date française : "le lundi 23 novembre", "Les 08 et 10 décembre 2026",
     // "Les 15, 16, 22, 23 juin de 13h30 à 16h30" (on coupe avant "de 13h")
-    function parseFrDate(text) {
-        if (!text) return null;
+    // Parse TOUTES les dates d'un texte : "le lundi 23 novembre", "Les 08 et 10 décembre 2026", "Les 15, 16, 22, 23 juin de 13h30 à 16h30"
+    function parseFrDates(text) {
+        if (!text) return [];
         var clean = text.replace(/\s+de\s+\d{1,2}\s?h.*$/i, '').trim();
         var months = { janvier: 1, 'février': 2, fevrier: 2, mars: 3, avril: 4, mai: 5, juin: 6, juillet: 7, 'août': 8, aout: 8, septembre: 9, octobre: 10, novembre: 11, 'décembre': 12, decembre: 12 };
-        var m = clean.toLowerCase().match(/(\d{1,2})(?:\s*(?:et|,|-)\s*\d{1,2})*\s+([a-zéû\d]+)\s*(\d{4})?/);
-        if (!m) return null;
-        var day = parseInt(m[1], 10);
+        var m = clean.toLowerCase().match(/(\d{1,2}(?:\s*(?:,|et|&)\s*\d{1,2})*)\s+([a-zéû]+)\s*(\d{4})?/);
+        if (!m) return [];
         var month = months[m[2]];
-        if (!month || !day) return null;
+        if (!month) return [];
         var year = m[3] ? parseInt(m[3], 10) : new Date().getFullYear();
-        return year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        var days = m[1].match(/\d{1,2}/g) || [];
+        return days.map(function (d) {
+            return year + '-' + String(month).padStart(2, '0') + '-' + String(parseInt(d, 10)).padStart(2, '0');
+        });
+    }
+
+    // Creneau : matin (AM) si heure de debut < 12h, sinon apres-midi (PM)
+    function parseSlot(timeText) {
+        var m = (timeText || '').match(/(\d{1,2})\s?h/i);
+        if (!m) return 'AM';
+        return parseInt(m[1], 10) < 12 ? 'AM' : 'PM';
     }
 
     // Extrait durée / dates / horaires depuis l'extrait structuré du site
@@ -73,7 +83,7 @@
                 var mDateAlt = clean.match(/(?:le |les )?(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\s+\d{1,2}(?:\s*(?:et|,|-)\s*\d{1,2})*\s+[a-zéû\d]+\s*(?:\d{4})?/i);
                 if (mDateAlt) out.dateText = mDateAlt[0].trim();
             }
-            out.startDate = parseFrDate(out.dateText) || '';
+            out.startDate = (parseFrDates(out.dateText)[0]) || '';
             // La description = le texte restant après les trois champs
             var desc = clean;
             if (mDur) desc = desc.replace(mDur[0], '');
@@ -101,13 +111,17 @@
                         if (!item.link || item.link.indexOf('__trashed') !== -1) return;
                         var excerptText = stripHtml(item.excerpt && item.excerpt.rendered);
                         var fields = Mec.parseExcerptFields(excerptText);
+                        var evDates = parseFrDates(fields.dateText);
+                        if (!evDates.length && fields.startDate) evDates = [fields.startDate];
                         events.push({
                             id: item.id,
                             title: stripHtml(item.title && item.title.rendered),
                             url: item.link,
                             excerpt: fields.description,
                             duration: fields.duration,
-                            startDate: fields.startDate || '',
+                            startDate: evDates[0] || '',
+                            dates: evDates,
+                            slot: parseSlot(fields.timeText),
                             dateText: fields.dateText,
                             timeLabel: fields.timeText,
                             categories: item.mec_category || [],
