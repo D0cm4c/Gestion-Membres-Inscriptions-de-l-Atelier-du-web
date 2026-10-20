@@ -115,6 +115,7 @@
     <script src="theme.js?v=14"></script>
     <script src="nav.js?v=1"></script>
     <script src="notifications.js?v=1"></script>
+    <script src="booking.js?v=1"></script>
     <script>
     (function () {
         'use strict';
@@ -264,8 +265,9 @@
                     var row = formationRows[String(ev.id)] || null;
 
                     var li = document.createElement('article');
-                    li.className = 'f-card';
+                    li.className = 'f-card f-card-link';
                     if (tone >= 0) li.setAttribute('data-tone', tone);
+                    li.setAttribute('data-goto-evid', esc(ev.id));
                     li.innerHTML =
                         '<div class="f-card-banner' + (ev.startDate ? '' : ' no-date') + '">' +
                         '<div class="f-card-date">' +
@@ -290,7 +292,9 @@
                         badge(ev) +
                         '<span class="spacer"></span>' +
                         (row ? '<a class="btn btn-secondary btn-small" href="formation.html?id=' + encodeURIComponent(ev.id) + '" title="Voir la fiche formation et les inscrits">👥 <span class="f-count">' + row.attendee_count + '</span></a>' : '') +
-                        '<a class="btn btn-primary btn-small" href="' + esc(url + (url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal') + '" target="_blank" rel="noopener" title="Réserver sur atelierduweb.be">Réserver sur le site</a>' +
+                        (row
+                        ? '<button class="btn btn-primary btn-small bk-open" data-evid="' + esc(ev.id) + '" title="Choisir un membre et réserver sur atelierduweb.be">Réserver sur le site</button>'
+                        : '<a class="btn btn-primary btn-small" href="' + esc(url) + '" target="_blank" rel="noopener">Réserver sur le site</a>') +
                         '</div>' +
                         '</div>';
                     wrap.appendChild(li);
@@ -361,6 +365,22 @@
                 status('⚠️ Impossible de charger les formations. Vérifiez votre connexion, puis cliquez sur « Actualiser ».');
             });
         }
+
+        grid.addEventListener('click', function (e) {
+            // Boutons et liens internes : ne declenchent pas la navigation
+            if (e.target.closest('.bk-open, a, button')) return;
+            var card = e.target.closest('.f-card-link');
+            if (!card) return;
+            var evid = card.getAttribute('data-goto-evid');
+            if (evid) location.href = 'formation.html?id=' + encodeURIComponent(evid);
+        });
+
+        grid.addEventListener('click', function (e) {
+            var btn = e.target.closest('.bk-open');
+            if (!btn) return;
+            var f = window.ADWDatabase.getFormationByEventId(btn.getAttribute('data-evid'));
+            if (f && window.ADWBooking) window.ADWBooking.openPicker(f);
+        });
 
         document.getElementById('refreshBtn').addEventListener('click', function () {
             window.ADWMec.clearCache();

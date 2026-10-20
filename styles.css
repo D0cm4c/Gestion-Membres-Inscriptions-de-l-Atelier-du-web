@@ -1290,3 +1290,7 @@ main {
 .notif-ico.sev-warning { background: var(--warning-bg); }
 .notif-ico.sev-danger { background: var(--danger-bg); }
 .notif-ico.sev-info { background: var(--info-bg); }
+
+/* Carte formation entirement cliquable */
+.f-card-link { cursor: pointer; }
+.f-card-link:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--accent); }

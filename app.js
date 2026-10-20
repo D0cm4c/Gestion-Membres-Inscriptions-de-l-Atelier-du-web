@@ -378,6 +378,8 @@
         html += '</div>';
 
         detailBody.innerHTML = html;
+        var detailFullBtn = document.getElementById('detailFullBtn');
+        if (detailFullBtn) detailFullBtn.href = 'membre.html?id=' + encodeURIComponent(member.id);
         detailModal.hidden = false;
         detailCloseBtn.focus();
     }

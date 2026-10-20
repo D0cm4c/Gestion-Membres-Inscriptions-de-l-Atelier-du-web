@@ -88,9 +88,10 @@ En cours / ouvert :
 8. **Attendre la validation visuelle du client avant de verrouiller un design** : la version « liste » a été refusée, la version « cartes avec bordures » validée. Itérer vite, commetter les états validés.
 9. **Ne jamais casser le desktop validé** : encapsuler tout travail responsive dans des `@media` (≤ 860px ici) sans toucher aux règles desktop — le design desktop est validé par le client et ne doit pas bouger.
 10. **Anticiper la migration SQLite-serveur dans chaque décision** : le projet Pages est une MAQUETTE — schémas SQL standards, requêtes paramétrées, logique métier découplée des API navigateur. Les décisions de flux (synchro, matching) sont pensées pour tourner côté serveur ensuite.
+11. **La validation humaine est le garde-fou des automatismes** : hiérarchie de matching avec seuil de certitude (id > email > nom), tout ce qui est certain s'automatise mais se journalise, tout ce qui est incertain passe par l'humain. Le champ « n° de membre » saisi par l'usager lui-même lors de la réservation renforce le maillon le plus fort.
+12. **Résumer et faire valider avant de pousser** : présenter le résumé de chaque action (fichiers, but, impact) et obtenir l'aval explicite de l'utilisateur avant commit/push — l'utilisateur garde le contrôle du dépôt.
 13. **Le préfill peut remplacer le tracking** : quand l'app fournit elle-même les données du formulaire distant (n° de membre), la donnée revient avec la réservation → le matching automatique fait la réconciliation. Pas besoin d'un système de vérification que personne n'utiliserait.
 14. **Modale pour le parcours rapide, page pour le lien profond** : dans une liste de gestion (inscrits), l'aperçu en modale évite la navigation ; la page dédiée reste pour le partage/deep-linking.
-11. **La validation humaine est le garde-fou des automatismes** : hiérarchie de matching avec seuil de certitude (id > email > nom), tout ce qui est certain s'automatise mais se journalise, tout ce qui est incertain passe par l'humain. Le champ « n° de membre » saisi par l'usager lui-même lors de la réservation renforce le maillon le plus fort.
 
 ## 📜 Historique des PRs
 

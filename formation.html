@@ -78,6 +78,7 @@
     <script src="db.js?v=16"></script>
     <script src="theme.js?v=13"></script>
     <script src="notifications.js?v=1"></script>
+    <script src="booking.js?v=1"></script>
     <script>
     (function () {
         'use strict';
@@ -109,26 +110,10 @@
         }
         var TONE_SOLID = ['#0F3D5C', '#6C5CE7', '#2F9BE4', '#18A55F', '#E8734A', '#B26A00', '#D8434B', '#7A5230', '#556B2F', '#4A4E69'];
 
-        // Ouvre le formulaire MEC pré-rempli pour un membre donné
-        function openMecPrefilled(f, member) {
-            var url = f.url + (f.url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal';
-            var params = [
-                ['adw_name', (member.first_name || '') + ' ' + (member.last_name || '')],
-                ['adw_email', member.email || ''],
-                ['adw_phone', member.phone || ''],
-                ['adw_member_no', member.member_no || '']
-            ];
-            params.forEach(function (kv) { if (kv[1]) url += '&' + kv[0] + '=' + encodeURIComponent(kv[1]); });
-            window.open(url, '_blank', 'noopener');
-            if (window.ADWNotifications) {
-                window.ADWNotifications.push('info',
-                    '📤 Formulaire d\u2019inscription ouvert sur le site pour ' + member.first_name + ' ' + member.last_name +
-                    ' — ' + f.title + '. Le rattachement se fera automatiquement dès que la réservation sera confirmée.',
-                    'info');
-            }
-        }
+        var currentFormation = null;
 
         function render(f) {
+            currentFormation = f;
             pageTitle.textContent = f.title;
             document.title = f.title + ' — Atelier du Web';
 
@@ -140,7 +125,6 @@
             var attendees = [];
             try { attendees = ADWDatabase.getFormationAttendees(f.id) || []; } catch (e) { attendees = []; }
 
-            var bookUrl = f.url ? f.url + (f.url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal' : '';
 
             var html = '';
 
@@ -152,7 +136,7 @@
                 (f.time_label ? ' · ' + esc(f.time_label) : '') +
                 (f.duration ? ' · ' + esc(f.duration) : '') +
                 '</p>' +
-                (bookUrl ? '<div class="hero-actions"><a class="btn btn-primary" href="' + esc(bookUrl) + '" target="_blank" rel="noopener">Réserver sur le site</a></div>' : '') +
+                '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button></div>' +
                 '</div>';
 
             // Détails structurés (organisateur/lieu/tarif remplis dès que les snippets répondront)
@@ -249,6 +233,11 @@
             if (li) openMemberPreview(li.getAttribute('data-preview-mid'));
         });
         document.getElementById('memberPreviewCloseBtn').addEventListener('click', function () { previewModal.hidden = true; });
+
+        // Bouton Réserver : ouvre le sélecteur de membre, puis MEC pré-rempli
+        document.getElementById('bookBtn').addEventListener('click', function () {
+            if (window.ADWBooking && currentFormation) window.ADWBooking.openPicker(currentFormation);
+        });
         previewModal.addEventListener('click', function (e) { if (e.target === previewModal) previewModal.hidden = true; });
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && !previewModal.hidden) previewModal.hidden = true;
