@@ -39,6 +39,7 @@
         var results = modal.querySelector('#bookingSearchResults');
         var formationLabel = modal.querySelector('#bookingPickerFormation');
         var currentFormation = null;
+        var activeIndex = -1; // navigation clavier dans les resultats
 
         function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
@@ -71,9 +72,24 @@
             }
         }
 
+        var lastMembers = []; // resultats de la recherche courante (pour la navigation clavier)
+
+        function setActive(idx) {
+            activeIndex = idx;
+            var items = results.querySelectorAll('.checkin-item');
+            items.forEach(function (el, i) {
+                el.classList.toggle('bk-active', i === activeIndex);
+            });
+            if (activeIndex >= 0 && items[activeIndex]) {
+                items[activeIndex].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
         function search(q) {
             q = (q || '').trim().toLowerCase();
             results.innerHTML = '';
+            lastMembers = [];
+            setActive(-1);
             if (!q) { results.hidden = true; return; }
             var members = window.ADWDatabase.queryAll(
                 'SELECT id, first_name, last_name, member_no, email FROM members WHERE (first_name LIKE ? OR last_name LIKE ? OR CAST(member_no AS TEXT) LIKE ?) ORDER BY last_name LIMIT 8',
@@ -81,6 +97,7 @@
             );
             results.hidden = members.length === 0;
             members.forEach(function (m) {
+                lastMembers.push(m);
                 var li = document.createElement('div');
                 li.className = 'checkin-item';
                 li.innerHTML =
@@ -89,8 +106,10 @@
                     (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
                     '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + '</div></div>';
                 li.addEventListener('click', function () { finish(m); });
+                li.addEventListener('mouseenter', function () { setActive(lastMembers.indexOf(m)); });
                 results.appendChild(li);
             });
+            if (members.length) setActive(0); // premier resultat pre-selectionne
         }
 
         window.ADWBooking = {
@@ -108,6 +127,19 @@
         };
 
         searchInput.addEventListener('input', function () { search(searchInput.value); });
+        searchInput.addEventListener('keydown', function (e) {
+            if (results.hidden || !lastMembers.length) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActive(Math.min(activeIndex + 1, lastMembers.length - 1));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActive(Math.max(activeIndex - 1, 0));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeIndex >= 0 && lastMembers[activeIndex]) finish(lastMembers[activeIndex]);
+            }
+        });
         modal.querySelector('#bookingNoMemberBtn').addEventListener('click', function () { finish(null); });
         modal.querySelector('#bookingCloseBtn').addEventListener('click', function () { modal.hidden = true; });
         modal.addEventListener('click', function (e) { if (e.target === modal) modal.hidden = true; });

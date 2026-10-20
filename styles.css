@@ -1294,3 +1294,7 @@ main {
 /* Carte formation entirement cliquable */
 .f-card-link { cursor: pointer; }
 .f-card-link:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--accent); }
+
+/* Navigation clavier du sélecteur de réservation */
+.checkin-item.bk-active { border-color: var(--accent); background: var(--accent-light); }
+.checkin-item.bk-active::after { content: '⏎'; margin-left: auto; color: var(--accent); font-weight: 800; font-size: 0.85rem; }
