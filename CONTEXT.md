@@ -58,6 +58,14 @@ Fait :
 - **Écran de validation des inscriptions du site** (page Formations, bouton 📥) : file des `bookings_remote` non traités avec matching hiérarchique — 1) n° de membre exact → auto notifié, 2) email exact (LOWER) → auto notifié, 3) nom+prénom → candidats + validation humaine (jamais auto), 4) sinon création de membre (n° auto). Bouton démo 🧪 pour la maquette (3 résas simulées). **La vraie synchro se fera côté serveur** (décision sécurité : pas de clé publique) — le schéma et le flux sont prêts.
 - **Page membre dédiée `membre.html?id=...`** : fiche complète en page (URL partageable, titre d'onglet dynamique, bouton retour), avec formations + visites. Les liens « voir la fiche » (modale inscriptions) pointent dessus. `membres.html#member=<id>` ouvre toujours la modale (compat ascendante).
 
+- **Architecture miroir « le site vend, l'app gère » (décision utilisateur, oct. 2026)** :
+  - Plus aucune inscription directe dans l'app : le bouton « 🌐 Inscrire via le site » ouvre le formulaire MEC pré-rempli (`?method=mec-booking-modal&adw_name=…&adw_member_no=…`) — **le n° de membre pré-rempli EST le tracking** : la booking revient avec, le matching auto fait le reste.
+  - Désinscription supprimée de l'UI : le miroir retire automatiquement l'inscription locale quand la réservation est annulée côté site (`applyMirror`, testé 4/4), toujours notifié.
+  - Le préfill nécessite le snippet 3 (wp_footer, remplissage de la modale AJAX MEC, en attente hébergeur).
+- **Pages dédiées (URL partageables)** : `formation.html?id=<event_id>` (bandeau couleur catégorie, infos structurées date/horaires/durée/tarif/lieu/organisateur — ces 3 derniers « à confirmer » en attendant les snippets 1-2, description, inscrits) et `membre.html` (fiche complète). Les inscrits de la page formation ouvrent une **modale d'aperçu rapide** (infos clés + bouton « Fiche complète → »). Liens croisés cartes → formations → membres → formations.
+- **Snippets WordPress séparés (plugin Code Snippets) en préparation** : 1) organisateur (REST), 2) lieu (REST), 3) préfill modale MEC (en attente du HTML de la modale pour les sélecteurs), 4) bookings (endpoint secret — refusé côté client public : à brancher sur le backend final).
+- Colonnes `organizer`/`location` ajoutées à la table `formations` (schéma prêt).
+
 En cours / ouvert :
 - **⚠️ MAQUETTE vs FINAL — décisions utilisateur (session oct. 2026) pour la synchro des inscriptions MEC :**
   1. **Refusé** : clé/secret public dans le JS pour exposer les inscriptions (point sécurité du 19/10). À revoir avec l'hébergeur/DPO — la synchro bookings devra passer par une voie non publique (idéalement le backend SQLite final, ou un endpoint protégé non exposé côté client).
@@ -80,6 +88,8 @@ En cours / ouvert :
 8. **Attendre la validation visuelle du client avant de verrouiller un design** : la version « liste » a été refusée, la version « cartes avec bordures » validée. Itérer vite, commetter les états validés.
 9. **Ne jamais casser le desktop validé** : encapsuler tout travail responsive dans des `@media` (≤ 860px ici) sans toucher aux règles desktop — le design desktop est validé par le client et ne doit pas bouger.
 10. **Anticiper la migration SQLite-serveur dans chaque décision** : le projet Pages est une MAQUETTE — schémas SQL standards, requêtes paramétrées, logique métier découplée des API navigateur. Les décisions de flux (synchro, matching) sont pensées pour tourner côté serveur ensuite.
+13. **Le préfill peut remplacer le tracking** : quand l'app fournit elle-même les données du formulaire distant (n° de membre), la donnée revient avec la réservation → le matching automatique fait la réconciliation. Pas besoin d'un système de vérification que personne n'utiliserait.
+14. **Modale pour le parcours rapide, page pour le lien profond** : dans une liste de gestion (inscrits), l'aperçu en modale évite la navigation ; la page dédiée reste pour le partage/deep-linking.
 11. **La validation humaine est le garde-fou des automatismes** : hiérarchie de matching avec seuil de certitude (id > email > nom), tout ce qui est certain s'automatise mais se journalise, tout ce qui est incertain passe par l'humain. Le champ « n° de membre » saisi par l'usager lui-même lors de la réservation renforce le maillon le plus fort.
 
 ## 📜 Historique des PRs
@@ -100,6 +110,7 @@ En cours / ouvert :
 1. Lire ce fichier et le README.
 2. Vérifier `git log`, les PRs ouvertes et `git status` avant de toucher au code.
 3. À la fin de la session : **mettre à jour ce fichier** (état, décisions, leçons) dans la même PR que le travail livré.
+4. **Avant tout commit/push : résumer l'action (fichiers, but) et attendre la validation explicite de l'utilisateur.** Jamais de push automatique en fin de tâche.
 
 ## 🔧 Autonomie de livraison
 
