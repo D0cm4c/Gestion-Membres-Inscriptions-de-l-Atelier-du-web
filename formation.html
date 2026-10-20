@@ -62,6 +62,18 @@
         <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
 
+    <!-- Modale apercu membre -->
+    <div class="modal-overlay" id="memberPreviewModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="memberPreviewTitle">
+            <h3 id="memberPreviewTitle">Membre</h3>
+            <div id="memberPreviewBody"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="memberPreviewCloseBtn">Fermer</button>
+                <a class="btn btn-primary" id="memberPreviewFullBtn">Fiche complète →</a>
+            </div>
+        </div>
+    </div>
+
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js?v=16"></script>
     <script src="theme.js?v=13"></script>
@@ -173,12 +185,12 @@
             if (attendees.length) {
                 html += '<ul class="checkin-results" style="display:flex;flex-direction:column;">';
                 attendees.forEach(function (m) {
-                    html += '<li class="checkin-item done" style="list-style:none;">' +
+                    html += '<li class="checkin-item done" style="list-style:none;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
                         '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
-                        '<a href="membre.html?id=' + encodeURIComponent(m.id) + '" style="flex:1;min-width:0;text-decoration:none;color:inherit;">' +
+                        '<div style="flex:1;min-width:0;">' +
                         '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
                         (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
-                        '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">voir la fiche →</span></div></a>' +
+                        '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">détails</span></div></div>' +
                         '</li>';
                 });
                 html += '</ul>';
@@ -191,6 +203,56 @@
             content.hidden = false;
             loading.hidden = true;
         }
+
+        // ============ Apercu membre (modale rapide) ============
+        var previewModal = document.getElementById('memberPreviewModal');
+        var previewTitle = document.getElementById('memberPreviewTitle');
+        var previewBody = document.getElementById('memberPreviewBody');
+        var previewFullBtn = document.getElementById('memberPreviewFullBtn');
+
+        var SUB_LABELS = { none: 'Aucun abo', monthly: 'Abo mensuel · 3 €', yearly: 'Abo annuel · 30 €' };
+
+        function openMemberPreview(memberId) {
+            var rows = ADWDatabase.queryAll(
+                'SELECT m.*, ' +
+                '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visit_count, ' +
+                '(SELECT COUNT(*) FROM formations_members fm WHERE fm.member_id = m.id) AS formation_count ' +
+                'FROM members m WHERE m.id = ?', [memberId]);
+            if (!rows.length) return;
+            var m = rows[0];
+            previewTitle.textContent = m.first_name + ' ' + m.last_name;
+            var expired = m.end_date && m.end_date < new Date().toISOString().slice(0, 10);
+            previewBody.innerHTML =
+                '<div class="detail-head">' +
+                '<div class="member-avatar">' + esc(((m.first_name || '?')[0] || '') + ((m.last_name || '')[0] || '')) + '</div>' +
+                '<div><div class="member-name">' + esc(m.first_name) + ' ' + esc(m.last_name) + '</div>' +
+                '<div class="member-no-detail">N° de membre : <strong>' + (m.member_no || '—') + '</strong></div>' +
+                '<div class="member-badges">' +
+                '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>' +
+                '<span class="badge badge-sub-none">' + esc(SUB_LABELS[m.subscription] || SUB_LABELS.none) + '</span>' +
+                '</div></div></div>' +
+                '<dl class="detail-list">' +
+                (m.email ? '<div><dt>Email</dt><dd><a href="mailto:' + esc(m.email) + '">' + esc(m.email) + '</a></dd></div>' : '') +
+                (m.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + esc(String(m.phone).replace(/\s/g, '')) + '">' + esc(m.phone) + '</a></dd></div>' : '') +
+                (m.age ? '<div><dt>Âge</dt><dd>' + esc(m.age) + ' ans</dd></div>' : '') +
+                (m.postal_code ? '<div><dt>Code postal</dt><dd>' + esc(m.postal_code) + '</dd></div>' : '') +
+                '<div><dt>Visites</dt><dd>' + m.visit_count + '</dd></div>' +
+                '<div><dt>Formations</dt><dd>' + m.formation_count + '</dd></div>' +
+                '</dl>';
+            previewFullBtn.href = 'membre.html?id=' + encodeURIComponent(m.id);
+            previewModal.hidden = false;
+            document.getElementById('memberPreviewCloseBtn').focus();
+        }
+
+        document.getElementById('formationContent').addEventListener('click', function (e) {
+            var li = e.target.closest('[data-preview-mid]');
+            if (li) openMemberPreview(li.getAttribute('data-preview-mid'));
+        });
+        document.getElementById('memberPreviewCloseBtn').addEventListener('click', function () { previewModal.hidden = true; });
+        previewModal.addEventListener('click', function (e) { if (e.target === previewModal) previewModal.hidden = true; });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !previewModal.hidden) previewModal.hidden = true;
+        });
 
         ADWDatabase.init().then(function () {
             if (window.ADWNotifications) window.ADWNotifications.refresh();
