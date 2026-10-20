@@ -279,6 +279,7 @@
                         (dateInfo ? '<div class="f-card-weekday">' + esc(dateInfo) + '</div>' : '') +
                         '<div class="f-card-time">' + (timeShort ? esc(timeShort) : '') + '</div>' +
                         '</div>' +
+                        (row ? '<a class="f-card-count' + (row.attendee_count ? ' has-attendees' : '') + '" href="formation.html?id=' + encodeURIComponent(ev.id) + '" title="Voir la fiche formation et les inscrits"><span class="f-count-num">' + row.attendee_count + '</span><span class="f-count-lbl">inscrit' + (row.attendee_count > 1 ? 's' : '') + '</span></a>' : '') +
                         '</div>' +
                         '<div class="f-card-body">' +
                         '<h3 class="f-card-title">' + esc(ev.title) + '</h3>' +
@@ -290,12 +291,10 @@
                             return '<span class="' + cls + '">' + esc(c) + '</span>';
                         }).join('') +
                         badge(ev) +
-                        '<span class="spacer"></span>' +
-                        (row ? '<a class="btn btn-secondary btn-small" href="formation.html?id=' + encodeURIComponent(ev.id) + '" title="Voir la fiche formation et les inscrits">👥 <span class="f-count">' + row.attendee_count + '</span></a>' : '') +
-                        (row
-                        ? '<button class="btn btn-primary btn-small bk-open" data-evid="' + esc(ev.id) + '" title="Choisir un membre et réserver sur atelierduweb.be">Réserver sur le site</button>'
-                        : '<a class="btn btn-primary btn-small" href="' + esc(url) + '" target="_blank" rel="noopener">Réserver sur le site</a>') +
                         '</div>' +
+                        (row
+                        ? '<button class="btn btn-primary f-card-book bk-open" data-evid="' + esc(ev.id) + '" title="Choisir un membre et réserver sur atelierduweb.be">Réserver sur le site</button>'
+                        : '<a class="btn btn-primary f-card-book" href="' + esc(url) + '" target="_blank" rel="noopener">Réserver sur le site</a>') +
                         '</div>';
                     wrap.appendChild(li);
                 });
