@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formation — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=13">
+    <link rel="stylesheet" href="styles.css?v=18">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -28,6 +28,10 @@
             <span class="side-section">Espace</span>
             <a href="formations.html"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
             <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+            <span class="side-section">Système</span>
+            <a href="suggestions.html"><span class="nav-ico" aria-hidden="true">💡</span> À faire</a>
+            <span class="side-section">Système</span>
+            <a href="parametres.html"><span class="nav-ico" aria-hidden="true">⚙️</span> Paramètres</a>
         </nav>
         <div class="sidebar-footer">
             <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
@@ -39,6 +43,7 @@
         <a class="btn btn-secondary btn-small" href="formations.html">← Retour aux formations</a>
         <h1 class="topbar-title" id="pageTitle">Formation</h1>
         <p class="topbar-date" id="todayDate"></p>
+        <span class="open-status" id="openStatus" role="status" aria-live="polite"></span>
         <span id="notifCenter" style="display:inline-flex;margin-left:auto;"></span>
         <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌗</button>
     </header>
@@ -77,7 +82,9 @@
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js?v=17"></script>
     <script src="theme.js?v=13"></script>
+    <script src="openstatus.js?v=1"></script>
     <script src="notifications.js?v=1"></script>
+    <script src="suggestions.js?v=1"></script>
     <script src="booking.js?v=1"></script>
     <script>
     (function () {

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>À faire / Suggestions — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=18">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">AW</span>
+            <span class="brand-text">
+                <span class="brand-name">Atelier du Web</span>
+                <span class="brand-sub">EPN · Saint-Gilles</span>
+            </span>
+        </a>
+        <nav class="side-nav" aria-label="Navigation principale">
+            <span class="side-section">Général</span>
+            <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
+            <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
+            <span class="side-section">Espace</span>
+            <a href="formations.html"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
+            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+            <span class="side-section">Système</span>
+            <a href="suggestions.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">💡</span> À faire</a>
+            <a href="parametres.html"><span class="nav-ico" aria-hidden="true">⚙️</span> Paramètres</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+    <header class="topbar">
+        <h1 class="topbar-title">À faire / Suggestions</h1>
+        <p class="topbar-date" id="todayDate"></p>
+        <span class="open-status" id="openStatus" role="status" aria-live="polite"></span>
+        <span id="notifCenter" style="display:inline-flex;margin-left:auto;"></span>
+        <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌗</button>
+    </header>
+
+    <main id="main">
+        <section class="filters-bar" aria-label="Filtres">
+            <div class="filter-group">
+                <div class="segmented" role="group" aria-label="Filtrer par statut">
+                    <button class="seg-btn active" data-status="all">Toutes</button>
+                    <button class="seg-btn" data-status="open">À traiter</button>
+                    <button class="seg-btn" data-status="done">Traitées</button>
+                    <button class="seg-btn" data-status="discarded">Écartées</button>
+                </div>
+            </div>
+            <span class="members-count" id="suggCount" aria-live="polite"></span>
+        </section>
+
+        <div class="empty-state" id="loadingState">
+            <p>⏳ Chargement…</p>
+        </div>
+        <div id="suggList" style="display:flex;flex-direction:column;gap:0.7rem;" aria-label="Liste des suggestions"></div>
+        <div class="empty-state" id="emptyState" hidden>
+            <p>Aucune suggestion dans cette catégorie.</p>
+            <p class="form-hint">Le bouton 💡 en bas à droite de chaque page permet d'en ajouter.</p>
+        </div>
+    </main>
+
+    </div>
+    </div>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js?v=18"></script>
+    <script src="theme.js?v=13"></script>
+    <script src="openstatus.js?v=1"></script>
+    <script src="notifications.js?v=1"></script>
+    <script src="suggestions.js?v=1"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var list = document.getElementById('suggList');
+        var empty = document.getElementById('emptyState');
+        var loading = document.getElementById('loadingState');
+        var countEl = document.getElementById('suggCount');
+        var status = 'all';
+
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+        function statusBadge(s) {
+            if (s === 'done') return '<span class="badge badge-ok">✓ traitée</span>';
+            if (s === 'discarded') return '<span class="badge badge-sub-none">écartée</span>';
+            return '<span class="badge badge-sub-monthly">à traiter</span>';
+        }
+
+        function pageLabel(p) {
+            if (!p) return '';
+            var name = (p.split('/').pop() || p).split('?')[0];
+            var map = { 'index.html': 'Tableau de bord', 'membres.html': 'Membres', 'formations.html': 'Formations', 'formation.html': 'Fiche formation', 'membre.html': 'Fiche membre', 'parametres.html': 'Paramètres', 'suggestions.html': 'À faire' };
+            return map[name] || name;
+        }
+
+        function render() {
+            var all = [];
+            try { all = window.ADWDatabase.listSuggestions(); } catch (e) { all = []; }
+            var items = status === 'all' ? all : all.filter(function (s) { return s.status === status; });
+            loading.hidden = true;
+            countEl.textContent = items.length + ' suggestion' + (items.length > 1 ? 's' : '');
+            list.innerHTML = '';
+            empty.hidden = items.length > 0;
+            items.forEach(function (s) {
+                var card = document.createElement('article');
+                card.className = 'checkin-item';
+                card.style.flexWrap = 'wrap';
+                card.style.cursor = 'default';
+                var date = (s.created_at || '').slice(0, 16).replace('T', ' ');
+                card.innerHTML =
+                    '<span style="font-size:1.2rem;" aria-hidden="true">' + (s.status === 'done' ? '✅' : s.status === 'discarded' ? '🚫' : '💡') + '</span>' +
+                    '<div style="flex:1;min-width:220px;">' +
+                    '<div>' + esc(s.message) + '</div>' +
+                    '<div class="form-hint">' +
+                    (s.author ? 'par ' + esc(s.author) + ' · ' : '') +
+                    date +
+                    (s.page ? ' · depuis ' + esc(pageLabel(s.page)) : '') +
+                    '</div></div>' +
+                    statusBadge(s.status) +
+                    '<div style="flex-basis:100%;display:flex;gap:0.4rem;padding-top:0.4rem;">' +
+                    (s.status === 'open'
+                        ? '<button class="btn btn-primary btn-small s-done" data-id="' + esc(s.id) + '">✓ Traiter</button>' +
+                          '<button class="btn btn-danger btn-small s-discard" data-id="' + esc(s.id) + '">Écarter</button>'
+                        : '<button class="btn btn-secondary btn-small s-reopen" data-id="' + esc(s.id) + '">↩ Rouvrir</button>') +
+                    '</div>';
+                list.appendChild(card);
+            });
+        }
+
+        list.addEventListener('click', function (e) {
+            var done = e.target.closest('.s-done');
+            var discard = e.target.closest('.s-discard');
+            var reopen = e.target.closest('.s-reopen');
+            if (!done && !discard && !reopen) return;
+            var id = (done || discard || reopen).getAttribute('data-id');
+            var action = done ? 'done' : (discard ? 'discarded' : 'open');
+            window.ADWDatabase.setSuggestionStatus(id, action);
+            render();
+        });
+
+        document.querySelectorAll('[data-status]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('[data-status]').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                status = btn.getAttribute('data-status');
+                render();
+            });
+        });
+
+        window.ADWDatabase.init().then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
+            render();
+        }).catch(function () {
+            loading.hidden = true;
+            empty.hidden = false;
+        });
+    })();
+    </script>
+</body>
+</html>

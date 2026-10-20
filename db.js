@@ -182,6 +182,18 @@
         if (!fcols.location) {
             db.run('ALTER TABLE formations ADD COLUMN location TEXT');
         }
+        db.run(
+            'CREATE TABLE IF NOT EXISTS suggestions (' +
+            'id TEXT PRIMARY KEY,' +
+            'message TEXT NOT NULL,' +
+            'page TEXT,' +               // page d'origine (location.pathname)
+            'author TEXT,' +            // optionnel : nom de l'animateur
+            'status TEXT DEFAULT \'open\',' + // open | done | discarded
+            'created_at TEXT DEFAULT (datetime(\'now\')),' +
+            'handled_at TEXT' +
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_sugg_status ON suggestions(status, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_notif_unread ON notifications(is_read, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_booking_unprocessed ON bookings_remote(processed, booked_at)');
         var cols = {};
@@ -425,6 +437,30 @@
             'UPDATE bookings_remote SET processed = 1, processed_action = ?, processed_at = ?, local_member_id = ? WHERE id = ?',
             [action, new Date().toISOString(), localMemberId || null, String(bookingId)]
         );
+    };
+
+    // ============ Suggestions ============
+
+    Database.addSuggestion = function (message, page, author) {
+        var sid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        this.run(
+            'INSERT INTO suggestions (id, message, page, author) VALUES (?, ?, ?, ?)',
+            [sid, message, page || null, author || null]
+        );
+        return sid;
+    };
+
+    Database.listSuggestions = function () {
+        return this.queryAll('SELECT * FROM suggestions ORDER BY created_at DESC');
+    };
+
+    Database.openSuggestionsCount = function () {
+        var rows = this.queryAll("SELECT COUNT(*) AS c FROM suggestions WHERE status = 'open'");
+        return rows.length ? rows[0].c : 0;
+    };
+
+    Database.setSuggestionStatus = function (id, status) {
+        this.run('UPDATE suggestions SET status = ?, handled_at = datetime(\'now\') WHERE id = ?', [status, String(id)]);
     };
 
     // ============ Miroir : réservation annulée côté site → retrait local notifié ============

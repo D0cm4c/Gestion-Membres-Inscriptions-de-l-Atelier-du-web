@@ -1326,3 +1326,18 @@ main {
     justify-content: center;
     margin-top: auto;                        /* pousse le bouton en bas meme si la description est courte */
 }
+
+/* ============ Bouton volant Suggestion ============ */
+.sugg-fab {
+    position: fixed; bottom: 1.4rem; right: 1.4rem;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color: #fff; font-size: 1.35rem;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(232, 115, 74, 0.45);
+    z-index: 90;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.sugg-fab:hover { transform: scale(1.08) rotate(8deg); box-shadow: 0 8px 26px rgba(232, 115, 74, 0.6); }
