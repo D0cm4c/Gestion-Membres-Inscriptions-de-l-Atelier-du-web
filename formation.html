@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formation — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=13">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">AW</span>
+            <span class="brand-text">
+                <span class="brand-name">Atelier du Web</span>
+                <span class="brand-sub">EPN · Saint-Gilles</span>
+            </span>
+        </a>
+        <nav class="side-nav" aria-label="Navigation principale">
+            <span class="side-section">Général</span>
+            <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
+            <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
+            <span class="side-section">Espace</span>
+            <a href="formations.html"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
+            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+    <header class="topbar">
+        <a class="btn btn-secondary btn-small" href="formations.html">← Retour aux formations</a>
+        <h1 class="topbar-title" id="pageTitle">Formation</h1>
+        <p class="topbar-date" id="todayDate"></p>
+        <span id="notifCenter" style="display:inline-flex;margin-left:auto;"></span>
+        <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌗</button>
+    </header>
+
+    <main id="main">
+        <div class="empty-state" id="loadingState">
+            <p>⏳ Chargement de la formation…</p>
+        </div>
+        <div id="formationContent" hidden></div>
+        <div class="empty-state" id="notFoundState" hidden>
+            <p>Formation introuvable.</p>
+            <div class="action-buttons" style="justify-content:center;">
+                <a class="btn btn-primary" href="formations.html">← Retour aux formations</a>
+            </div>
+        </div>
+    </main>
+
+    </div>
+    </div>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js?v=16"></script>
+    <script src="theme.js?v=13"></script>
+    <script src="notifications.js?v=1"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var loading = document.getElementById('loadingState');
+        var content = document.getElementById('formationContent');
+        var notFound = document.getElementById('notFoundState');
+        var pageTitle = document.getElementById('pageTitle');
+
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        function formatDate(v) {
+            if (!v) return '—';
+            var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!m) return v;
+            var d = new Date(v + 'T12:00:00');
+            return d.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        // Couleur déterministe par catégorie (même logique que formations.html)
+        function toneFor(name) {
+            var s = (name || '').toLowerCase();
+            var h = 0;
+            for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+            return h % 10;
+        }
+        var TONE_SOLID = ['#0F3D5C', '#6C5CE7', '#2F9BE4', '#18A55F', '#E8734A', '#B26A00', '#D8434B', '#7A5230', '#556B2F', '#4A4E69'];
+
+        // Ouvre le formulaire MEC pré-rempli pour un membre donné
+        function openMecPrefilled(f, member) {
+            var url = f.url + (f.url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal';
+            var params = [
+                ['adw_name', (member.first_name || '') + ' ' + (member.last_name || '')],
+                ['adw_email', member.email || ''],
+                ['adw_phone', member.phone || ''],
+                ['adw_member_no', member.member_no || '']
+            ];
+            params.forEach(function (kv) { if (kv[1]) url += '&' + kv[0] + '=' + encodeURIComponent(kv[1]); });
+            window.open(url, '_blank', 'noopener');
+            if (window.ADWNotifications) {
+                window.ADWNotifications.push('info',
+                    '📤 Formulaire d\u2019inscription ouvert sur le site pour ' + member.first_name + ' ' + member.last_name +
+                    ' — ' + f.title + '. Le rattachement se fera automatiquement dès que la réservation sera confirmée.',
+                    'info');
+            }
+        }
+
+        function render(f) {
+            pageTitle.textContent = f.title;
+            document.title = f.title + ' — Atelier du Web';
+
+            var cats = (f.categories || '').split(',').map(function (c) { return c.trim(); }).filter(Boolean);
+            var mainCat = cats[0] || '';
+            var tone = mainCat ? toneFor(mainCat) : -1;
+            var bannerStyle = tone >= 0 ? ' style="background:linear-gradient(135deg,' + TONE_SOLID[tone] + ',rgba(0,0,0,0.25))"' : '';
+
+            var attendees = [];
+            try { attendees = ADWDatabase.getFormationAttendees(f.id) || []; } catch (e) { attendees = []; }
+
+            var bookUrl = f.url ? f.url + (f.url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal' : '';
+
+            var html = '';
+
+            // Bandeau (couleur de la catégorie)
+            html += '<div class="hero"' + bannerStyle + ' style="border-radius:var(--radius);padding:1.4rem 1.6rem;color:#fff;margin-bottom:1.3rem;">' +
+                '<h2 style="color:#fff;font-size:1.35rem;font-weight:800;letter-spacing:-0.4px;margin-bottom:0.5rem;">' + esc(f.title) + '</h2>' +
+                '<p style="opacity:0.92;font-size:0.95rem;">' +
+                (f.date_text || (f.start_date ? formatDate(f.start_date) : 'date à confirmer')) +
+                (f.time_label ? ' · ' + esc(f.time_label) : '') +
+                (f.duration ? ' · ' + esc(f.duration) : '') +
+                '</p>' +
+                (bookUrl ? '<div class="hero-actions"><a class="btn btn-primary" href="' + esc(bookUrl) + '" target="_blank" rel="noopener">Réserver sur le site</a></div>' : '') +
+                '</div>';
+
+            // Détails structurés (organisateur/lieu/tarif remplis dès que les snippets répondront)
+            html += '<div class="stats-container">' +
+                '<div class="stat-card"><h3>📌 Informations</h3><ul>' +
+                '<li><strong>📅 Date :</strong> ' + esc(f.date_text || (f.start_date ? formatDate(f.start_date) : 'à confirmer')) + '</li>' +
+                '<li><strong>⏰ Horaires :</strong> ' + esc(f.time_label || 'à confirmer') + '</li>' +
+                '<li><strong>⏳ Durée :</strong> ' + esc(f.duration || 'à confirmer') + '</li>' +
+                '<li><strong>💶 Tarif :</strong> ' + (f.price ? esc(f.price) + ' €' : 'voir sur le site') + '</li>' +
+                '<li><strong>📍 Lieu :</strong> ' + esc(f.location || 'à confirmer') + '</li>' +
+                '<li><strong>👤 Organisateur :</strong> ' + esc(f.organizer || 'à confirmer') + '</li>' +
+                '</ul></div>' +
+                '<div class="stat-card"><h3>🗂 Catégories</h3>' +
+                (cats.length ? '<ul>' + cats.map(function (c) {
+                    var t = toneFor(c);
+                    return '<li><span class="month-dot" style="display:inline-block;background:' + TONE_SOLID[t] + ';margin-right:0.4rem;"></span>' + esc(c) + '</li>';
+                }).join('') + '</ul>' : '<p class="form-hint">Aucune catégorie.</p>') +
+                '</div>' +
+                '</div>';
+
+            // Description
+            if (f.excerpt) {
+                html += '<div class="stat-card" style="margin-bottom:1.3rem;"><h3>📝 Description</h3><p style="font-size:0.95rem;color:var(--text);">' + esc(f.excerpt) + '</p>' +
+                    (f.url ? '<p class="form-hint" style="margin-top:0.6rem;"><a href="' + esc(f.url) + '" target="_blank" rel="noopener">Voir la page complète sur atelierduweb.be →</a></p>' : '') +
+                    '</div>';
+            }
+
+            // Inscriptions (miroir)
+            html += '<div class="stat-card"><h3>👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>';
+            if (attendees.length) {
+                html += '<ul class="checkin-results" style="display:flex;flex-direction:column;">';
+                attendees.forEach(function (m) {
+                    html += '<li class="checkin-item done" style="list-style:none;">' +
+                        '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
+                        '<a href="membre.html?id=' + encodeURIComponent(m.id) + '" style="flex:1;min-width:0;text-decoration:none;color:inherit;">' +
+                        '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
+                        (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
+                        '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">voir la fiche →</span></div></a>' +
+                        '</li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="form-hint">Aucun membre inscrit pour l\u2019instant. Les inscriptions réalisées sur le site apparaîtront ici après synchronisation (bouton 📥 dans la page Formations).</p>';
+            }
+            html += '</div>';
+
+            content.innerHTML = html;
+            content.hidden = false;
+            loading.hidden = true;
+        }
+
+        ADWDatabase.init().then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
+            var id = null;
+            var m = location.search.match(/[?&]id=([^&]+)/) || location.hash.match(/^#formation=(.+)$/);
+            if (m) id = decodeURIComponent(m[1]);
+            if (!id) {
+                loading.hidden = true;
+                notFound.hidden = false;
+                notFound.querySelector('p').textContent = 'Aucune formation spécifiée dans l\u2019URL.';
+                return;
+            }
+            // id = event_id MEC (clé naturelle partagée avec les cartes)
+            var f = ADWDatabase.getFormationByEventId(id);
+            if (!f) {
+                loading.hidden = true;
+                notFound.hidden = false;
+                return;
+            }
+            render(f);
+        }).catch(function (err) {
+            loading.hidden = true;
+            notFound.hidden = false;
+            notFound.querySelector('p').textContent = 'Erreur de chargement de la base : ' + err.message;
+        });
+    })();
+    </script>
+</body>
+</html>

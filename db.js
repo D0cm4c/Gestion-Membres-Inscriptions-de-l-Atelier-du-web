@@ -125,6 +125,8 @@
             'url TEXT,' +
             'categories TEXT,' +
             'price REAL,' +
+            'organizer TEXT,' +
+            'location TEXT,' +
             'synced_at TEXT,' +
             'created_at TEXT DEFAULT (datetime(\'now\'))' +
             ')'

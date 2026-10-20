@@ -349,7 +349,8 @@
                 html += '<li><span>🎓 ' + escapeHtml(f.title) +
                     (f.time_label ? ' · <span class="form-hint">' + escapeHtml(f.time_label) + '</span>' : '') +
                     ' · <span class="form-hint">📅 ' + dLabel + '</span></span>' +
-                    (f.url ? '<a href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">voir</a>' : '') +
+                    '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="badge badge-sub-monthly" title="Voir la fiche formation">fiche →</a>' +
+                    (f.url ? ' <a href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">site</a>' : '') +
                     '</li>';
             });
             html += '</ul>';
