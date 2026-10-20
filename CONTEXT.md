@@ -33,7 +33,8 @@ Contrainte de design : correspondre au design du site atelierduweb.be.
 - Livraison : **PRs petites et ciblées** (une fonctionnalité = une PR), fusionnées dans `main` via GitHub.
 - Vérifications minimales par PR : `node --check` sur les JS modifiés + validation de la structure HTML.
 - **Tests fonctionnels en sandbox** (jsdom + sql.js réel) avant chaque PR quand la logique est testable — c'est la méthode qui a trouvé le plus de bugs (35/35, 48/48, 15/15 assertions).
-- ⚠️ **Cache navigateur sur Pages** : incrémenter le cache-busting des assets (actuellement v12+) à chaque changement de JS/CSS, sinon les visiteurs voient l'ancienne version.
+- ⚠️ **Cache navigateur sur Pages** : incrémenter le cache-busting des assets à chaque changement de JS/CSS, sinon les visiteurs voient l'ancienne version.
+- **Versionnage global** : quand un asset partagé change (theme.js, db.js, styles.css, notifications.js…), monter sa version sur **TOUTES les pages dans le même commit** — jamais page par page (l'audit d'oct. 2026 a trouvé theme.js en v13/v14 selon les pages et db.js en v17/v18 : même fichier, mais risque de cache divergent au prochain vrai changement). Vérifier avec `grep -h 'asset.js?v=' *.html | sort -u` qu'une seule version existe.
 
 ## 📦 État actuel (nov. 2026)
 
