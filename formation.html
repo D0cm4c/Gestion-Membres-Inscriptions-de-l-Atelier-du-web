@@ -234,8 +234,10 @@
         });
         document.getElementById('memberPreviewCloseBtn').addEventListener('click', function () { previewModal.hidden = true; });
 
-        // Bouton Réserver : ouvre le sélecteur de membre, puis MEC pré-rempli
-        document.getElementById('bookBtn').addEventListener('click', function () {
+        // Bouton Réserver : ouvre le sélecteur de membre, puis MEC pré-rempli.
+        // Délégation sur #formationContent car #bookBtn n'existe qu'après le rendu.
+        document.getElementById('formationContent').addEventListener('click', function (e) {
+            if (!e.target.closest('#bookBtn')) return;
             if (window.ADWBooking && currentFormation) window.ADWBooking.openPicker(currentFormation);
         });
         previewModal.addEventListener('click', function (e) { if (e.target === previewModal) previewModal.hidden = true; });
