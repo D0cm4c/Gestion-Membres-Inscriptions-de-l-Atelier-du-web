@@ -65,9 +65,9 @@
             if (window.ADWNotifications) {
                 window.ADWNotifications.push('info',
                     member
-                        ? '\U0001F4E4 Formulaire d\u2019inscription ouvert sur le site pour ' + member.first_name + ' ' + member.last_name +
+                        ? '\uD83D\uDCE4 Formulaire d\u2019inscription ouvert sur le site pour ' + member.first_name + ' ' + member.last_name +
                           ' \u2014 ' + f.title + '. Le rattachement se fera automatiquement dès que la réservation sera confirmée.'
-                        : '\U0001F4E4 Formulaire d\u2019inscription ouvert sur le site \u2014 ' + f.title + ' (sans membre sélectionné).',
+                        : '\uD83D\uDCE4 Formulaire d\u2019inscription ouvert sur le site \u2014 ' + f.title + ' (sans membre sélectionné).',
                     'info');
             }
         }

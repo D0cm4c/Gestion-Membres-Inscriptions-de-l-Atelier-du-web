@@ -28,21 +28,21 @@
         var hours = OPENING_HOURS[day];
         if (!hours) {
             el.className = 'open-status closed';
-            el.textContent = '\U0001F534 Ferm\u00e9';
+            el.textContent = '\uD83D\uDD34 Ferm\u00e9';
             el.title = 'Ferm\u00e9 aujourd\u2019hui';
             return;
         }
         if (t < hours[0]) {
             el.className = 'open-status closed';
-            el.textContent = '\U0001F7E1 Ouverture \u00e0 ' + fmt(hours[0]);
+            el.textContent = '\uD83D\uDFE1 Ouverture \u00e0 ' + fmt(hours[0]);
             el.title = 'Ouverture \u00e0 ' + fmt(hours[0]);
         } else if (t < hours[1]) {
             el.className = 'open-status open';
-            el.textContent = '\U0001F7E2 Ouvert \u00b7 ferme \u00e0 ' + fmt(hours[1]);
+            el.textContent = '\uD83D\uDFE2 Ouvert \u00b7 ferme \u00e0 ' + fmt(hours[1]);
             el.title = 'Ouvert jusqu\u2019\u00e0 ' + fmt(hours[1]);
         } else {
             el.className = 'open-status closed';
-            el.textContent = '\U0001F534 Ferm\u00e9';
+            el.textContent = '\uD83D\uDD34 Ferm\u00e9';
             el.title = 'Ferm\u00e9 pour aujourd\u2019hui';
         }
     }

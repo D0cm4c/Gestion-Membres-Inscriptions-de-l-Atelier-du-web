@@ -63,7 +63,7 @@
             window.ADWDatabase.addSuggestion(msg, location.pathname, authorInput.value.trim() || null);
             if (window.ADWNotifications) {
                 window.ADWNotifications.push('info',
-                    '\U0001F4A1 Suggestion enregistr\u00e9e \u2014 merci ! Elle est consultable dans \u00c0 faire.',
+                    '\uD83D\uDCA1 Suggestion enregistr\u00e9e \u2014 merci ! Elle est consultable dans \u00c0 faire.',
                     'success');
             }
             modal.hidden = true;
