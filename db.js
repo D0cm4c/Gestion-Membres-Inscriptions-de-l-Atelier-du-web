@@ -170,6 +170,18 @@
             'local_member_id TEXT' +       // membre rattaché dans l'app
             ')'
         );
+        // Migration formations : colonnes organizer/location ajoutées en oct. 2026
+        var fcols = {};
+        var fres = db.exec('PRAGMA table_info(formations)');
+        if (fres.length) {
+            fres[0].values.forEach(function (row) { fcols[row[1]] = true; });
+        }
+        if (!fcols.organizer) {
+            db.run('ALTER TABLE formations ADD COLUMN organizer TEXT');
+        }
+        if (!fcols.location) {
+            db.run('ALTER TABLE formations ADD COLUMN location TEXT');
+        }
         db.run('CREATE INDEX IF NOT EXISTS idx_notif_unread ON notifications(is_read, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_booking_unprocessed ON bookings_remote(processed, booked_at)');
         var cols = {};
