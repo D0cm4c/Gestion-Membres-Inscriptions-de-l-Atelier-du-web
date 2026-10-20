@@ -340,7 +340,7 @@
         } catch (e) { memberFormations = []; }
         html += '<div class="detail-prints">' +
             '<div class="chart-header">' +
-                '<h4>🎓 Formations <span class="members-count">' + memberFormations.length + '</span></h4>' +
+                '<h4>🎓 Inscriptions aux formations <span class="members-count">' + memberFormations.length + '</span></h4>' +
             '</div>';
         if (memberFormations.length) {
             html += '<ul class="visits-list">';

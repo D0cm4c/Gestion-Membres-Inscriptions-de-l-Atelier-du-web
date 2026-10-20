@@ -91,7 +91,7 @@
         <div class="modal-overlay" id="bookingsModal" hidden>
             <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingsTitle" style="max-width:720px;">
                 <h3 id="bookingsTitle">📥 Inscriptions venant du site</h3>
-                <p class="form-hint">Chaque réservation est comparée aux membres : par <strong>n° de membre</strong>, puis <strong>email</strong>, puis <strong>nom/prénom</strong>. Les rattachements certains sont automatiques (notifiés) ; les autres demandent ta validation.</p>
+                <p class="form-hint">Les inscriptions se font uniquement sur le site (atelierduweb.be) — ici, on rattache les réservations aux fiches membres. Comparaison par <strong>n° de membre</strong>, puis <strong>email</strong>, puis <strong>nom/prénom</strong> : les rattachements certains sont automatiques (notifiés) ; les autres demandent ta validation. Les annulations côté site retirent automatiquement l'inscription locale (notifié).</p>
                 <div id="bookingsQueue" class="checkin-results"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary btn-small" id="bookingsDemoBtn">🧪 Charger 3 résas de démo</button>
@@ -104,13 +104,14 @@
         <!-- Modale inscription membres -->
         <div class="modal-overlay" id="attendeeModal" hidden>
             <div class="modal" role="dialog" aria-modal="true" aria-labelledby="attendeeTitle">
-                <h3 id="attendeeTitle">Inscriptions à la formation</h3>
+                <h3 id="attendeeTitle">Inscriptions — formation</h3>
                 <div class="form-group">
-                    <label for="attendeeSearch">Rechercher un membre</label>
+                    <label for="attendeeSearch">Inscrire un membre via le site</label>
                     <input type="text" id="attendeeSearch" placeholder="Nom, prénom ou n° de membre..." autocomplete="off">
+                    <p class="form-hint">Le formulaire d'inscription du site s'ouvre pré-rempli avec les données du membre (n° de membre, nom, email, téléphone). Une fois la réservation confirmée sur le site, le rattachement se fait automatiquement à la prochaine synchronisation.</p>
                     <div id="attendeeResults" class="checkin-results" style="margin-top:0.6rem;" hidden></div>
                 </div>
-                <h4 style="font-size:0.95rem;margin:1rem 0 0.5rem;">Membres inscrits (<span id="attendeeCount">0</span>)</h4>
+                <h4 style="font-size:0.95rem;margin:1rem 0 0.5rem;">Inscrits (miroir du site) (<span id="attendeeCount">0</span>)</h4>
                 <div id="attendeeList" class="checkin-results"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="attendeeCloseBtn">Fermer</button>
@@ -308,7 +309,7 @@
                         badge(ev) +
                         '<span class="spacer"></span>' +
                         (row ? '<button class="btn btn-secondary btn-small f-register-btn" data-fid="' + esc(row.id) + '" title="Inscrire des membres">👥 <span class="f-count">' + row.attendee_count + '</span></button>' : '') +
-                        '<a class="btn btn-primary btn-small" href="' + esc(url) + '" target="_blank" rel="noopener">Voir / Réserver</a>' +
+                        '<a class="btn btn-primary btn-small" href="' + esc(url + (url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal') + '" target="_blank" rel="noopener" title="Réserver sur atelierduweb.be">Réserver sur le site</a>' +
                         '</div>' +
                         '</div>';
                     wrap.appendChild(li);
@@ -441,20 +442,12 @@
                     '<a href="' + ficheUrl + '" style="flex:1;min-width:0;text-decoration:none;color:inherit;" title="Ouvrir la fiche membre">' +
                     '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
                     (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
-                    '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">voir la fiche →</span></div></a>' +
-                    '<button class="btn btn-danger btn-small f-unregister" data-mid="' + esc(m.id) + '" title="Désinscrire">✕</button>';
+                    '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">voir la fiche →</span></div></a>';
                 attendeeList.appendChild(li);
             });
         }
 
-        attendeeList.addEventListener('click', function (e) {
-            var btn = e.target.closest('.f-unregister');
-            if (!btn) return;
-            window.ADWDatabase.unregisterMemberFromFormation(currentFormationId, btn.getAttribute('data-mid'));
-            refreshAttendeeList();
-            updateCardCount(currentFormationId);
-            searchMembers('');
-        });
+
 
         function searchMembers(q) {
             q = (q || '').trim().toLowerCase();
@@ -477,7 +470,7 @@
                     '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
                     '<div style="flex:1;min-width:0;"><strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
                     (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') + '</div>' +
-                    '<button class="btn btn-primary btn-small f-register" data-mid="' + esc(m.id) + '">Inscrire</button>';
+                    '<button class="btn btn-primary btn-small f-register" data-mid="' + esc(m.id) + '">🌐 Inscrire via le site</button>';
                 attendeeResults.appendChild(li);
             });
         }
@@ -485,11 +478,29 @@
         attendeeResults.addEventListener('click', function (e) {
             var btn = e.target.closest('.f-register');
             if (!btn) return;
-            window.ADWDatabase.registerMemberToFormation(currentFormationId, btn.getAttribute('data-mid'));
+            // Le site vend, l'app gère : on ouvre le formulaire MEC pré-rempli.
+            // Si la réservation aboutit (avec le n° de membre pré-rempli),
+            // le miroir rattache automatiquement à la synchro suivante.
+            var member = window.ADWDatabase.queryAll(
+                'SELECT id, first_name, last_name, email, phone, member_no FROM members WHERE id = ?',
+                [btn.getAttribute('data-mid')])[0];
+            var f = window.ADWDatabase.getFormation(currentFormationId);
+            if (!member || !f || !f.url) return;
+            var url = f.url + (f.url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal';
+            var params = [
+                ['adw_name', (member.first_name || '') + ' ' + (member.last_name || '')],
+                ['adw_email', member.email || ''],
+                ['adw_phone', member.phone || ''],
+                ['adw_member_no', member.member_no || '']
+            ];
+            params.forEach(function (kv) { if (kv[1]) url += '&' + kv[0] + '=' + encodeURIComponent(kv[1]); });
+            window.open(url, '_blank', 'noopener');
+            window.ADWNotifications.push('info',
+                '📤 Formulaire d’inscription ouvert sur le site pour ' + member.first_name + ' ' + member.last_name +
+                ' — ' + f.title + '. Le rattachement se fera automatiquement dès que la réservation sera confirmée.',
+                'info');
             attendeeSearch.value = '';
             attendeeResults.hidden = true;
-            refreshAttendeeList();
-            updateCardCount(currentFormationId);
         });
 
         function updateCardCount(fid) {
