@@ -119,6 +119,66 @@
 
         var currentFormation = null;
 
+        function roomCardHtml(f) {
+            var rooms = ADWDatabase.listRooms();
+            var dates = [];
+            try { dates = ADWDatabase.getFormationDates(f.id) || []; } catch (e) { dates = []; }
+            var html = '<div class="form-group"><label for="roomSelect">Salle attribuée</label>' +
+                '<select id="roomSelect">' +
+                '<option value="">— Non attribuée —</option>';
+            rooms.forEach(function (r) {
+                html += '<option value="' + esc(r.id) + '"' + (f.room_id === r.id ? ' selected' : '') + '>' + esc(r.name) + '</option>';
+            });
+            html += '</select><div id="roomConflict" class="form-error" style="margin-top:0.6rem;" hidden></div></div>';
+            // Seances (dates + creneaux)
+            if (dates.length) {
+                html += '<p class="form-hint" style="margin-bottom:0.4rem;"><strong>Séances (' + dates.length + ')</strong> — chaque séance bloque un créneau dans le planning de la salle :</p><ul style="list-style:none;">';
+                dates.forEach(function (d) {
+                    var label = new Date(d.date + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric', month: 'short' });
+                    html += '<li style="padding:0.25rem 0;border-bottom:1px solid var(--bg);font-size:0.88rem;">' +
+                        '📅 ' + esc(label) + ' · <span class="badge ' + (d.slot === 'AM' ? 'badge-sub-monthly' : 'badge-sub-yearly') + '">' + (d.slot === 'AM' ? 'Matin 9h30–12h30' : 'Après-midi 13h30–16h30') + '</span></li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="form-hint">Aucune séance parsée pour cette formation — elle ne bloque aucun créneau.</p>';
+            }
+            return html;
+        }
+
+        function attachRoomLogic(f) {
+            var select = document.getElementById('roomSelect');
+            var conflictBox = document.getElementById('roomConflict');
+            if (!select) return;
+            select.addEventListener('change', function () {
+                var roomId = select.value || null;
+                var conflicts = roomId ? ADWDatabase.getRoomConflicts(f.id, roomId) : [];
+                ADWDatabase.setFormationRoom(f.id, roomId);
+                if (roomId) {
+                    var roomName = select.options[select.selectedIndex].textContent;
+                    if (conflicts.length) {
+                        var details = conflicts.map(function (c) {
+                            var label = new Date(c.date + 'T12:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' });
+                            return '⚠️ ' + c.title + ' occupe déjà ce créneau le ' + label + ' ' + (c.slot === 'AM' ? 'matin' : 'après-midi');
+                        }).join('<br>');
+                        conflictBox.innerHTML = '<strong>Conflit détecté :</strong><br>' + details + '<br><span class="form-hint">Attribution enregistrée quand même — à toi de trancher.</span>';
+                        conflictBox.hidden = false;
+                        if (window.ADWNotifications) {
+                            window.ADWNotifications.push('awaiting_validation',
+                                '⚠️ Conflit de salle : « ' + f.title + ' » et ' + conflicts.length + ' autre(s) formation(s) partagent un créneau',
+                                'warning');
+                        }
+                    } else {
+                        conflictBox.hidden = true;
+                    }
+                    if (window.ADWNotifications) {
+                        window.ADWNotifications.push('info', '📝 « ' + f.title + ' » attribuée à ' + roomName, 'success');
+                    }
+                } else {
+                    conflictBox.hidden = true;
+                }
+            });
+        }
+
         function render(f) {
             currentFormation = f;
             pageTitle.textContent = f.title;
@@ -162,6 +222,9 @@
                     return '<li><span class="month-dot" style="display:inline-block;background:' + TONE_SOLID[t] + ';margin-right:0.4rem;"></span>' + esc(c) + '</li>';
                 }).join('') + '</ul>' : '<p class="form-hint">Aucune catégorie.</p>') +
                 '</div>' +
+                '</div>' +
+                '<div class="stat-card" id="roomCard"><h3>📝 Salle & séances</h3>' +
+                roomCardHtml(f) +
                 '</div>';
 
             // Description
@@ -191,6 +254,7 @@
             html += '</div>';
 
             content.innerHTML = html;
+            attachRoomLogic(f);
             content.hidden = false;
             loading.hidden = true;
         }
