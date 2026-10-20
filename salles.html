@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salles — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=18">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">AW</span>
+            <span class="brand-text">
+                <span class="brand-name">Atelier du Web</span>
+                <span class="brand-sub">EPN · Saint-Gilles</span>
+            </span>
+        </a>
+        <nav class="side-nav" aria-label="Navigation principale">
+            <span class="side-section">Général</span>
+            <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
+            <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
+            <span class="side-section">Espace</span>
+            <a href="formations.html"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
+            <a href="salles.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+            <span class="side-section">Système</span>
+            <a href="suggestions.html"><span class="nav-ico" aria-hidden="true">💡</span> À faire</a>
+            <a href="parametres.html"><span class="nav-ico" aria-hidden="true">⚙️</span> Paramètres</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+    <header class="topbar">
+        <h1 class="topbar-title">Planning des salles</h1>
+        <p class="topbar-date" id="todayDate"></p>
+        <span class="open-status" id="openStatus" role="status" aria-live="polite"></span>
+        <span id="notifCenter" style="display:inline-flex;margin-left:auto;"></span>
+        <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌗</button>
+    </header>
+
+    <main id="main">
+        <section class="filters-bar" aria-label="Navigation et filtres">
+            <button class="btn btn-secondary btn-small" id="prevMonthBtn" title="Mois précédent">◀</button>
+            <strong id="monthLabel" style="min-width:170px;text-align:center;text-transform:capitalize;"></strong>
+            <button class="btn btn-secondary btn-small" id="nextMonthBtn" title="Mois suivant">▶</button>
+            <button class="btn btn-primary btn-small" id="todayBtn">Aujourd'hui</button>
+            <span class="members-count" id="monthCount" aria-live="polite"></span>
+            <button class="btn btn-secondary btn-small" id="unassignedBtn" title="Formations sans salle attribuée">🏷 Sans salle <span class="badge badge-full" id="unassignedBadge">0</span></button>
+        </section>
+
+        <div id="planningWrap" style="overflow-x:auto;"></div>
+
+        <!-- Modale : formations sans salle -->
+        <div class="modal-overlay" id="unassignedModal" hidden>
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="unassignedTitle" style="max-width:640px;">
+                <h3 id="unassignedTitle">🏷 Formations sans salle</h3>
+                <p class="form-hint">Attribue une salle à chaque formation — les créneaux correspondants se bloquent dans le planning.</p>
+                <div id="unassignedList" class="checkin-results" style="max-height:50vh;"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-primary" id="unassignedCloseBtn">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    </div>
+    </div>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js?v=18"></script>
+    <script src="theme.js?v=14"></script>
+    <script src="openstatus.js?v=2"></script>
+    <script src="notifications.js?v=2"></script>
+    <script src="suggestions.js?v=2"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var planningWrap = document.getElementById('planningWrap');
+        var monthLabel = document.getElementById('monthLabel');
+        var monthCount = document.getElementById('monthCount');
+        var unassignedBadge = document.getElementById('unassignedBadge');
+        var unassignedModal = document.getElementById('unassignedModal');
+        var unassignedList = document.getElementById('unassignedList');
+
+        // Mois courant par défaut
+        var view = new Date();
+        view.setDate(1);
+
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+        // Couleur déterministe par catégorie (même logique que formations)
+        function toneFor(name) {
+            var s = (name || '').toLowerCase();
+            var h = 0;
+            for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+            return h % 10;
+        }
+        var TONE_SOLID = ['#0F3D5C', '#6C5CE7', '#2F9BE4', '#18A55F', '#E8734A', '#B26A00', '#D8434B', '#7A5230', '#556B2F', '#4A4E69'];
+
+        function monthBounds(d) {
+            var start = new Date(d.getFullYear(), d.getMonth(), 1);
+            var end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+            return [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)];
+        }
+
+        function mainCatOf(categories) {
+            return (categories || '').split(',').map(function (c) { return c.trim(); }).filter(Boolean)[0] || '';
+        }
+
+        function shortTitle(t) {
+            t = t || '';
+            return t.length > 22 ? t.slice(0, 20) + '…' : t;
+        }
+
+        function render() {
+            var bounds = monthBounds(view);
+            monthLabel.textContent = view.toLocaleDateString('fr-BE', { month: 'long', year: 'numeric' });
+
+            var rooms = window.ADWDatabase.listRooms();
+            var planning = window.ADWDatabase.getRoomPlanning(bounds[0], bounds[1]);
+            var formations = {};
+            planning.forEach(function (p) {
+                // ordonne par fid
+                formations[p.fid] = formations[p.fid] || [];
+                formations[p.fid].push(p);
+            });
+
+            // Index: date -> [{room, slot, fid, title, event_id, categories}]
+            var byCell = {};
+            planning.forEach(function (p) {
+                var f = window.ADWDatabase.getFormationByEventId(p.event_id);
+                if (!f || !f.room_id) return;
+                var key = p.date + '|' + f.room_id + '|' + p.slot;
+                byCell[key] = { fid: p.fid, title: p.title, event_id: p.event_id, cat: mainCatOf(p.categories) };
+            });
+
+            var daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+            var todayStr = new Date().toISOString().slice(0, 10);
+            var occupied = 0;
+
+            var html = '<table class="room-planning"><thead><tr><th style="text-align:left;">Jour</th>';
+            rooms.forEach(function (r) {
+                html += '<th colspan="2">' + esc(r.name) + '</th>';
+            });
+            html += '</tr><tr><th></th>';
+            rooms.forEach(function () {
+                html += '<th class="slot-h">Matin</th><th class="slot-h">A-midi</th>';
+            });
+            html += '</tr></thead><tbody>';
+
+            for (var day = 1; day <= daysInMonth; day++) {
+                var d = new Date(view.getFullYear(), view.getMonth(), day);
+                var dateStr = d.toISOString().slice(0, 10);
+                var weekday = d.getDay(); // 0=dim, 6=sam
+                var isWeekend = weekday === 0 || weekday === 6;
+                var isToday = dateStr === todayStr;
+                var dayLabel = d.toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric' });
+
+                html += '<tr class="' + (isWeekend ? 'weekend' : '') + (isToday ? ' today' : '') + '">';
+                html += '<td class="day-cell' + (isWeekend ? ' muted' : '') + '">' + (isToday ? '<strong>● </strong>' : '') + esc(dayLabel) + '</td>';
+
+                rooms.forEach(function (r) {
+                    ['AM', 'PM'].forEach(function (slot) {
+                        var cell = byCell[dateStr + '|' + r.id + '|' + slot];
+                        if (cell) {
+                            occupied++;
+                            var tone = cell.cat ? toneFor(cell.cat) : -1;
+                            var bg = tone >= 0 ? TONE_SOLID[tone] : 'var(--primary)';
+                            html += '<td class="slot-cell busy"><a href="formation.html?id=' + encodeURIComponent(cell.event_id) + '" class="slot-busy" style="background:' + bg + ';" title="' + esc(cell.title) + '">' + esc(shortTitle(cell.title)) + '</a></td>';
+                        } else {
+                            html += '<td class="slot-cell' + (isWeekend ? ' muted' : '') + '"></td>';
+                        }
+                    });
+                });
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            planningWrap.innerHTML = html;
+            monthCount.textContent = occupied + ' créneau' + (occupied > 1 ? 'x' : '') + ' occupé' + (occupied > 1 ? 's' : '');
+
+            // Badge sans salle
+            var without = window.ADWDatabase.formationsWithoutRoom();
+            unassignedBadge.textContent = without.length;
+            unassignedBadge.style.display = without.length ? '' : 'none';
+        }
+
+        function renderUnassigned() {
+            var rooms = window.ADWDatabase.listRooms();
+            var without = window.ADWDatabase.formationsWithoutRoom();
+            unassignedList.innerHTML = without.length ? '' : '<p class="form-hint" style="padding:1rem;">Toutes les formations ont une salle. 🎉</p>';
+            without.forEach(function (f) {
+                var li = document.createElement('div');
+                li.className = 'checkin-item';
+                li.style.flexWrap = 'wrap';
+                var dates = window.ADWDatabase.getFormationDates(f.id);
+                li.innerHTML =
+                    '<div style="flex:1;min-width:200px;"><strong>' + esc(f.title) + '</strong>' +
+                    '<div class="form-hint">' + esc(f.date_text || f.start_date || 'dates à confirmer') + ' · ' + dates.length + ' séance' + (dates.length > 1 ? 's' : '') + (dates.length ? ' (' + dates[0].slot + ')' : '') + '</div></div>' +
+                    '<select class="unassigned-select" data-fid="' + esc(f.id) + '">' +
+                    '<option value="">— Choisir une salle —</option>' +
+                    rooms.map(function (r) { return '<option value="' + esc(r.id) + '">' + esc(r.name) + '</option>'; }).join('') +
+                    '</select>';
+                unassignedList.appendChild(li);
+            });
+            unassignedList.querySelectorAll('.unassigned-select').forEach(function (sel) {
+                sel.addEventListener('change', function () {
+                    if (!sel.value) return;
+                    var fid = sel.getAttribute('data-fid');
+                    var f = window.ADWDatabase.queryAll('SELECT title, event_id FROM formations WHERE id = ?', [fid])[0];
+                    var conflicts = window.ADWDatabase.getRoomConflicts(fid, sel.value);
+                    window.ADWDatabase.setFormationRoom(fid, sel.value);
+                    var roomName = sel.options[sel.selectedIndex].textContent;
+                    if (window.ADWNotifications) {
+                        window.ADWNotifications.push('info', '📝 « ' + f.title + ' » attribuée à ' + roomName +
+                            (conflicts.length ? ' — ⚠️ ' + conflicts.length + ' conflit(s) de créneau' : ''), conflicts.length ? 'warning' : 'success');
+                    }
+                    renderUnassigned();
+                    render();
+                });
+            });
+        }
+
+        document.getElementById('prevMonthBtn').addEventListener('click', function () {
+            view.setMonth(view.getMonth() - 1); render();
+        });
+        document.getElementById('nextMonthBtn').addEventListener('click', function () {
+            view.setMonth(view.getMonth() + 1); render();
+        });
+        document.getElementById('todayBtn').addEventListener('click', function () {
+            view = new Date(); view.setDate(1); render();
+        });
+        document.getElementById('unassignedBtn').addEventListener('click', function () {
+            renderUnassigned();
+            unassignedModal.hidden = false;
+        });
+        document.getElementById('unassignedCloseBtn').addEventListener('click', function () { unassignedModal.hidden = true; });
+        unassignedModal.addEventListener('click', function (e) { if (e.target === unassignedModal) unassignedModal.hidden = true; });
+
+        window.ADWDatabase.init().then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
+            render();
+        }).catch(function () {
+            planningWrap.innerHTML = '<div class="empty-state"><p>Erreur de chargement de la base.</p></div>';
+        });
+    })();
+    </script>
+</body>
+</html>
