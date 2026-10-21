@@ -568,7 +568,9 @@ main {
     background: var(--accent-light); padding: 0.32rem 0.9rem; border-radius: 999px;
 }
 
+.filters-more { display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap; flex: 1; }
 .filters-more .members-count { margin-left: auto; }
+.filters-more[hidden] { display: none; }
 
 /* ============ Cartes membres ============ */
 .members-grid {
