@@ -125,6 +125,8 @@
             'url TEXT,' +
             'categories TEXT,' +
             'price REAL,' +
+            'organizer TEXT,' +
+            'location TEXT,' +
             'synced_at TEXT,' +
             'created_at TEXT DEFAULT (datetime(\'now\'))' +
             ')'
@@ -168,6 +170,53 @@
             'local_member_id TEXT' +       // membre rattaché dans l'app
             ')'
         );
+        // Migration formations : colonnes organizer/location ajoutées en oct. 2026
+        var fcols = {};
+        var fres = db.exec('PRAGMA table_info(formations)');
+        if (fres.length) {
+            fres[0].values.forEach(function (row) { fcols[row[1]] = true; });
+        }
+        if (!fcols.organizer) {
+            db.run('ALTER TABLE formations ADD COLUMN organizer TEXT');
+        }
+        if (!fcols.location) {
+            db.run('ALTER TABLE formations ADD COLUMN location TEXT');
+        }
+        if (!fcols.room_id) {
+            db.run('ALTER TABLE formations ADD COLUMN room_id TEXT');
+        }
+        db.run(
+            'CREATE TABLE IF NOT EXISTS rooms (' +
+            'id TEXT PRIMARY KEY,' +
+            'name TEXT NOT NULL,' +
+            'capacity INTEGER,' +
+            'sort_order INTEGER DEFAULT 0,' +
+            'created_at TEXT DEFAULT (datetime(\'now\'))' +
+            ')'
+        );
+        db.run(
+            'CREATE TABLE IF NOT EXISTS formation_dates (' +
+            'id TEXT PRIMARY KEY,' +
+            'formation_id TEXT NOT NULL,' +
+            'date TEXT NOT NULL,' +
+            'slot TEXT NOT NULL CHECK (slot IN (\'AM\', \'PM\')),' +
+            'UNIQUE(formation_id, date, slot),' +
+            'FOREIGN KEY (formation_id) REFERENCES formations(id) ON DELETE CASCADE' +
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_fdates ON formation_dates(date, slot)');
+        db.run(
+            'CREATE TABLE IF NOT EXISTS suggestions (' +
+            'id TEXT PRIMARY KEY,' +
+            'message TEXT NOT NULL,' +
+            'page TEXT,' +               // page d'origine (location.pathname)
+            'author TEXT,' +            // optionnel : nom de l'animateur
+            'status TEXT DEFAULT \'open\',' + // open | done | discarded
+            'created_at TEXT DEFAULT (datetime(\'now\')),' +
+            'handled_at TEXT' +
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_sugg_status ON suggestions(status, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_notif_unread ON notifications(is_read, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_booking_unprocessed ON bookings_remote(processed, booked_at)');
         var cols = {};
@@ -191,6 +240,14 @@
             db.run('ALTER TABLE members ADD COLUMN social_status TEXT');
         }
         db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_members_no ON members(member_no)');
+        // Salles par defaut (premier chargement seulement)
+        var roomCount = db.exec('SELECT COUNT(*) FROM rooms');
+        if (!roomCount.length || roomCount[0].values[0][0] === 0) {
+            db.run("INSERT INTO rooms (id, name, capacity, sort_order) VALUES ('room-grande', 'Grande salle', 15, 1)");
+            db.run("INSERT INTO rooms (id, name, capacity, sort_order) VALUES ('room-petite', 'Petite salle', 8, 2)");
+            db.run("INSERT INTO rooms (id, name, capacity, sort_order) VALUES ('room-cyber', 'Cyber-espace', 25, 3)");
+        }
+
         var missing = db.exec("SELECT id FROM members WHERE member_no IS NULL");
         if (missing.length) {
             var used = {};
@@ -280,19 +337,30 @@
         events.forEach(function (ev) {
             var existing = self.queryAll('SELECT id FROM formations WHERE event_id = ?', [String(ev.id)]);
             var categories = (ev.categories || []).join(', ');
+            var formationId;
             if (existing.length) {
+                formationId = existing[0].id;
                 db.run(
                     'UPDATE formations SET title = ?, start_date = ?, date_text = ?, time_label = ?, duration = ?, excerpt = ?, url = ?, categories = ?, synced_at = ? WHERE event_id = ?',
                     [ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null, now, String(ev.id)]
                 );
-                keptIds.push(existing[0].values[0][0]);
             } else {
-                var fid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                formationId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
                 db.run(
                     'INSERT INTO formations (id, event_id, title, start_date, date_text, time_label, duration, excerpt, url, categories, synced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [fid, String(ev.id), ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null, now]
+                    [formationId, String(ev.id), ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null, now]
                 );
-                keptIds.push(fid);
+            }
+            keptIds.push(formationId);
+            // Dates + creneaux pour le planning des salles
+            if (ev.dates && ev.dates.length) {
+                var slot = ev.slot || 'AM';
+                db.run('DELETE FROM formation_dates WHERE formation_id = ?', [formationId]);
+                ev.dates.forEach(function (d) {
+                    var did = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                    db.run('INSERT OR IGNORE INTO formation_dates (id, formation_id, date, slot) VALUES (?, ?, ?, ?)',
+                        [did, formationId, d, slot]);
+                });
             }
         });
         // Supprime les formations disparues du flux (et leurs inscriptions via CASCADE)
@@ -411,6 +479,141 @@
             'UPDATE bookings_remote SET processed = 1, processed_action = ?, processed_at = ?, local_member_id = ? WHERE id = ?',
             [action, new Date().toISOString(), localMemberId || null, String(bookingId)]
         );
+    };
+
+    // ============ Salles & planning ============
+
+    Database.listRooms = function () {
+        return this.queryAll('SELECT * FROM rooms ORDER BY sort_order ASC, name ASC');
+    };
+
+    Database.setFormationRoom = function (formationId, roomId) {
+        this.run('UPDATE formations SET room_id = ? WHERE id = ?', [roomId || null, formationId]);
+    };
+
+    // Dates+creneaux d'une formation (re-calculables depuis date_text/time_label)
+    Database.setFormationDates = function (formationId, dates) {
+        // dates : [{ date: '2026-12-08', slot: 'AM' }]
+        var self = this;
+        this.db.run('DELETE FROM formation_dates WHERE formation_id = ?', [formationId]);
+        dates.forEach(function (d) {
+            var did = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+            self.db.run('INSERT INTO formation_dates (id, formation_id, date, slot) VALUES (?, ?, ?, ?)',
+                [did, formationId, d.date, d.slot]);
+        });
+        this.persist();
+    };
+
+    Database.getFormationDates = function (formationId) {
+        return this.queryAll('SELECT date, slot FROM formation_dates WHERE formation_id = ? ORDER BY date ASC', [formationId]);
+    };
+
+    // Grille du mois : toutes les occupations (date, slot, room) avec la formation
+    Database.getRoomPlanning = function (monthStart, monthEnd) {
+        return this.queryAll(
+            'SELECT fd.date, fd.slot, fd.formation_id AS fid, f.title, f.event_id, f.categories ' +
+            'FROM formation_dates fd JOIN formations f ON f.id = fd.formation_id ' +
+            'WHERE fd.date >= ? AND fd.date <= ? ' +
+            'ORDER BY fd.date ASC, fd.slot ASC', [monthStart, monthEnd]);
+    };
+
+    // Conflits : meme salle x meme date x meme creneau
+    Database.getRoomConflicts = function (formationId, roomId) {
+        var dates = this.getFormationDates(formationId);
+        if (!dates.length || !roomId) return [];
+        var conflicts = [];
+        var self = this;
+        dates.forEach(function (d) {
+            var rows = self.queryAll(
+                'SELECT fd.formation_id AS fid, f.title, fd.date, fd.slot ' +
+                'FROM formation_dates fd JOIN formations f ON f.id = fd.formation_id ' +
+                'WHERE f.room_id = ? AND fd.date = ? AND fd.slot = ? AND fd.formation_id != ?',
+                [roomId, d.date, d.slot, formationId]);
+            conflicts = conflicts.concat(rows);
+        });
+        return conflicts;
+    };
+
+    Database.formationsWithoutRoom = function () {
+        return this.queryAll(
+            "SELECT f.*, (SELECT COUNT(*) FROM formation_dates fd WHERE fd.formation_id = f.id) AS date_count " +
+            "FROM formations f WHERE f.room_id IS NULL ORDER BY f.start_date ASC");
+    };
+
+    // ============ Suggestions ============
+
+    Database.addSuggestion = function (message, page, author) {
+        var sid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        this.run(
+            'INSERT INTO suggestions (id, message, page, author) VALUES (?, ?, ?, ?)',
+            [sid, message, page || null, author || null]
+        );
+        return sid;
+    };
+
+    Database.listSuggestions = function () {
+        return this.queryAll('SELECT * FROM suggestions ORDER BY created_at DESC');
+    };
+
+    Database.openSuggestionsCount = function () {
+        var rows = this.queryAll("SELECT COUNT(*) AS c FROM suggestions WHERE status = 'open'");
+        return rows.length ? rows[0].c : 0;
+    };
+
+    Database.setSuggestionStatus = function (id, status) {
+        this.run('UPDATE suggestions SET status = ?, handled_at = datetime(\'now\') WHERE id = ?', [status, String(id)]);
+    };
+
+    // ============ Miroir : réservation annulée côté site → retrait local notifié ============
+    // Règles décidées avec l'utilisateur (oct. 2026) :
+    //  - booking traité (linked/auto_linked/created) + statut canceled → retirer l'inscription locale,
+    //    notifier, et remettre processed = 0 (pour ne pas ressusciter l'inscription au re-match)
+    //  - booking non traité + statut canceled → marquer traité-ignoré (ne pollue pas la file)
+    //  Retourne la liste des retraits effectués pour notification groupée.
+    Database.applyMirror = function () {
+        var self = this;
+        var removals = [];
+        var resetIds = [];
+        var canceledProcessed = this.queryAll(
+            "SELECT * FROM bookings_remote WHERE processed = 1 AND processed_action != 'ignored' AND UPPER(status) IN ('CANCELED', 'CANCELLED', 'TRASH', 'REJECTED')"
+        );
+        canceledProcessed.forEach(function (b) {
+            if (b.local_member_id) {
+                // Retrouve l'inscription locale (formation via event_id)
+                var formation = self.queryAll('SELECT id, title FROM formations WHERE event_id = ?', [String(b.event_id)]);
+                var member = self.queryAll('SELECT id, first_name, last_name FROM members WHERE id = ?', [b.local_member_id]);
+                if (formation.length && member.length) {
+                    self.db.run('DELETE FROM formations_members WHERE formation_id = ? AND member_id = ?', [formation[0].id, member[0].id]);
+                    removals.push({
+                        memberName: member[0].first_name + ' ' + member[0].last_name,
+                        formationTitle: formation[0].title,
+                        bookingId: b.id
+                    });
+                }
+            }
+            // Le booking redevient non-traité ; s'il est réimporté plus tard,
+            // il repassera dans la file sans jamais ressusciter une inscription annulée.
+            self.db.run(
+                'UPDATE bookings_remote SET processed = 0, processed_action = NULL, processed_at = NULL, local_member_id = NULL WHERE id = ?',
+                [String(b.id)]
+            );
+            resetIds.push(String(b.id));
+        });
+        // Non traités mais annulés côté site → ignorés (ne pas polluer la file de validation).
+        // On exclut ceux qu'on vient de reseter (sinon ils seraient re-capturés immédiatement).
+        if (resetIds.length) {
+            var placeholders = resetIds.map(function () { return '?'; }).join(', ');
+            this.db.run(
+                "UPDATE bookings_remote SET processed = 1, processed_action = 'ignored', processed_at = datetime('now') WHERE processed = 0 AND id NOT IN (" + placeholders + ") AND UPPER(status) IN ('CANCELED', 'CANCELLED', 'TRASH', 'REJECTED')",
+                resetIds
+            );
+        } else {
+            this.db.run(
+                "UPDATE bookings_remote SET processed = 1, processed_action = 'ignored', processed_at = datetime('now') WHERE processed = 0 AND UPPER(status) IN ('CANCELED', 'CANCELLED', 'TRASH', 'REJECTED')"
+            );
+        }
+        if (removals.length) this.persist();
+        return removals;
     };
 
     // Matching : hiérarchie n° membre > email > nom/prénom

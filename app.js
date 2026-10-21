@@ -340,7 +340,7 @@
         } catch (e) { memberFormations = []; }
         html += '<div class="detail-prints">' +
             '<div class="chart-header">' +
-                '<h4>🎓 Formations <span class="members-count">' + memberFormations.length + '</span></h4>' +
+                '<h4>🎓 Inscriptions aux formations <span class="members-count">' + memberFormations.length + '</span></h4>' +
             '</div>';
         if (memberFormations.length) {
             html += '<ul class="visits-list">';
@@ -349,7 +349,8 @@
                 html += '<li><span>🎓 ' + escapeHtml(f.title) +
                     (f.time_label ? ' · <span class="form-hint">' + escapeHtml(f.time_label) + '</span>' : '') +
                     ' · <span class="form-hint">📅 ' + dLabel + '</span></span>' +
-                    (f.url ? '<a href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">voir</a>' : '') +
+                    '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="badge badge-sub-monthly" title="Voir la fiche formation">fiche →</a>' +
+                    (f.url ? ' <a href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">site</a>' : '') +
                     '</li>';
             });
             html += '</ul>';
@@ -377,6 +378,8 @@
         html += '</div>';
 
         detailBody.innerHTML = html;
+        var detailFullBtn = document.getElementById('detailFullBtn');
+        if (detailFullBtn) detailFullBtn.href = 'membre.html?id=' + encodeURIComponent(member.id);
         detailModal.hidden = false;
         detailCloseBtn.focus();
     }

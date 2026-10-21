@@ -22,13 +22,11 @@
             </span>
         </a>
         <nav class="side-nav" aria-label="Navigation principale" id="sidebarNav">
-            <span class="side-section">Général</span>
             <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
             <a href="membres.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
-            <span class="side-section">Espace</span>
             <a href="formations.html"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
-            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
-            <span class="side-section">Système</span>
+            <a href="salles.html"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+            <a href="suggestions.html"><span class="nav-ico" aria-hidden="true">💡</span> À faire</a>
             <a href="parametres.html"><span class="nav-ico" aria-hidden="true">⚙️</span> Paramètres</a>
         </nav>
         <div class="sidebar-footer">
@@ -41,6 +39,7 @@
         <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="sidebarNav" aria-label="Ouvrir la navigation">☰</button>
     <h1 class="topbar-title">Membres</h1>
         <p class="topbar-date" id="todayDate"></p>
+        <span class="open-status" id="openStatus" role="status" aria-live="polite"></span>
         <span style="margin-left:auto;"></span>
         <div class="search-bar">
             <span class="search-icon" aria-hidden="true">🔍</span>
@@ -223,8 +222,12 @@
             <div id="detailBody"></div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" id="detailCloseBtn">Fermer</button>
+<<<<<<< HEAD
                 <button type="button" class="btn btn-secondary" id="detailEditBtn">✏️ Modifier</button>
                 <button type="button" class="btn btn-danger" id="detailDeleteBtn">🗑️ Supprimer</button>
+=======
+                <a class="btn btn-secondary" id="detailFullBtn">Fiche complète →</a>
+>>>>>>> origin/main
                 <button type="button" class="btn btn-primary" id="detailCheckinBtn">✅ Pointer une visite du jour</button>
             </div>
         </div>
@@ -264,13 +267,20 @@
     </div>
 
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=14"></script>
+    <script src="db.js?v=18"></script>
     <script src="postal-codes.js?v=13"></script>
     <script src="import.js?v=13"></script>
     <script src="demo-data.js?v=13"></script>
     <script src="theme.js?v=14"></script>
+    <script src="openstatus.js?v=2"></script>
     <script src="nav.js?v=1"></script>
+<<<<<<< HEAD
     <script src="notifications.js?v=1"></script>
     <script src="app.js?v=19"></script>
+=======
+    <script src="notifications.js?v=2"></script>
+    <script src="suggestions.js?v=2"></script>
+    <script src="app.js?v=15"></script>
+>>>>>>> origin/main
 </body>
 </html>

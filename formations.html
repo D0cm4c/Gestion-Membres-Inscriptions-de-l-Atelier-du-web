@@ -22,13 +22,11 @@
             </span>
         </a>
         <nav class="side-nav" aria-label="Navigation principale" id="sidebarNav">
-            <span class="side-section">Général</span>
             <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
             <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
-            <span class="side-section">Espace</span>
             <a href="formations.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
-            <a href="#" aria-disabled="true"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
-            <span class="side-section">Système</span>
+            <a href="salles.html"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
+            <a href="suggestions.html"><span class="nav-ico" aria-hidden="true">💡</span> À faire</a>
             <a href="parametres.html"><span class="nav-ico" aria-hidden="true">⚙️</span> Paramètres</a>
         </nav>
         <div class="sidebar-footer">
@@ -41,6 +39,7 @@
         <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="sidebarNav" aria-label="Ouvrir la navigation">☰</button>
     <h1 class="topbar-title">Formations</h1>
         <p class="topbar-date" id="todayDate"></p>
+        <span class="open-status" id="openStatus" role="status" aria-live="polite"></span>
         <div class="search-bar">
             <span class="search-icon" aria-hidden="true">🔍</span>
             <label for="searchInput" style="position:absolute;left:-9999px">Rechercher une formation</label>
@@ -91,7 +90,7 @@
         <div class="modal-overlay" id="bookingsModal" hidden>
             <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingsTitle" style="max-width:720px;">
                 <h3 id="bookingsTitle">📥 Inscriptions venant du site</h3>
-                <p class="form-hint">Chaque réservation est comparée aux membres : par <strong>n° de membre</strong>, puis <strong>email</strong>, puis <strong>nom/prénom</strong>. Les rattachements certains sont automatiques (notifiés) ; les autres demandent ta validation.</p>
+                <p class="form-hint">Les inscriptions se font uniquement sur le site (atelierduweb.be) — ici, on rattache les réservations aux fiches membres. Comparaison par <strong>n° de membre</strong>, puis <strong>email</strong>, puis <strong>nom/prénom</strong> : les rattachements certains sont automatiques (notifiés) ; les autres demandent ta validation. Les annulations côté site retirent automatiquement l'inscription locale (notifié).</p>
                 <div id="bookingsQueue" class="checkin-results"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary btn-small" id="bookingsDemoBtn">🧪 Charger 3 résas de démo</button>
@@ -101,24 +100,6 @@
             </div>
         </div>
 
-        <!-- Modale inscription membres -->
-        <div class="modal-overlay" id="attendeeModal" hidden>
-            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="attendeeTitle">
-                <h3 id="attendeeTitle">Inscriptions à la formation</h3>
-                <div class="form-group">
-                    <label for="attendeeSearch">Rechercher un membre</label>
-                    <input type="text" id="attendeeSearch" placeholder="Nom, prénom ou n° de membre..." autocomplete="off">
-                    <div id="attendeeResults" class="checkin-results" style="margin-top:0.6rem;" hidden></div>
-                </div>
-                <h4 style="font-size:0.95rem;margin:1rem 0 0.5rem;">Membres inscrits (<span id="attendeeCount">0</span>)</h4>
-                <div id="attendeeList" class="checkin-results"></div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" id="attendeeCloseBtn">Fermer</button>
-                    <button type="button" class="btn btn-secondary" id="attendeeExportBtn">📤 Exporter CSV</button>
-                    <a class="btn btn-primary" id="attendeeBookBtn" target="_blank" rel="noopener">Réserver sur le site</a>
-                </div>
-            </div>
-        </div>
     </main>
 
     </div>
@@ -128,11 +109,14 @@
     </footer>
 
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=14"></script>
-    <script src="mec.js?v=14"></script>
+    <script src="db.js?v=18"></script>
+    <script src="mec.js?v=15"></script>
     <script src="theme.js?v=14"></script>
+    <script src="openstatus.js?v=2"></script>
     <script src="nav.js?v=1"></script>
-    <script src="notifications.js?v=1"></script>
+    <script src="notifications.js?v=2"></script>
+    <script src="suggestions.js?v=2"></script>
+    <script src="booking.js?v=2"></script>
     <script>
     (function () {
         'use strict';
@@ -282,8 +266,9 @@
                     var row = formationRows[String(ev.id)] || null;
 
                     var li = document.createElement('article');
-                    li.className = 'f-card';
+                    li.className = 'f-card f-card-link';
                     if (tone >= 0) li.setAttribute('data-tone', tone);
+                    li.setAttribute('data-goto-evid', esc(ev.id));
                     li.innerHTML =
                         '<div class="f-card-banner' + (ev.startDate ? '' : ' no-date') + '">' +
                         '<div class="f-card-date">' +
@@ -295,6 +280,7 @@
                         (dateInfo ? '<div class="f-card-weekday">' + esc(dateInfo) + '</div>' : '') +
                         '<div class="f-card-time">' + (timeShort ? esc(timeShort) : '') + '</div>' +
                         '</div>' +
+                        (row ? '<a class="f-card-count' + (row.attendee_count ? ' has-attendees' : '') + '" href="formation.html?id=' + encodeURIComponent(ev.id) + '" title="Voir la fiche formation et les inscrits"><span class="f-count-num">' + row.attendee_count + '</span><span class="f-count-lbl">inscrit' + (row.attendee_count > 1 ? 's' : '') + '</span></a>' : '') +
                         '</div>' +
                         '<div class="f-card-body">' +
                         '<h3 class="f-card-title">' + esc(ev.title) + '</h3>' +
@@ -306,10 +292,10 @@
                             return '<span class="' + cls + '">' + esc(c) + '</span>';
                         }).join('') +
                         badge(ev) +
-                        '<span class="spacer"></span>' +
-                        (row ? '<button class="btn btn-secondary btn-small f-register-btn" data-fid="' + esc(row.id) + '" title="Inscrire des membres">👥 <span class="f-count">' + row.attendee_count + '</span></button>' : '') +
-                        '<a class="btn btn-primary btn-small" href="' + esc(url) + '" target="_blank" rel="noopener">Voir / Réserver</a>' +
                         '</div>' +
+                        (row
+                        ? '<button class="btn btn-primary f-card-book bk-open" data-evid="' + esc(ev.id) + '" title="Choisir un membre et réserver sur atelierduweb.be">Réserver sur le site</button>'
+                        : '<a class="btn btn-primary f-card-book" href="' + esc(url) + '" target="_blank" rel="noopener">Réserver sur le site</a>') +
                         '</div>';
                     wrap.appendChild(li);
                 });
@@ -326,6 +312,13 @@
                 // Synchronise dans la base SQLite (mise à jour / ajout / retrait)
                 if (db) {
                     var count = window.ADWDatabase.syncFormations(events);
+                    // Miroir des inscriptions : réservations annulées côté site → retraits locaux notifiés
+                    var removals = window.ADWDatabase.applyMirror();
+                    removals.forEach(function (r) {
+                        window.ADWNotifications.push('auto_unlink',
+                            '🗑 Inscription retirée : ' + r.memberName + ' — « ' + r.formationTitle + ' » (réservation annulée sur le site)',
+                            'warning');
+                    });
                     // Recharge depuis la DB pour avoir les ids internes + compte d'inscrits
                     var rows = window.ADWDatabase.listFormations();
                     formationRows = {};
@@ -333,8 +326,8 @@
                     dataSource.textContent = events.length + ' formations synchronisées avec la base locale (' + count + ' à jour).';
                     if (window.ADWNotifications) {
                         window.ADWNotifications.push('sync_formations',
-                            '🔄 Synchro formations : ' + events.length + ' formation(s) synchronisée(s) depuis atelierduweb.be',
-                            'info');
+                            '🔄 Synchro formations : ' + events.length + ' formation(s) synchronisée(s) depuis atelierduweb.be' + (removals.length ? ' · ' + removals.length + ' inscription(s) retirée(s) (annulations site)' : ''),
+                            removals.length ? 'warning' : 'info');
                     }
                 } else {
                     dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
@@ -373,6 +366,22 @@
             });
         }
 
+        grid.addEventListener('click', function (e) {
+            // Boutons et liens internes : ne declenchent pas la navigation
+            if (e.target.closest('.bk-open, a, button')) return;
+            var card = e.target.closest('.f-card-link');
+            if (!card) return;
+            var evid = card.getAttribute('data-goto-evid');
+            if (evid) location.href = 'formation.html?id=' + encodeURIComponent(evid);
+        });
+
+        grid.addEventListener('click', function (e) {
+            var btn = e.target.closest('.bk-open');
+            if (!btn) return;
+            var f = window.ADWDatabase.getFormationByEventId(btn.getAttribute('data-evid'));
+            if (f && window.ADWBooking) window.ADWBooking.openPicker(f);
+        });
+
         document.getElementById('refreshBtn').addEventListener('click', function () {
             window.ADWMec.clearCache();
             loadEvents();
@@ -390,141 +399,6 @@
         searchInput.addEventListener('input', applyFilters);
         monthSelect.addEventListener('change', applyFilters);
         catSelect.addEventListener('change', applyFilters);
-
-        // ============ Inscriptions membres ============
-        var attendeeModal = document.getElementById('attendeeModal');
-        var attendeeSearch = document.getElementById('attendeeSearch');
-        var attendeeResults = document.getElementById('attendeeResults');
-        var attendeeList = document.getElementById('attendeeList');
-        var attendeeCountEl = document.getElementById('attendeeCount');
-        var attendeeTitle = document.getElementById('attendeeTitle');
-        var attendeeBookBtn = document.getElementById('attendeeBookBtn');
-        var currentFormationId = null;
-
-        grid.addEventListener('click', function (e) {
-            var btn = e.target.closest('.f-register-btn');
-            if (!btn || !db) return;
-            openAttendeeModal(btn.getAttribute('data-fid'));
-        });
-
-        function openAttendeeModal(fid) {
-            currentFormationId = fid;
-            var f = window.ADWDatabase.getFormation(fid);
-            if (!f) return;
-            attendeeTitle.textContent = 'Inscriptions — ' + f.title;
-            attendeeBookBtn.href = f.url || 'https://atelierduweb.be/nos-formations-et-ateliers/';
-            attendeeSearch.value = '';
-            attendeeResults.hidden = true;
-            attendeeResults.innerHTML = '';
-            refreshAttendeeList();
-            attendeeModal.hidden = false;
-            attendeeSearch.focus();
-        }
-
-        function refreshAttendeeList() {
-            var attendees = window.ADWDatabase.getFormationAttendees(currentFormationId);
-            attendeeCountEl.textContent = attendees.length;
-            attendeeList.innerHTML = attendees.length ? '' : '<p class="form-hint">Aucun membre inscrit pour l\u2019instant.</p>';
-            attendees.forEach(function (m) {
-                var li = document.createElement('div');
-                li.className = 'checkin-item done';
-                var ficheUrl = 'membres.html#member=' + encodeURIComponent(m.id);
-                li.innerHTML =
-                    '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
-                    '<a href="' + ficheUrl + '" style="flex:1;min-width:0;text-decoration:none;color:inherit;" title="Ouvrir la fiche membre">' +
-                    '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
-                    (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
-                    '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">voir la fiche →</span></div></a>' +
-                    '<button class="btn btn-danger btn-small f-unregister" data-mid="' + esc(m.id) + '" title="Désinscrire">✕</button>';
-                attendeeList.appendChild(li);
-            });
-        }
-
-        attendeeList.addEventListener('click', function (e) {
-            var btn = e.target.closest('.f-unregister');
-            if (!btn) return;
-            window.ADWDatabase.unregisterMemberFromFormation(currentFormationId, btn.getAttribute('data-mid'));
-            refreshAttendeeList();
-            updateCardCount(currentFormationId);
-            searchMembers('');
-        });
-
-        function searchMembers(q) {
-            q = (q || '').trim().toLowerCase();
-            if (!q) { attendeeResults.hidden = true; return; }
-            var members = window.ADWDatabase.queryAll(
-                'SELECT id, first_name, last_name, member_no, email FROM members WHERE (first_name LIKE ? OR last_name LIKE ? OR CAST(member_no AS TEXT) LIKE ?) ORDER BY last_name LIMIT 8',
-                ['%' + q + '%', '%' + q + '%', '%' + q + '%']
-            );
-            // Exclure les déjà inscrits
-            var attendees = window.ADWDatabase.getFormationAttendees(currentFormationId);
-            var registered = {};
-            attendees.forEach(function (a) { registered[a.id] = true; });
-            attendeeResults.innerHTML = '';
-            attendeeResults.hidden = members.length === 0;
-            members.forEach(function (m) {
-                if (registered[m.id]) return;
-                var li = document.createElement('div');
-                li.className = 'checkin-item';
-                li.innerHTML =
-                    '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
-                    '<div style="flex:1;min-width:0;"><strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
-                    (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') + '</div>' +
-                    '<button class="btn btn-primary btn-small f-register" data-mid="' + esc(m.id) + '">Inscrire</button>';
-                attendeeResults.appendChild(li);
-            });
-        }
-
-        attendeeResults.addEventListener('click', function (e) {
-            var btn = e.target.closest('.f-register');
-            if (!btn) return;
-            window.ADWDatabase.registerMemberToFormation(currentFormationId, btn.getAttribute('data-mid'));
-            attendeeSearch.value = '';
-            attendeeResults.hidden = true;
-            refreshAttendeeList();
-            updateCardCount(currentFormationId);
-        });
-
-        function updateCardCount(fid) {
-            var row = window.ADWDatabase.getFormation(fid);
-            var btn = grid.querySelector('.f-register-btn[data-fid="' + fid + '"]');
-            if (btn && row) btn.querySelector('.f-count').textContent = row.attendee_count !== undefined ? row.attendee_count : (function () {
-                return window.ADWDatabase.getFormationAttendees(fid).length;
-            })();
-        }
-
-        attendeeSearch.addEventListener('input', function () { searchMembers(attendeeSearch.value); });
-        document.getElementById('attendeeCloseBtn').addEventListener('click', function () { attendeeModal.hidden = true; });
-        attendeeModal.addEventListener('click', function (e) { if (e.target === attendeeModal) attendeeModal.hidden = true; });
-
-        // Export CSV des inscrits à la formation courante
-        document.getElementById('attendeeExportBtn').addEventListener('click', function () {
-            var f = window.ADWDatabase.getFormation(currentFormationId);
-            var attendees = window.ADWDatabase.getFormationAttendees(currentFormationId);
-            if (!attendees.length) return;
-            function csv(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }
-            var rows = [];
-            rows.push(['Formation', csv(f.title)].join(';'));
-            rows.push(['Date', csv(f.date_text || f.start_date || '')].join(';'));
-            rows.push(['Horaires', csv(f.time_label || '')].join(';'));
-            rows.push(['Exporté le', csv(new Date().toLocaleString('fr-BE'))].join(';'));
-            rows.push('');
-            rows.push(['N°', 'Prénom', 'Nom', 'Email', 'Téléphone', 'Inscrit le'].map(csv).join(';'));
-            attendees.forEach(function (m) {
-                rows.push([
-                    m.member_no || '', m.first_name, m.last_name,
-                    m.email || '', m.phone || '',
-                    m.registered_at ? m.registered_at.slice(0, 10) : ''
-                ].map(csv).join(';'));
-            });
-            var blob = new Blob(['\ufeff' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-            var a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            var slug = (f.title || 'formation').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
-            a.download = 'inscrits-' + slug + '.csv';
-            a.click();
-            URL.revokeObjectURL(a.href);
-        });
 
         // ============ File de validation des inscriptions du site ============
         var bookingsModal = document.getElementById('bookingsModal');

@@ -519,12 +519,68 @@
 
     /* ============ Check-in rapide ============ */
 
+
+    /* ---------- Navigation clavier des listes de recherche (visites/impressions) ---------- */
+    function makeListNavigable(searchInput, resultsEl, opts) {
+        // opts.onEnter(itemEl, members, activeIndex, subAction) — valide la ligne ;
+        // opts.subActions : liste de selecteurs de sous-boutons (navigation gauche/droite + Entr\u00e9e sur le bouton focus).
+        var state = { activeIndex: -1, subIndex: -1, members: [] };
+        function items() { return resultsEl.querySelectorAll('li.checkin-item'); }
+        function setActive(idx, subIdx) {
+            state.activeIndex = idx;
+            state.subIndex = (subIdx === undefined ? -1 : subIdx);
+            var els = items();
+            els.forEach(function (el, i) {
+                el.classList.toggle('bk-active', i === state.activeIndex);
+            });
+            if (state.activeIndex >= 0 && els[state.activeIndex]) {
+                els[state.activeIndex].scrollIntoView({ block: 'nearest' });
+            }
+        }
+        searchInput.addEventListener('keydown', function (e) {
+            var els = items();
+            if (!els.length) return;
+            var max = els.length - 1;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActive(state.activeIndex < 0 ? 0 : Math.min(state.activeIndex + 1, max));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActive(state.activeIndex <= 0 ? 0 : state.activeIndex - 1);
+            } else if (e.key === 'ArrowRight' && opts.subActions && state.activeIndex >= 0) {
+                e.preventDefault();
+                var btns = els[state.activeIndex].querySelectorAll(opts.subActions);
+                state.subIndex = Math.min(state.subIndex + 1, btns.length - 1);
+                btns.forEach(function (b, i) { b.classList.toggle('bk-active', i === state.subIndex); });
+            } else if (e.key === 'ArrowLeft' && opts.subActions && state.activeIndex >= 0) {
+                e.preventDefault();
+                var btns = els[state.activeIndex].querySelectorAll(opts.subActions);
+                state.subIndex = Math.max(state.subIndex - 1, -1);
+                btns.forEach(function (b, i) { b.classList.toggle('bk-active', i === state.subIndex); });
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (state.activeIndex >= 0 && state.members[state.activeIndex]) {
+                    var el = els[state.activeIndex];
+                    var subBtn = state.subIndex >= 0 ? el.querySelectorAll(opts.subActions)[state.subIndex] : null;
+                    if (subBtn) { subBtn.click(); }
+                    else { el.click(); }
+                }
+            }
+        });
+        searchInput.addEventListener('input', function () { setActive(-1); });
+        return {
+            setMembers: function (members) { state.members = members || []; setActive(state.members.length ? 0 : -1); },
+            state: state
+        };
+    }
+
     var checkinModal = document.getElementById('checkinModal');
     var quickCheckinBtn = document.getElementById('quickCheckinBtn');
     var checkinCloseBtn = document.getElementById('checkinCloseBtn');
     var checkinSearch = document.getElementById('checkinSearch');
     var checkinResults = document.getElementById('checkinResults');
     var checkinHint = document.getElementById('checkinHint');
+    var checkinNav = (checkinSearch && checkinResults) ? makeListNavigable(checkinSearch, checkinResults, {}) : null;
 
     var CHECKIN_SQL = 'SELECT id, first_name, last_name, member_no, subscription, ' +
         '(SELECT COUNT(*) FROM visits v WHERE v.member_id = members.id AND v.visit_date = date(\'now\')) AS visited_today, ' +
@@ -563,6 +619,7 @@
             checkinResults.innerHTML = '<li class="form-hint" style="list-style:none;padding:0.6rem 0;">Aucun membre trouvé.</li>';
             return;
         }
+        if (checkinNav) checkinNav.setMembers(members);
         members.forEach(function (m) {
             var li = document.createElement('li');
             li.className = 'checkin-item' + (m.visited_today ? ' done' : '');
@@ -615,6 +672,7 @@
     var printCloseBtn = document.getElementById('printCloseBtn');
     var printSearch = document.getElementById('printSearch');
     var printResults = document.getElementById('printResults');
+    var printNav = (printSearch && printResults) ? makeListNavigable(printSearch, printResults, { subActions: '[data-print]' }) : null;
 
     function openPrint() {
         if (!printModal) return;
@@ -633,6 +691,7 @@
     function displayPrintResults(members) {
         if (!printResults) return;
         printResults.innerHTML = '';
+        if (printNav) printNav.setMembers(members);
         if (!members.length) {
             printResults.innerHTML = '<li class="form-hint" style="list-style:none;padding:0.6rem 0;">Aucun membre trouvé.</li>';
             return;
