@@ -116,6 +116,7 @@
     <script src="nav.js?v=1"></script>
     <script src="notifications.js?v=2"></script>
     <script src="suggestions.js?v=2"></script>
+    <script src="globalsearch.js?v=1"></script>
     <script src="booking.js?v=2"></script>
     <script>
     (function () {
@@ -328,6 +329,15 @@
                         window.ADWNotifications.push('sync_formations',
                             '🔄 Synchro formations : ' + events.length + ' formation(s) synchronisée(s) depuis atelierduweb.be' + (removals.length ? ' · ' + removals.length + ' inscription(s) retirée(s) (annulations site)' : ''),
                             removals.length ? 'warning' : 'info');
+                    }
+                    // Rappel d'attribution : formations sans salle (avec dates parsées) -> notification actionnable
+                    var withoutRoom = [];
+                    try { withoutRoom = window.ADWDatabase.formationsWithoutRoom(); } catch (e) { withoutRoom = []; }
+                    var attributable = withoutRoom.filter(function (f) { return f.date_count > 0; });
+                    if (attributable.length && window.ADWNotifications) {
+                        window.ADWNotifications.push('awaiting_validation',
+                            '🏷 ' + attributable.length + ' formation(s) attendent une salle — attribue-les depuis le planning (page Salles) pour bloquer leurs créneaux.',
+                            'warning');
                     }
                 } else {
                     dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
