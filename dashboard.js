@@ -98,7 +98,57 @@
 
     /* ============ Stats ============ */
 
+    // ============ Agenda du jour ============
+    function isoLocal(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function toneFor(name) {
+        var str = (name || '').toLowerCase();
+        var h = 0;
+        for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+        return h % 10;
+    }
+    var TONE_SOLID = ['#0F3D5C', '#6C5CE7', '#2F9BE4', '#18A55F', '#E8734A', '#B26A00', '#D8434B', '#7A5230', '#556B2F', '#4A4E69'];
+
+    function renderTodayAgenda() {
+        var el = document.getElementById('todayAgenda');
+        if (!el) return;
+        var today = isoLocal(new Date());
+        var rows;
+        try {
+            rows = ADWDatabase.queryAll(
+                'SELECT f.title, f.event_id, f.time_label, f.categories, f.room_id, fd.slot, ' +
+                '(SELECT name FROM rooms r WHERE r.id = f.room_id) AS room_name ' +
+                'FROM formation_dates fd JOIN formations f ON f.id = fd.formation_id ' +
+                'WHERE fd.date = ? ORDER BY fd.slot ASC, f.title ASC', [today]);
+        } catch (e) { rows = []; }
+        if (!rows.length) {
+            el.hidden = true;
+            return;
+        }
+        var html = '<div class="stat-card today-agenda" style="margin-bottom:1.3rem;">' +
+            '<h3>📆 Aujourd\u2019hui à l\u2019Atelier <span class="members-count">' + rows.length + ' formation' + (rows.length > 1 ? 's' : '') + '</span></h3>' +
+            '<div class="agenda-list">';
+        rows.forEach(function (f) {
+            var mainCat = (f.categories || '').split(',')[0].trim();
+            var tone = mainCat ? toneFor(mainCat) : -1;
+            var bg = tone >= 0 ? TONE_SOLID[tone] : 'var(--primary)';
+            html += '<a class="agenda-item" href="formation.html?id=' + encodeURIComponent(f.event_id) + '" style="text-decoration:none;">' +
+                '<span class="agenda-slot ' + (f.slot === 'AM' ? 'am' : 'pm') + '">' + (f.slot === 'AM' ? 'Matin' : 'A-midi') + '</span>' +
+                '<span class="agenda-bar" style="background:' + bg + ';"></span>' +
+                '<span class="agenda-title">' + escapeHtml(f.title) + '</span>' +
+                (f.room_name ? '<span class="agenda-room">' + escapeHtml(f.room_name) + '</span>' : '<span class="badge badge-full">sans salle</span>') +
+                '</a>';
+        });
+        html += '</div></div>';
+        el.innerHTML = html;
+        el.hidden = false;
+    }
+
     function render() {
+        renderTodayAgenda();
+
         var total = one('SELECT COUNT(*) v FROM members');
         var active = one('SELECT COUNT(*) v FROM members WHERE date(end_date) >= date(\'now\') OR end_date IS NULL');
         var expired = one('SELECT COUNT(*) v FROM members WHERE date(end_date) < date(\'now\') AND end_date IS NOT NULL');

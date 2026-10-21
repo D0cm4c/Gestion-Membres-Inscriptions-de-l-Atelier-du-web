@@ -1445,3 +1445,45 @@ main {
     pointer-events: none;
 }
 .room-planning tr.today .day-cell { background: var(--accent-light); }
+
+/* ============ Agenda du jour (dashboard) ============ */
+.today-agenda .agenda-list { display: flex; flex-direction: column; gap: 0.45rem; }
+.agenda-item {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    transition: border-color 0.15s, transform 0.12s;
+}
+.agenda-item:hover { border-color: var(--accent); transform: translateX(3px); }
+.agenda-slot {
+    flex-shrink: 0;
+    font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+    padding: 0.22rem 0.55rem; border-radius: 999px;
+    min-width: 74px; text-align: center;
+}
+.agenda-slot.am { background: #FCF2DF; color: #8F5600; }
+.agenda-slot.pm { background: #E4F2FC; color: #1F6FA0; }
+.agenda-bar { flex-shrink: 0; width: 5px; height: 28px; border-radius: 3px; }
+.agenda-title { flex: 1; min-width: 0; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agenda-room { flex-shrink: 0; font-size: 0.78rem; font-weight: 600; color: var(--text-soft); background: var(--bg); padding: 0.2rem 0.6rem; border-radius: 999px; }
+
+/* ============ Recherche globale (dropdown) ============ */
+.gs-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-lg);
+    z-index: 150; overflow: hidden; max-height: 340px; overflow-y: auto;
+}
+.gs-item {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0.55rem 0.85rem; cursor: pointer;
+    border-bottom: 1px solid var(--bg);
+}
+.gs-item:last-child { border-bottom: none; }
+.gs-item:hover, .gs-item.gs-active { background: var(--accent-light); }
+.gs-ico { flex-shrink: 0; font-size: 1rem; }
+.gs-label { flex: 1; min-width: 0; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-hint { flex-shrink: 0; font-size: 0.74rem; color: var(--text-soft); max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-empty { padding: 0.9rem; font-size: 0.88rem; color: var(--text-soft); }
