@@ -51,6 +51,11 @@
                 if (!raw) return null;
                 var cached = JSON.parse(raw);
                 if (!cached || !cached.time || Date.now() - cached.time > CACHE_TTL) return null;
+                // Cache pollué par des IDs numériques non résolus : forcer un rechargement
+                var numeric = (cached.events || []).some(function (ev) {
+                    return (ev.categories || []).some(function (c) { return /^\d+$/.test(String(c)); });
+                });
+                if (numeric) return null;
                 return cached;
             } catch (e) { return null; }
         },
@@ -159,7 +164,14 @@
                     ev.categories = (ev.categories || []).map(function (id) { return map[id] || null; }).filter(Boolean);
                 });
                 return events;
-            }).catch(function () { return events; });
+            }).catch(function () {
+                // Résolution impossible : renvoyer les catégories vides plutôt que des IDs numériques,
+                // qui pollueraient le cache, la base locale et l'affichage (numéros au lieu d'intitulés)
+                events.forEach(function (ev) {
+                    ev.categories = (ev.categories || []).filter(function (c) { return !/^\d+$/.test(String(c)); });
+                });
+                return events;
+            });
         },
 
         // Source 2 (fallback) : flux RSS du site

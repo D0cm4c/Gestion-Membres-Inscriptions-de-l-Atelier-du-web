@@ -131,7 +131,7 @@
             '<h3>📆 Aujourd\u2019hui à l\u2019Atelier <span class="members-count">' + rows.length + ' formation' + (rows.length > 1 ? 's' : '') + '</span></h3>' +
             '<div class="agenda-list">';
         rows.forEach(function (f) {
-            var mainCat = (f.categories || '').split(',')[0].trim();
+            var mainCat = (f.categories || '').split(',').map(function (c) { return c.trim(); }).filter(function (c) { return c && !/^\d+$/.test(c); })[0] || '';
             var tone = mainCat ? toneFor(mainCat) : -1;
             var bg = tone >= 0 ? TONE_SOLID[tone] : 'var(--primary)';
             html += '<a class="agenda-item" href="formation.html?id=' + encodeURIComponent(f.event_id) + '" style="text-decoration:none;">' +

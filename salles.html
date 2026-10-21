@@ -13,36 +13,9 @@
     <a class="skip-link" href="#main">Aller au contenu principal</a>
 
     <div class="app-layout">
-    <aside class="sidebar">
-        <a class="brand" href="index.html">
-            <span class="brand-mark" aria-hidden="true">AW</span>
-            <span class="brand-text">
-                <span class="brand-name">Atelier du Web</span>
-                <span class="brand-sub">EPN · Saint-Gilles</span>
-            </span>
-        </a>
-        <nav class="side-nav" aria-label="Navigation principale" id="sidebarNav">
-            <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
-            <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
-            <a href="formations.html"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
-            <a href="salles.html" class="active" aria-current="page"><span class="nav-ico" aria-hidden="true">📅</span> Salles</a>
-            <a href="suggestions.html"><span class="nav-ico" aria-hidden="true">💡</span> À faire</a>
-            <a href="parametres.html"><span class="nav-ico" aria-hidden="true">⚙️</span> Paramètres</a>
-        </nav>
-        <div class="sidebar-footer">
-            <a class="side-external" href="https://atelierduweb.be" target="_blank" rel="noopener">🌐 atelierduweb.be</a>
-        </div>
-    </aside>
-
-    <div class="app-main">
-    <header class="topbar">
-        <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="sidebarNav" aria-label="Ouvrir la navigation">☰</button>
-        <h1 class="topbar-title">Planning des salles</h1>
-        <p class="topbar-date" id="todayDate"></p>
-        <span class="open-status" id="openStatus" role="status" aria-live="polite"></span>
-        <span id="notifCenter" style="display:inline-flex;margin-left:auto;"></span>
-        <button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">🌗</button>
-    </header>
+        <div data-layout-sidebar></div>
+<div class="app-main">
+        <div data-layout-topbar data-title="Planning des salles"></div>
 
     <main id="main">
         <section class="filters-bar" aria-label="Navigation et filtres">
@@ -75,6 +48,7 @@
         <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
 
+    <script src="layout.js?v=1"></script>
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js?v=18"></script>
     <script src="theme.js?v=14"></script>
@@ -125,7 +99,7 @@
         }
 
         function mainCatOf(categories) {
-            return (categories || '').split(',').map(function (c) { return c.trim(); }).filter(Boolean)[0] || '';
+            return (categories || '').split(',').map(function (c) { return c.trim(); }).filter(function (c) { return c && !/^\d+$/.test(c); })[0] || '';
         }
 
         function shortTitle(t) {
