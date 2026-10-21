@@ -21,7 +21,7 @@
                 <span class="brand-sub">EPN · Saint-Gilles</span>
             </span>
         </a>
-        <nav class="side-nav" aria-label="Navigation principale">
+        <nav class="side-nav" aria-label="Navigation principale" id="sidebarNav">
             <a href="index.html"><span class="nav-ico" aria-hidden="true">📊</span> Tableau de bord</a>
             <a href="membres.html"><span class="nav-ico" aria-hidden="true">👥</span> Membres</a>
             <a href="formations.html"><span class="nav-ico" aria-hidden="true">🎓</span> Formations</a>
@@ -36,6 +36,7 @@
 
     <div class="app-main">
     <header class="topbar">
+        <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="sidebarNav" aria-label="Ouvrir la navigation">☰</button>
         <h1 class="topbar-title">À faire / Suggestions</h1>
         <p class="topbar-date" id="todayDate"></p>
         <span class="open-status" id="openStatus" role="status" aria-live="polite"></span>
@@ -75,6 +76,7 @@
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js?v=18"></script>
     <script src="theme.js?v=14"></script>
+    <script src="nav.js?v=1"></script>
     <script src="openstatus.js?v=2"></script>
     <script src="notifications.js?v=2"></script>
     <script src="suggestions.js?v=2"></script>
