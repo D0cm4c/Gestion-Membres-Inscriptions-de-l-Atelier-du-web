@@ -525,6 +525,7 @@ main {
 .quick-actions h3 { color: var(--primary); margin-bottom: 0.9rem; font-size: 1rem; }
 
 /* ============ Barre de filtres ============ */
+.filters-toggle { display: none; }
 .filters-bar {
     display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap;
     background: var(--surface);
@@ -933,6 +934,12 @@ main {
     .bk-actions { display: flex; gap: 0.45rem; flex-wrap: wrap; flex-basis: 100%; padding-top: 0.5rem; }
     .bk-actions .btn { flex: 1 1 100%; }
 
+    /* Cartes formation : boutons d'action en 2 colonnes égales, tapables */
+    .f-card-foot { gap: 0.45rem; }
+    .f-card-foot .btn { flex: 1 1 calc(50% - 0.3rem); text-align: center; }
+    .f-card-foot .spacer { flex-basis: 100%; height: 0; }
+    .f-card { padding-bottom: 1rem; }
+
     /* Saisie : 16px pour éviter le zoom auto iOS au focus */
     .form-group input, .form-group select, .search-bar input, .filters-bar select { font-size: 16px; }
 
@@ -941,6 +948,9 @@ main {
     .hero-actions .btn { width: 100%; justify-content: center; }
     .filters-bar { display: grid; grid-template-columns: 1fr; gap: 0.7rem; padding: 0.9rem; }
     .filters-bar .btn { width: 100%; justify-content: center; }
+    .filters-toggle { display: inline-flex !important; }
+    .filters-more { display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
+    .filters-more[hidden] { display: none !important; }
     .filter-group { flex-wrap: wrap; }
     .segmented { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
     .seg-btn { width: 100%; text-align: center; padding: 0.55rem 0.4rem; }
@@ -966,6 +976,11 @@ main {
 
     .member-row { grid-template-columns: 40px 1fr auto; }
     .member-row .list-cell:not(.avatar-cell):not(.name-cell):not(.dates-cell) { display: none; }
+
+    /* Cartes membres : actions accessibles depuis la fiche, pas de suppression accidentelle */
+    .card-actions, .list-actions { display: none; }
+    .member-card, .member-row { cursor: pointer; }
+    .member-card:active, .member-row:active { background: var(--accent-light); }
 
     .form-row { flex-direction: column; gap: 0; }
     .subscription-options { grid-template-columns: 1fr; }

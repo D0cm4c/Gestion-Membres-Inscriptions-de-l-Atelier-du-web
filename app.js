@@ -424,6 +424,24 @@
         }
     });
 
+    var detailEditBtn = document.getElementById('detailEditBtn');
+    var detailDeleteBtn = document.getElementById('detailDeleteBtn');
+    if (detailEditBtn) detailEditBtn.addEventListener('click', function () {
+        if (!detailMember) return;
+        closeDetail();
+        openModal(detailMember);
+    });
+    if (detailDeleteBtn) detailDeleteBtn.addEventListener('click', function () {
+        if (!detailMember) return;
+        if (confirm('Supprimer le membre "' + detailMember.first_name + ' ' + detailMember.last_name + '" ?')) {
+            ADWDatabase.run('DELETE FROM members WHERE id = ?', [detailMember.id]).then(function () {
+                closeDetail();
+                render();
+                showToast('Membre supprimé', 'success');
+            });
+        }
+    });
+
     detailCheckinBtn.addEventListener('click', function () {
         if (!detailMember) return;
         var today = new Date().toISOString().slice(0, 10);
@@ -637,6 +655,29 @@
     viewGridBtn.addEventListener('click', function () { setView('grid'); });
     viewListBtn.addEventListener('click', function () { setView('list'); });
     if (exportBtn) exportBtn.addEventListener('click', exportCSV);
+
+    // Barre de filtres repliable en mobile
+    var filtersToggle = document.getElementById('filtersToggle');
+    var filtersMore = document.getElementById('filtersMore');
+    if (filtersToggle && filtersMore) {
+        var MOBILE = window.matchMedia('(max-width: 860px)');
+        var syncFiltersToggle = function () {
+            filtersToggle.hidden = !MOBILE.matches;
+            if (!MOBILE.matches) filtersMore.hidden = false;
+        };
+        filtersToggle.addEventListener('click', function () {
+            var open = filtersToggle.getAttribute('aria-expanded') === 'true';
+            filtersToggle.setAttribute('aria-expanded', String(!open));
+            filtersToggle.textContent = open ? '\uD83D\uDD3D Filtres & tri' : '\uD83D\uDD3C Filtres & tri';
+            filtersMore.hidden = open;
+        });
+        if (MOBILE.addEventListener) {
+            MOBILE.addEventListener('change', syncFiltersToggle);
+        } else if (MOBILE.addListener) {
+            MOBILE.addListener(syncFiltersToggle);
+        }
+        syncFiltersToggle();
+    }
 
     document.querySelectorAll('.filters-bar [data-filter]').forEach(function (btn) {
         btn.addEventListener('click', function () {
