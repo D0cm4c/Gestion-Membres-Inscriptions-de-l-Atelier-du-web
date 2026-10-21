@@ -568,6 +568,8 @@ main {
     background: var(--accent-light); padding: 0.32rem 0.9rem; border-radius: 999px;
 }
 
+.filters-more .members-count { margin-left: auto; }
+
 /* ============ Cartes membres ============ */
 .members-grid {
     display: grid;
