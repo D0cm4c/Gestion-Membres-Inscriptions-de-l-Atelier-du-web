@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paramètres — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=20">
+    <link rel="stylesheet" href="styles.css?v=21">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -18,42 +18,64 @@
         <div data-layout-topbar data-title="Paramètres"></div>
 
     <main id="main">
-        <section class="stat-card" style="max-width:720px;">
-            <h2>🏫 Salles de formation</h2>
-            <p class="form-hint" style="margin-bottom:1rem;">Salles utilisées pour le planning et l'attribution des formations (page Salles). Une salle occupée par au moins une formation ne peut pas être supprimée.</p>
-            <ul style="list-style:none;" id="roomsList"></ul>
-            <div class="modal-actions" style="justify-content:flex-start;">
-                <div class="form-group" style="margin:0;">
-                    <input type="text" id="newRoomName" placeholder="Nom de la nouvelle salle…" style="max-width:220px;" aria-label="Nom de la nouvelle salle">
+        <div class="settings-grid">
+
+        <section class="settings-card" aria-labelledby="roomsTitle">
+            <div class="settings-head">
+                <span class="settings-ico blue" aria-hidden="true">🏫</span>
+                <div>
+                    <h2 id="roomsTitle">Salles de formation</h2>
+                    <p>Planning, attribution des formations</p>
                 </div>
-                <div class="form-group" style="margin:0;">
-                    <input type="number" id="newRoomCapacity" placeholder="Capacité" min="1" style="max-width:100px;" aria-label="Capacité de la salle">
+            </div>
+            <p class="settings-note">Salles utilisées par la page Salles et l'attribution des formations. Une salle occupée par au moins une formation ne peut pas être supprimée.</p>
+            <ul class="settings-list" id="roomsList"></ul>
+            <div class="settings-foot">
+                <div class="form-group">
+                    <input type="text" id="newRoomName" placeholder="Nom de la nouvelle salle…" aria-label="Nom de la nouvelle salle">
                 </div>
-                <button class="btn btn-primary" id="addRoomBtn">+ Ajouter la salle</button>
+                <div class="form-group">
+                    <input type="number" id="newRoomCapacity" placeholder="Capacité" min="1" style="max-width:110px;" aria-label="Capacité de la salle">
+                </div>
+                <button class="btn btn-primary" id="addRoomBtn">+ Ajouter</button>
             </div>
         </section>
 
-        <section class="stat-card" style="max-width:720px;">
-            <h2>🧩 Cartes du tableau de bord</h2>
-            <p class="form-hint" style="margin-bottom:1rem;">Cochez les cartes à afficher sur le tableau de bord. La disposition (glisser-déposer) et ce réglage sont mémorisés sur ce navigateur.</p>
-            <ul style="list-style:none;" id="tilesList"></ul>
-            <div class="modal-actions" style="justify-content:flex-start;">
-                <button class="btn btn-secondary" id="tilesAllBtn">Tout afficher</button>
-                <button class="btn btn-secondary" id="tilesNoneBtn">Tout masquer</button>
+        <section class="settings-card" aria-labelledby="tilesTitle">
+            <div class="settings-head">
+                <span class="settings-ico orange" aria-hidden="true">🧩</span>
+                <div>
+                    <h2 id="tilesTitle">Cartes du tableau de bord</h2>
+                    <p>Affichage, disposition mémorisée</p>
+                </div>
+            </div>
+            <p class="settings-note">Coche les cartes à afficher sur le tableau de bord. La disposition (glisser-déposer) et ce réglage sont mémorisés sur ce navigateur.</p>
+            <ul class="settings-list" id="tilesList"></ul>
+            <div class="settings-foot">
+                <button class="btn btn-secondary btn-small" id="tilesAllBtn">☑️ Tout afficher</button>
+                <button class="btn btn-secondary btn-small" id="tilesNoneBtn">☐ Tout masquer</button>
             </div>
         </section>
 
-        <section class="stat-card" style="max-width:720px;">
-            <h2>🔒 Données personnelles (RGPD)</h2>
-            <p class="form-hint" style="margin-bottom:1rem;">Cette application stocke les données des membres et inscrits dans ce navigateur (base SQLite locale). Les données du site atelierduweb.be (formations, salles) sont conservées.</p>
-            <ul style="list-style:none;padding-left:1.2rem;margin-bottom:1rem;">
-                <li><strong>Effacer un membre</strong> : depuis sa fiche ou la liste — supprime aussi ses visites, impressions et inscriptions aux formations.</li>
-                <li><strong>Purge complète</strong> : efface <em>tous</em> les membres, visites, impressions, inscriptions aux formations, réservations en attente et suggestions. Action irréversible.</li>
+        <section class="settings-card" aria-labelledby="rgpdTitle">
+            <div class="settings-head">
+                <span class="settings-ico red" aria-hidden="true">🔒</span>
+                <div>
+                    <h2 id="rgpdTitle">Données personnelles (RGPD)</h2>
+                    <p>Base SQLite locale à ce navigateur</p>
+                </div>
+            </div>
+            <p class="settings-note">Les données des membres et inscrits sont stockées dans ce navigateur (base SQLite locale). Les données du site atelierduweb.be (formations, salles) sont conservées.</p>
+            <ul class="settings-list">
+                <li><span class="grow"><strong>Effacer un membre</strong> — depuis sa fiche ou la liste : supprime aussi ses visites, impressions et inscriptions.</span></li>
+                <li><span class="grow"><strong>Purge complète</strong> — efface <em>tous</em> les membres, visites, impressions, inscriptions, réservations en attente et suggestions. <strong style="color:var(--danger);">Irréversible.</strong></span></li>
             </ul>
-            <div class="modal-actions" style="justify-content:flex-start;">
+            <div class="settings-foot">
                 <button class="btn btn-danger" id="purgeAllBtn">🗑️ Purger toutes les données personnelles</button>
             </div>
         </section>
+
+        </div>
     </main>
     </div>
     </div>
@@ -76,6 +98,6 @@
         document.getElementById('todayDate').textContent =
             new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     </script>
-    <script src="settings.js?v=16"></script>
+    <script src="settings.js?v=17"></script>
 </body>
 </html>
