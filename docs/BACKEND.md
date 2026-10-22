@@ -152,23 +152,95 @@ Les scripts de pages (app.js, formations.html…) appellent déjà `ADWDatabase.
 1. **Aucune clé API dans le JS public** (décision utilisateur explicite) : la synchro des bookings MEC doit rester **server-to-server**, jamais appelée depuis le navigateur. Le plugin WordPress prévoit une route protégée par secret.
 2. L'API WP utilisée dans la maquette est **publique et sans clé** (`wp/v2/mec-events`) — c'est un choix assumé côté navigateur.
 3. **API officielle MEC (`wp-json/mec/v1.0`, header `mec-token`) — testée le 22 oct. 2026, fonctionne avec clé.** Réserves au serveur (clé en config serveur, JAMAIS dans le JS) :
-   - `GET /events` : formations + **contenu complet** (mieux que l'excerpt de l'API publique).
-   - `GET /events/{id}/tickets` : 🎯 **tarifs** (« Stage de vacance : 30 € ») — complète les fiches (champ tarif aujourd'hui « à confirmer »).
-   - `GET /events/{id}/next-occurrences` : **dates + horaires structurés** (`start.date`, `hour`, `minutes`) — remplace le parseur d'extraits FR (`parseFrDates` de mec.js) par des données propres.
-   - `GET /events/{id}/related-events` : formations liées.
-   - ❌ **`/bookers` n'existe pas** (404) : les réservations ne sont PAS exposées par l'API officielle, même avec clé. La synchro des inscriptions devra passer par le plugin WordPress prévu (module bookings avec secret) ou une lecture directe de la table `wp_mec_bookings`.
-   - ⚠️ Ne pas oublier le piège CORS : l'API officielle exige un header custom → preflight bloqué depuis un navigateur. C'est une API **server-to-server**.
+   - `GET /events/{id}` (Single Event) : **une seule requête renvoie TOUT** — testé en réel :
+     - `data.locations` : **lieu** (nom, adresse complète) — remplace le module 2 du plugin prévu
+     - `data.organizers` : **organisateur** (nom, email, page équipe, photo) — remplace le module 1
+     - `data.tickets` + `availability` : **tarifs ET places restantes** — remplace le module 3
+     - `data.labels` : inclut « **Complet** » (#dd3333) — l'état complet est déjà là
+     - `data.categories` : noms directement (plus de résolution IDs → noms)
+     - `data.dates[]` + `data.time` : dates/horaires structurés (« 10h00 »–« 12h00 », timestamps)
+     - `data.featured_image`, `data.thumbnails` : photos
+     - `data.meta.mec_cost` : coût
+   - `GET /events` : liste avec **pagination propre** (`pagination.next_date`/`next_offset`) et filtres (`start=today`, `show_only_past_events`…) — mieux que le `per_page=100` de l'API publique.
+   - `GET /events/{id}/next-occurrences`, `/related-events` : compléments.
+   - `GET /config/attendee-fields` : **structure du formulaire d'inscription du site** (testé) — champs récoltés : email, nom, date de naissance, adresse, code postal, tél, genre (F/M/X/Divers), statut social (Travailleur.se, Intérim, Actiris, Mutuelle, CPAS, Pensionné, Étudiant, Enfant), paiement, SMS de rappel. **≈ le schéma de la table `members`** → une réservation d'un nouveau venu fournit une fiche membre quasi complète. ⚠️ Le champ **n° de membre** n'existe PAS encore côté formulaire MEC — l'ajouter renforcerait le matching (voir §6).
+   - **Hiérarchie d'authentification** (doc officielle webnus.net) : clé `mec-token` seule = lecture (« public commands ») ; clé + `user-token` (via `POST /login` avec compte WP) = **écriture** (créer/modifier/supprimer events, taxonomies). Le serveur peut donc, si besoin un jour, créer des formations depuis l'app.
+   - ❌ **Les réservations/inscrits ne sont PAS exposées** (aucun endpoint dans la doc officielle, `/bookers` = 404 testé) : la liste des inscrits devra passer par un snippet WordPress avec secret (voir point 4) ou un accès SQL direct à `wp_mec_bookings`.
+   - ⚠️ Piège CORS : header custom → preflight bloqué depuis un navigateur. API **server-to-server** uniquement.
+
+   **Conséquence roadmap** : le plugin WordPress « atelierduweb-mec-api » se réduit au **module bookings seul** (lecture `wp_mec_bookings`, route protégée par secret) — les modules organisateur/lieu/places restantes sont couverts par l'API officielle. Le préfill de modale (module 4) est un JS `wp_footer` indépendant.
 3. **À ajouter par le backend** (hors périmètre maquette) : authentification des postes (au minimum un token d'accès app + éventuellement login par utilisateur de l'équipe), HTTPS si exposition hors réseau local.
 4. Le fichier `membres.db` contient des données personnelles (RGPD) : accès disque restreint, sauvegardes chiffrées si externes.
 
-## 8. Pièges connus (leçons de la maquette)
+## 8. Le préfill de la modale de réservation (module 4) — PRIORITÉ UTILISATEUR
+
+**Objectif** : quand l'app envoie un membre réserver sur le site, la modale MEC est **déjà remplie** avec ses infos (nom, email, tél, n° de membre). Le n° de membre pré-rempli EST le tracking : la réservation revient avec, le matching auto fait le reste.
+
+**Côté app, c'est déjà prêt** (`booking.js`) : l'URL ouverte est
+`{formation.url}?method=mec-booking-modal&adw_name=…&adw_email=…&adw_phone=…&adw_member_no=…`
+
+**Côté WordPress, il manque ce snippet** (JS injecté via `wp_footer`, plugin Code Snippets ou thème enfant) :
+
+```js
+// ADW — Préfill modale M.E. Calendar depuis l'app de gestion
+// Reçoit ?adw_name=…&adw_email=…&adw_phone=…&adw_member_no=… et remplit la modale AJAX MEC.
+(function () {
+    var params = new URLSearchParams(location.search);
+    if (!params.get('adw_email') && !params.get('adw_name')) return;
+
+    // ⚙️ SÉLECTEURS — à ajuster avec le HTML réel de la modale MEC ouverte
+    // (ouvrir une résa sur le site, F12, repérer les input par name/id)
+    var FIELDS = {
+        name:      'input[name="name"]',            // champ nom/prénom
+        email:     'input[name="email"]',           // champ email
+        phone:     'input[name="tel"], input[name="phone"]',
+        member_no: 'input[name="adw_member_no"], input[name="mec_fix_custom_field_1"]' // champ n° membre (voir note)
+    };
+    var ADW = {
+        name: params.get('adw_name'),
+        email: params.get('adw_email'),
+        phone: params.get('adw_phone'),
+        member_no: params.get('adw_member_no')
+    };
+
+    function fill() {
+        var modal = document.querySelector('.mec-booking-modal, .lity-content'); // conteneur modale MEC
+        if (!modal) return false;
+        Object.keys(FIELDS).forEach(function (k) {
+            if (!ADW[k]) return;
+            var sel = FIELDS[k].split(',').map(function (s) { return s.trim(); });
+            for (var i = 0; i < sel.length; i++) {
+                var input = modal.querySelector(sel[i]);
+                if (input) { input.value = ADW[k]; input.dispatchEvent(new Event('input', { bubbles: true })); break; }
+            }
+        });
+        return true;
+    }
+
+    // La modale MEC charge en AJAX : réessayer jusqu'à ce qu'elle apparaisse
+    var tries = 0;
+    var timer = setInterval(function () {
+        if (fill() || ++tries > 40) clearInterval(timer); // ~8s max
+    }, 200);
+})();
+```
+
+**Étapes pour le poser** :
+1. Sur le site, ouvrir une réservation de formation, **F12 sur la modale ouverte**, noter les vrais `name`/`id` des champs (nom, email, tél) → ajuster `FIELDS`.
+2. Ajouter le champ **« n° de membre »** dans M.E. Calendar > Settings > Booking > attendee/fixed fields (c'est le maillon fort du matching) — noter son `name` réel (ex. `mec_fix_custom_field_1`) dans `FIELDS.member_no`.
+3. Coller le snippet (adapté) via plugin Code Snippets : « footer only », ou dans le thème enfant.
+4. Test : depuis l'app, bouton « Réserver sur le site » sur un membre → la modale doit arriver remplie.
+
+⚠️ **Pré-requis découvert le 22 oct.** : le champ n° de membre n'existe pas encore dans le formulaire MEC (`/config/attendee-fields` testé — email/nom/date naissance/adresse/CP/tél/genre/statut présents, pas de n° membre). **Il faut l'ajouter côté MEC d'abord.** Le reste des champs du formulaire (adresse, statut…) est déjà récolté → une réservation de nouveau venu ≈ une fiche membre quasi complète.
+
+## 9. Pièges connus (leçons de la maquette)
 
 - `toISOString()` décale les dates d'un jour en UTC+1 → **toujours** un formateur local (voir `isoLocal()` dans dashboard.js).
 - Cache navigateur : les assets sont versionnés `?v=N` ; la CI vérifie la cohérence des versions entre pages (ne pas casser).
 - Le double pointage de visite est refusé par la maquette — garder cette règle côté serveur (contrainte d'unicité).
 - Les catégories MEC arrivent en **IDs numériques** de l'API : la résolution en noms (`mec_category`) doit réussir, sinon filtrer les numéros (bug historique corrigé — voir `resolveCategories`).
 
-## 9. Ordre de travail suggéré
+## 10. Ordre de travail suggéré
 
 1. Serveur minimal : `express.static` + `GET /api/sante` → l'app s'affiche (en mode maquette encore).
 2. `schema.sql` repris de `ensureSchema()` + endpoints lecture (`listMembres`, `listFormations`…).
