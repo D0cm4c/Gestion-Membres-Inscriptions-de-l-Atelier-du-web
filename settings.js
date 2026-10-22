@@ -162,8 +162,49 @@
         ensureDb().then(render).catch(function () { /* base indisponible : liste vide */ });
     }
 
+    // ============ Clé API M.E. Calendar (page Paramètres) ============
+
+    var MEC_KEY_STORAGE = 'atelierduweb_mec_api_key';
+
+    function initMecKey() {
+        var input = document.getElementById('mecApiKey');
+        var saveBtn = document.getElementById('mecKeySaveBtn');
+        var clearBtn = document.getElementById('mecKeyClearBtn');
+        var statusEl = document.getElementById('mecKeyStatus');
+        if (!input || !saveBtn || !clearBtn) return;
+
+        function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
+
+        var stored = '';
+        try { stored = localStorage.getItem(MEC_KEY_STORAGE) || ''; } catch (e) { /* stockage indisponible */ }
+        if (stored) {
+            input.value = stored;
+            setStatus('✓ Clé enregistrée dans ce navigateur (' + stored.slice(0, 4) + '…' + stored.slice(-4) + ')');
+        }
+
+        saveBtn.addEventListener('click', function () {
+            var val = (input.value || '').trim();
+            if (!val) { input.focus(); setStatus('Colle d\u2019abord la clé dans le champ.'); return; }
+            try {
+                localStorage.setItem(MEC_KEY_STORAGE, val);
+                setStatus('✓ Clé enregistrée dans ce navigateur (' + val.slice(0, 4) + '…' + val.slice(-4) + ')');
+            } catch (e) {
+                setStatus('⚠️ Impossible d\u2019enregistrer (stockage indisponible).');
+            }
+        });
+
+        clearBtn.addEventListener('click', function () {
+            input.value = '';
+            try { localStorage.removeItem(MEC_KEY_STORAGE); } catch (e) { /* ignore */ }
+            setStatus('Clé effacée de ce navigateur.');
+        });
+    }
+
     if (document.readyState !== 'loading') initRoomsAdmin();
     else document.addEventListener('DOMContentLoaded', initRoomsAdmin);
+
+    if (document.readyState !== 'loading') initMecKey();
+    else document.addEventListener('DOMContentLoaded', initMecKey);
 
     window.ADWSettings = {
         hiddenTiles: getHidden,

@@ -57,6 +57,25 @@
             </div>
         </section>
 
+        <section class="settings-card" aria-labelledby="mecTitle">
+            <div class="settings-head">
+                <span class="settings-ico orange" aria-hidden="true">🔑</span>
+                <div>
+                    <h2 id="mecTitle">Clé API M.E. Calendar</h2>
+                    <p>Connexion au site atelierduweb.be</p>
+                </div>
+            </div>
+            <p class="settings-note">Clé de l'API officielle du plugin formations du site (M.E. Calendar &gt; Settings &gt; API). Stockée uniquement dans ce navigateur — l'app actuelle ne l'utilise pas : elle servira au futur serveur (lecture des tarifs et dates structurées). Voir <code>docs/BACKEND.md</code>.</p>
+            <div class="settings-foot">
+                <div class="form-group" style="flex:1;min-width:200px;">
+                    <input type="password" id="mecApiKey" placeholder="Colle la clé API ici…" autocomplete="off" aria-label="Clé API M.E. Calendar">
+                </div>
+                <button class="btn btn-primary" id="mecKeySaveBtn">💾 Enregistrer</button>
+                <button class="btn btn-secondary" id="mecKeyClearBtn">🗑️ Effacer</button>
+            </div>
+            <p class="form-hint" id="mecKeyStatus" style="margin-top:0.7rem;margin-bottom:0;"></p>
+        </section>
+
         <section class="settings-card" aria-labelledby="rgpdTitle">
             <div class="settings-head">
                 <span class="settings-ico red" aria-hidden="true">🔒</span>
