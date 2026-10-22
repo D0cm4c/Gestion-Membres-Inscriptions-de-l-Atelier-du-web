@@ -82,6 +82,79 @@
         }
     }
 
+    // ============ Gestion des salles (page Paramètres) ============
+
+    function initRoomsAdmin() {
+        var list = document.getElementById('roomsList');
+        var nameInput = document.getElementById('newRoomName');
+        var capInput = document.getElementById('newRoomCapacity');
+        var addBtn = document.getElementById('addRoomBtn');
+        if (!list || !addBtn || !window.ADWDatabase) return;
+
+        function esc(v) { return window.ADWEscape.html(v); }
+
+        function render() {
+            var rooms = window.ADWDatabase.listRooms();
+            if (!rooms.length) {
+                list.innerHTML = '<li class="form-hint" style="padding:0.5rem 0;">Aucune salle — ajoute-en une ci-dessous.</li>';
+                return;
+            }
+            list.innerHTML = '';
+            rooms.forEach(function (r) {
+                var li = document.createElement('li');
+                li.style.cssText = 'display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;border-bottom:1px solid var(--border);';
+                li.innerHTML =
+                    '<span style="flex:1;font-weight:600;">' + esc(r.name) + '</span>' +
+                    '<span class="form-hint">' + (r.capacity ? esc(r.capacity) + ' place' + (r.capacity > 1 ? 's' : '') : 'capacité non définie') + '</span>';
+
+                var renameBtn = document.createElement('button');
+                renameBtn.className = 'btn btn-secondary btn-small';
+                renameBtn.textContent = '✏️';
+                renameBtn.title = 'Renommer la salle';
+                renameBtn.addEventListener('click', function () {
+                    var newName = prompt('Nouveau nom de la salle :', r.name);
+                    if (newName && newName.trim()) {
+                        window.ADWDatabase.renameRoom(r.id, newName);
+                        render();
+                    }
+                });
+
+                var deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger btn-small';
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.title = 'Supprimer la salle';
+                deleteBtn.addEventListener('click', function () {
+                    var res = window.ADWDatabase.deleteRoom(r.id);
+                    if (!res.ok) {
+                        alert('Impossible de supprimer « ' + r.name + ' » : ' + res.blocked.length +
+                            ' formation(s) y sont attribuée(s) (ex. « ' + res.blocked[0].title + ' »).\n' +
+                            'Réattribue-les depuis la page Salles d’abord.');
+                        return;
+                    }
+                    render();
+                });
+
+                li.appendChild(renameBtn);
+                li.appendChild(deleteBtn);
+                list.appendChild(li);
+            });
+        }
+
+        addBtn.addEventListener('click', function () {
+            var name = (nameInput.value || '').trim();
+            if (!name) { nameInput.focus(); return; }
+            window.ADWDatabase.addRoom(name, capInput.value);
+            nameInput.value = '';
+            capInput.value = '';
+            render();
+        });
+
+        render();
+    }
+
+    if (document.readyState !== 'loading') initRoomsAdmin();
+    else document.addEventListener('DOMContentLoaded', initRoomsAdmin);
+
     window.ADWSettings = {
         hiddenTiles: getHidden,
         TILE_LABELS: TILE_LABELS
