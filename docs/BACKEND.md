@@ -172,30 +172,30 @@ Les scripts de pages (app.js, formations.html…) appellent déjà `ADWDatabase.
 3. **À ajouter par le backend** (hors périmètre maquette) : authentification des postes (au minimum un token d'accès app + éventuellement login par utilisateur de l'équipe), HTTPS si exposition hors réseau local.
 4. Le fichier `membres.db` contient des données personnelles (RGPD) : accès disque restreint, sauvegardes chiffrées si externes.
 
-## 8. Le préfill de la modale de réservation (module 4) — PRIORITÉ UTILISATEUR
+## 8. Le préfill du formulaire de réservation (module 4) — PRIORITÉ UTILISATEUR
 
-**Objectif** : quand l'app envoie un membre réserver sur le site, la modale MEC est **déjà remplie** avec ses infos (nom, email, tél, n° de membre). Le n° de membre pré-rempli EST le tracking : la réservation revient avec, le matching auto fait le reste.
+**Objectif** : quand l'app envoie un membre réserver sur le site, le formulaire MEC est **déjà rempli** avec ses infos (nom, email, tél, n° de membre). Le n° de membre pré-rempli EST le tracking : la réservation revient avec, le matching auto fait le reste.
 
 **Côté app, c'est déjà prêt** (`booking.js`) : l'URL ouverte est
 `{formation.url}?method=mec-booking-modal&adw_name=…&adw_email=…&adw_phone=…&adw_member_no=…`
 
-**Côté WordPress, il manque ce snippet** (JS injecté via `wp_footer`, plugin Code Snippets ou thème enfant) :
+### Constaté sur le HTML réel de la page de résa (analysé le 22 oct. 2026)
+
+- `?method=mec-booking-modal` **n'ouvre pas une popup** : le formulaire est rendu **dans la page** (`#mec_booking{ID}`), en 4 étapes (Ticket → Participants → Paiement → Confirmation).
+- **L'étape 1 ne contient que la quantité de billets**. Les champs participant (nom, email…) apparaissent à **l'étape 2, injectés en AJAX** — le HTML de l'étape 1 n'a PAS les inputs. Un préfill au seul chargement de la page ne peut donc pas fonctionner : il faut **observer le DOM** au fil des étapes.
+- Noms réels des inputs (étape 2, `7` = id du billet) : `book[tickets][7][name]`, `book[tickets][7][email]` ; champs perso (reg fields) : `book[tickets][7][reg][ID]`.
+- Le site a déjà le plugin **Code Snippets** actif → installation facile.
+
+### Snippet prêt (Code Snippets > Add New > « footer only », ou thème enfant)
 
 ```js
-// ADW — Préfill modale M.E. Calendar depuis l'app de gestion
-// Reçoit ?adw_name=…&adw_email=…&adw_phone=…&adw_member_no=… et remplit la modale AJAX MEC.
+// ADW — Préfill formulaire M.E. Calendar depuis l'app de gestion
+// Lit ?adw_name=…&adw_email=…&adw_phone=…&adw_member_no=… et remplit
+// les champs participant dès qu'ils apparaissent (étapes AJAX du booking MEC).
 (function () {
     var params = new URLSearchParams(location.search);
     if (!params.get('adw_email') && !params.get('adw_name')) return;
 
-    // ⚙️ SÉLECTEURS — à ajuster avec le HTML réel de la modale MEC ouverte
-    // (ouvrir une résa sur le site, F12, repérer les input par name/id)
-    var FIELDS = {
-        name:      'input[name="name"]',            // champ nom/prénom
-        email:     'input[name="email"]',           // champ email
-        phone:     'input[name="tel"], input[name="phone"]',
-        member_no: 'input[name="adw_member_no"], input[name="mec_fix_custom_field_1"]' // champ n° membre (voir note)
-    };
     var ADW = {
         name: params.get('adw_name'),
         email: params.get('adw_email'),
@@ -203,35 +203,53 @@ Les scripts de pages (app.js, formations.html…) appellent déjà `ADWDatabase.
         member_no: params.get('adw_member_no')
     };
 
-    function fill() {
-        var modal = document.querySelector('.mec-booking-modal, .lity-content'); // conteneur modale MEC
-        if (!modal) return false;
-        Object.keys(FIELDS).forEach(function (k) {
-            if (!ADW[k]) return;
-            var sel = FIELDS[k].split(',').map(function (s) { return s.trim(); });
-            for (var i = 0; i < sel.length; i++) {
-                var input = modal.querySelector(sel[i]);
-                if (input) { input.value = ADW[k]; input.dispatchEvent(new Event('input', { bubbles: true })); break; }
-            }
+    function tryFill() {
+        // Conteneur du booking MEC (dans la page avec ?method=mec-booking-modal)
+        var wrap = document.querySelector('[id^="mec_booking"]');
+        if (!wrap) return false;
+
+        var filled = 0;
+        // Champs par participant : book[tickets][{ticketId}][name] / [email]
+        wrap.querySelectorAll('input[name^="book[tickets]"]').forEach(function (input) {
+            var n = input.getAttribute('name');
+            if (/\[name\]$/.test(n) && ADW.name) { input.value = ADW.name; filled++; }
+            else if (/\[email\]$/.test(n) && ADW.email) { input.value = ADW.email; filled++; }
+            else if (/\[tel\]$/.test(n) && ADW.phone) { input.value = ADW.phone; filled++; }
+            // Champs reg (perso) : identifier par label ou par name reg[ID] —
+            // pour le n° de membre, voir la note ci-dessous
         });
-        return true;
+        // Champs fixes éventuels : book[fields][ID]
+        wrap.querySelectorAll('input[name^="book[fields]"]').forEach(function (input) {
+            var li = input.closest('li');
+            var label = li ? (li.textContent || '') : '';
+            if (/t[ée]l[ée]phone/i.test(label) && ADW.phone) { input.value = ADW.phone; filled++; }
+            if (/n[°o]\s*(de\s*)?membre/i.test(label) && ADW.member_no) { input.value = ADW.member_no; filled++; }
+        });
+        return filled > 0;
     }
 
-    // La modale MEC charge en AJAX : réessayer jusqu'à ce qu'elle apparaisse
-    var tries = 0;
-    var timer = setInterval(function () {
-        if (fill() || ++tries > 40) clearInterval(timer); // ~8s max
-    }, 200);
+    // Les étapes du booking sont injectées en AJAX : observer le DOM
+    var done = { name: false };
+    var obs = new MutationObserver(function () {
+        // Remplir à chaque apparition de nouveaux champs (étape suivante)
+        tryFill();
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+
+    // Première tentative immédiate (au cas où l'étape 2 serait déjà là)
+    tryFill();
 })();
 ```
 
-**Étapes pour le poser** :
-1. Sur le site, ouvrir une réservation de formation, **F12 sur la modale ouverte**, noter les vrais `name`/`id` des champs (nom, email, tél) → ajuster `FIELDS`.
-2. Ajouter le champ **« n° de membre »** dans M.E. Calendar > Settings > Booking > attendee/fixed fields (c'est le maillon fort du matching) — noter son `name` réel (ex. `mec_fix_custom_field_1`) dans `FIELDS.member_no`.
-3. Coller le snippet (adapté) via plugin Code Snippets : « footer only », ou dans le thème enfant.
-4. Test : depuis l'app, bouton « Réserver sur le site » sur un membre → la modale doit arriver remplie.
+**Notes d'adaptation** :
+- Le remplissage est **idempotent** (relancé à chaque mutation DOM) : il re-remplit après chaque changement d'étape AJAX sans casser la saisie manuelle ultérieure — si l'utilisateur modifie, la valeur saisie manuellement reste tant qu'aucune nouvelle injection DOM n'a lieu. À valider en usage réel ; si besoin, ajouter un marqueur `data-adw-filled` pour ne remplir qu'une fois par champ.
+- **Champ n° de membre** : il n'existe pas encore dans le formulaire MEC (`/config/attendee-fields` testé — aucun champ n° membre). L'ajouter dans M.E. Calendar > Settings > Booking (attendee ou fixed field) ; une fois créé, repérer son `name` réel (`book[tickets][7][reg][ID]` ou `book[fields][ID]`) et compléter le mapping (par label comme ci-dessus, ou par ID explicite).
+- Les champs date/select du formulaire (date de naissance, genre, statut) peuvent être pré-remplis sur le même modèle si l'app envoie les paramètres correspondants (extension possible de `booking.js`).
 
-⚠️ **Pré-requis découvert le 22 oct.** : le champ n° de membre n'existe pas encore dans le formulaire MEC (`/config/attendee-fields` testé — email/nom/date naissance/adresse/CP/tél/genre/statut présents, pas de n° membre). **Il faut l'ajouter côté MEC d'abord.** Le reste des champs du formulaire (adresse, statut…) est déjà récolté → une réservation de nouveau venu ≈ une fiche membre quasi complète.
+**Étapes de pose** :
+1. Ajouter le champ « n° de membre » dans M.E. Calendar > Settings > Booking.
+2. Coller le snippet via **Code Snippets** (déjà installé sur le site) : Add New, scope « footer only », activer.
+3. Test : depuis l'app, « Réserver sur le site » sur un membre → étape Participants du site doit arriver remplie (nom, email, tél, n° membre).
 
 ## 9. Pièges connus (leçons de la maquette)
 
