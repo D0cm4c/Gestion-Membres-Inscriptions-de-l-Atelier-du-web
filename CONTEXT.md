@@ -134,6 +134,7 @@ En cours / ouvert :
 15. Administration des salles dans Paramètres (PR #29) : addRoom/renameRoom/deleteRoom (suppression refusée si formations attribuées). Fix associé (PR #30) : parametres.html n'initialisait jamais la base — `ensureDb()` mémoïsé + `vendor/sql-wasm.js` ajouté ; le smoke test CI vérifie désormais que toute page chargeant db.js charge sql-wasm.js avant.
 16. Refonte visuelle page Paramètres (PR #31) : grille responsive `settings-grid`, en-têtes pastillés, classes dédiées (plus de style inline).
 17. Docs révisées pour l'arrivée du collègue backend : README refait, `docs/BACKEND.md` créé (guide migration Node/better-sqlite3 : inventaire des 36 méthodes ADWDatabase, schéma, sécurité, pièges).
+18. **API officielle MEC testée avec clé (22 oct. 2026)** : `wp-json/mec/v1.0` fonctionne en server-to-server — `/events` (contenu complet), `/events/{id}/tickets` (TARIFS enfin disponibles), `/next-occurrences` (dates structurées). **`/bookers` n'existe pas** (404) : la synchro des inscriptions devra passer par le plugin WP prévu ou une lecture directe de `wp_mec_bookings`. CORS bloqué côté navigateur (header custom) : API réservée au futur serveur. Décisions reportées dans `docs/BACKEND.md` §7.
 
 ## 📌 Règle pour toute future session
 
