@@ -70,6 +70,11 @@ PAGES.forEach(function (page) {
     else ok(page, 'layout.js en premier');
     if (scripts.length < 2 || scripts[1].src !== 'escape.js') fail(page, 'escape.js doit suivre layout.js (échappement HTML partagé)');
     else ok(page, 'escape.js en second');
+    // db.js requiert sql-wasm.js (initSqlJs) chargé avant
+    var hasDb = scripts.some(function (s) { return s.src === 'db.js'; });
+    var sqlIdx = scripts.findIndex(function (s) { return s.src === 'vendor/sql-wasm.js'; });
+    var dbIdx = scripts.findIndex(function (s) { return s.src === 'db.js'; });
+    if (hasDb && (sqlIdx === -1 || sqlIdx > dbIdx)) fail(page, 'db.js chargé sans vendor/sql-wasm.js avant lui (initSqlJs manquant)');
 
     scripts.forEach(function (s) {
         if (!fs.existsSync(path.join(ROOT, s.src))) fail(page, 'script introuvable : ' + s.src);

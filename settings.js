@@ -75,14 +75,24 @@
                 if (!step1) return;
                 var step2 = confirm('Confirmation finale : cette action est IRRÉVERSIBLE.\n\nLes données personnelles vont être effacées définitivement.');
                 if (!step2) return;
-                window.ADWDatabase.purgeAllPersonalData().then(function () {
+                ensureDb().then(function () {
+                    return window.ADWDatabase.purgeAllPersonalData();
+                }).then(function () {
                     alert('Toutes les données personnelles ont été effacées de ce navigateur.');
+                }).catch(function () {
+                    alert('Impossible d\u2019ouvrir la base de données locale.');
                 });
             });
         }
     }
 
     // ============ Gestion des salles (page Paramètres) ============
+
+    var dbReady = null;
+    function ensureDb() {
+        if (!dbReady) dbReady = window.ADWDatabase.init();
+        return dbReady;
+    }
 
     function initRoomsAdmin() {
         var list = document.getElementById('roomsList');
@@ -149,7 +159,7 @@
             render();
         });
 
-        render();
+        ensureDb().then(render).catch(function () { /* base indisponible : liste vide */ });
     }
 
     if (document.readyState !== 'loading') initRoomsAdmin();
