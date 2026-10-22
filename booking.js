@@ -41,7 +41,7 @@
         var currentFormation = null;
         var activeIndex = -1; // navigation clavier dans les resultats
 
-        function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        function esc(s) { return window.ADWEscape.html(s); }
 
         function mecUrl(formation, member) {
             var url = formation.url + (formation.url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal';

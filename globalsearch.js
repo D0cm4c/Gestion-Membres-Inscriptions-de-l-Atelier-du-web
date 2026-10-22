@@ -26,7 +26,7 @@
         var results = [];
         var activeIndex = -1;
 
-        function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        function esc(s) { return window.ADWEscape.html(s); }
 
         function setActive(idx) {
             activeIndex = idx;

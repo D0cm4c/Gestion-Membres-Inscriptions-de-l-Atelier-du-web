@@ -68,6 +68,8 @@ PAGES.forEach(function (page) {
 
     if (!scripts.length || scripts[0].src !== 'layout.js') fail(page, 'layout.js doit être le premier script (injection synchrone)');
     else ok(page, 'layout.js en premier');
+    if (scripts.length < 2 || scripts[1].src !== 'escape.js') fail(page, 'escape.js doit suivre layout.js (échappement HTML partagé)');
+    else ok(page, 'escape.js en second');
 
     scripts.forEach(function (s) {
         if (!fs.existsSync(path.join(ROOT, s.src))) fail(page, 'script introuvable : ' + s.src);
