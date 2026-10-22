@@ -35,6 +35,8 @@ Contrainte de design : correspondre au design du site atelierduweb.be.
 - **Tests fonctionnels en sandbox** (jsdom + sql.js réel) avant chaque PR quand la logique est testable — c'est la méthode qui a trouvé le plus de bugs (35/35, 48/48, 15/15 assertions).
 - ⚠️ **Cache navigateur sur Pages** : incrémenter le cache-busting des assets à chaque changement de JS/CSS, sinon les visiteurs voient l'ancienne version.
 - **Versionnage global** : quand un asset partagé change (theme.js, db.js, styles.css, notifications.js…), monter sa version sur **TOUTES les pages dans le même commit** — jamais page par page (l'audit d'oct. 2026 a trouvé theme.js en v13/v14 selon les pages et db.js en v17/v18 : même fichier, mais risque de cache divergent au prochain vrai changement). Vérifier avec `grep -h 'asset.js?v=' *.html | sort -u` qu'une seule version existe.
+- **Le smoke test CI vérifie maintenant ça automatiquement** (`tests/smoke-pages.js`, livré avec la CI) : une version `?v=` incohérente entre pages pour un même fichier = échec du build. La convention est donc appliquée d'office — ne plus y penser à la main, la CI gueule si on oublie.
+- Leçon d'oct. 2026 (PRs #19-#22) : les fixes styles.css/mec.js/dashboard.js/layout.js ont été livrés **sans bump** — les navigateurs avec ancien cache gardaient les bugs corrigés. Audit complet fait le 22 oct. : styles.css 18/19 divergents → 20, mec.js 15→16, dashboard.js 17→18, layout.js 1→2.
 
 ## 📦 État actuel (nov. 2026)
 
