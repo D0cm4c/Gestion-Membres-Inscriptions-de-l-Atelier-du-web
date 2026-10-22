@@ -122,6 +122,9 @@ En cours / ouvert :
 6. dashboard temps réel + README — fusionnée (tests 15/15)
 7. Formations M.E. Calendar — draft ouvert puis **fusionnée directement sur `main`** à la demande de l'utilisateur (commits `d7378eb` → `03a8e4e`) : page + API MEC officielle, puis refactor vers API WP publique, puis design cartes/mois, puis couleurs par catégorie.
 8. Suite formations (oct. 2026, livré directement sur `main`) : inscriptions en base + modale + export CSV (`fed0e8a`), formations sur fiche membre (`db13583`), horaires/durée parsés proprement + filtrage events passés/trashed (`6ef0cf5`), centre de notifications + écran de validation des inscriptions du site + schéma bookings_remote (`fb87835`), page membre dédiée (`d57e02d`).
+9. Header + sidebar externalisés dans `layout.js` (slots `data-layout-*`, injection synchrone) + fix catégories numériques MEC (PR #21).
+10. Fix recherche topbar alignée à droite (PR #22) : double `margin-left:auto` supprimé.
+11. CI GitHub Actions : `node --check` sur tous les `.js` + smoke test des pages (`tests/smoke-pages.js` — structure, layout en premier script, slots, versions `?v=` cohérentes).
 
 ## 📌 Règle pour toute future session
 
