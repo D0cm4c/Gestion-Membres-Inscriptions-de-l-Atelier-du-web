@@ -99,11 +99,7 @@
         viewListBtn.classList.toggle('active', currentView === 'list');
     }
 
-    function escapeHtml(str) {
-        var div = document.createElement('div');
-        div.textContent = str == null ? '' : String(str);
-        return div.innerHTML;
-    }
+    function escapeHtml(str) { return window.ADWEscape.html(str); }
 
     var GENDER_LABELS = { F: 'Femme', M: 'Homme', X: 'Autre / Non-binaire' };
     var STATUS_LABELS = {

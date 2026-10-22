@@ -49,15 +49,16 @@
     </div>
 
     <script src="layout.js?v=2"></script>
+    <script src="escape.js?v=1"></script>
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js?v=18"></script>
     <script src="theme.js?v=14"></script>
     <script src="nav.js?v=1"></script>
     <script src="openstatus.js?v=2"></script>
-    <script src="notifications.js?v=2"></script>
+    <script src="notifications.js?v=3"></script>
     <script src="suggestions.js?v=2"></script>
-    <script src="globalsearch.js?v=1"></script>
-    <script src="booking.js?v=2"></script>
+    <script src="globalsearch.js?v=2"></script>
+    <script src="booking.js?v=3"></script>
     <script>
     (function () {
         'use strict';
@@ -71,7 +72,7 @@
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
         });
 
-        function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        function esc(s) { return window.ADWEscape.html(s); }
         function formatDate(v) {
             if (!v) return '—';
             var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -130,7 +131,7 @@
                     if (conflicts.length) {
                         var details = conflicts.map(function (c) {
                             var label = new Date(c.date + 'T12:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' });
-                            return '⚠️ ' + c.title + ' occupe déjà ce créneau le ' + label + ' ' + (c.slot === 'AM' ? 'matin' : 'après-midi');
+                            return '⚠️ ' + esc(c.title) + ' occupe déjà ce créneau le ' + label + ' ' + (c.slot === 'AM' ? 'matin' : 'après-midi');
                         }).join('<br>');
                         conflictBox.innerHTML = '<strong>Conflit détecté :</strong><br>' + details + '<br><span class="form-hint">Attribution enregistrée quand même — à toi de trancher.</span>';
                         conflictBox.hidden = false;

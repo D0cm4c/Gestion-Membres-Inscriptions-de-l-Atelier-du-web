@@ -35,11 +35,7 @@
         var badge = btn.querySelector('.notif-badge');
         var list = modal.querySelector('#notifList');
 
-        function esc(s) {
-            var d = document.createElement('div');
-            d.textContent = s || '';
-            return d.innerHTML;
-        }
+        function esc(s) { return window.ADWEscape.html(s); }
 
         function refreshBadge() {
             var count = 0;

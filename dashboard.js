@@ -67,11 +67,7 @@
     var loading = document.getElementById('dashLoading');
     if (!loading) return;
 
-    function escapeHtml(str) {
-        var div = document.createElement('div');
-        div.textContent = str == null ? '' : String(str);
-        return div.innerHTML;
-    }
+    function escapeHtml(str) { return window.ADWEscape.html(str); }
 
     function one(sql, params, col) {
         var rows = ADWDatabase.queryAll(sql, params);
