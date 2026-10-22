@@ -253,7 +253,7 @@
             actions.children[1].addEventListener('click', function (e) {
                 e.stopPropagation();
                 if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?')) {
-                    ADWDatabase.run('DELETE FROM members WHERE id = ?', [member.id]).then(function () {
+                    ADWDatabase.deleteMemberCompletely(member.id).then(function () {
                         render();
                         showToast('Membre supprimé', 'success');
                     });
@@ -433,7 +433,7 @@
     if (detailDeleteBtn) detailDeleteBtn.addEventListener('click', function () {
         if (!detailMember) return;
         if (confirm('Supprimer le membre "' + detailMember.first_name + ' ' + detailMember.last_name + '" ?')) {
-            ADWDatabase.run('DELETE FROM members WHERE id = ?', [detailMember.id]).then(function () {
+            ADWDatabase.deleteMemberCompletely(detailMember.id).then(function () {
                 closeDetail();
                 render();
                 showToast('Membre supprimé', 'success');

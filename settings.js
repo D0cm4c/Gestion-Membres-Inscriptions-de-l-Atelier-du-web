@@ -66,6 +66,20 @@
             setHidden(Object.keys(TILE_LABELS));
             list.querySelectorAll('input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
         });
+
+        var purgeBtn = document.getElementById('purgeAllBtn');
+        if (purgeBtn) {
+            purgeBtn.addEventListener('click', function () {
+                if (!window.ADWDatabase) return;
+                var step1 = confirm('Purger TOUTES les données personnelles de ce navigateur ?\n\nMembres, visites, impressions, inscriptions aux formations, réservations en attente et suggestions seront définitivement effacés.');
+                if (!step1) return;
+                var step2 = confirm('Confirmation finale : cette action est IRRÉVERSIBLE.\n\nLes données personnelles vont être effacées définitivement.');
+                if (!step2) return;
+                window.ADWDatabase.purgeAllPersonalData().then(function () {
+                    alert('Toutes les données personnelles ont été effacées de ce navigateur.');
+                });
+            });
+        }
     }
 
     window.ADWSettings = {

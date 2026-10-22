@@ -27,6 +27,18 @@
                 <button class="btn btn-secondary" id="tilesNoneBtn">Tout masquer</button>
             </div>
         </section>
+
+        <section class="stat-card" style="max-width:720px;">
+            <h2>🔒 Données personnelles (RGPD)</h2>
+            <p class="form-hint" style="margin-bottom:1rem;">Cette application stocke les données des membres et inscrits dans ce navigateur (base SQLite locale). Les données du site atelierduweb.be (formations, salles) sont conservées.</p>
+            <ul style="list-style:none;padding-left:1.2rem;margin-bottom:1rem;">
+                <li><strong>Effacer un membre</strong> : depuis sa fiche ou la liste — supprime aussi ses visites, impressions et inscriptions aux formations.</li>
+                <li><strong>Purge complète</strong> : efface <em>tous</em> les membres, visites, impressions, inscriptions aux formations, réservations en attente et suggestions. Action irréversible.</li>
+            </ul>
+            <div class="modal-actions" style="justify-content:flex-start;">
+                <button class="btn btn-danger" id="purgeAllBtn">🗑️ Purger toutes les données personnelles</button>
+            </div>
+        </section>
     </main>
     </div>
     </div>
@@ -37,7 +49,7 @@
 
     <script src="layout.js?v=2"></script>
     <script src="escape.js?v=1"></script>
-    <script src="db.js?v=18"></script>
+    <script src="db.js?v=19"></script>
     <script src="theme.js?v=14"></script>
     <script src="notifications.js?v=3"></script>
     <script src="suggestions.js?v=2"></script>
@@ -48,6 +60,6 @@
         document.getElementById('todayDate').textContent =
             new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     </script>
-    <script src="settings.js?v=13"></script>
+    <script src="settings.js?v=14"></script>
 </body>
 </html>
