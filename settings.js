@@ -35,12 +35,10 @@
 
         Object.keys(TILE_LABELS).forEach(function (tid) {
             var li = document.createElement('li');
-            li.style.borderBottom = '1px solid var(--bg)';
-            li.style.padding = '0.55rem 0';
             li.innerHTML =
-                '<label style="display:flex;align-items:center;gap:0.7rem;font-size:0.95rem;font-weight:600;cursor:pointer;">' +
+                '<label style="display:flex;align-items:center;gap:0.7rem;font-size:0.93rem;font-weight:600;cursor:pointer;">' +
                     '<input type="checkbox" data-tile="' + tid + '"' + (hidden.indexOf(tid) === -1 ? ' checked' : '') + ' style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;">' +
-                    '<span>' + TILE_LABELS[tid] + '</span>' +
+                    '<span class="grow">' + TILE_LABELS[tid] + '</span>' +
                 '</label>';
             list.appendChild(li);
         });
@@ -112,10 +110,9 @@
             list.innerHTML = '';
             rooms.forEach(function (r) {
                 var li = document.createElement('li');
-                li.style.cssText = 'display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;border-bottom:1px solid var(--border);';
                 li.innerHTML =
-                    '<span style="flex:1;font-weight:600;">' + esc(r.name) + '</span>' +
-                    '<span class="form-hint">' + (r.capacity ? esc(r.capacity) + ' place' + (r.capacity > 1 ? 's' : '') : 'capacité non définie') + '</span>';
+                    '<span class="grow" style="font-weight:600;">' + esc(r.name) + '</span>' +
+                    '<span class="room-cap">' + (r.capacity ? esc(r.capacity) + ' place' + (r.capacity > 1 ? 's' : '') : 'capacité libre') + '</span>';
 
                 var renameBtn = document.createElement('button');
                 renameBtn.className = 'btn btn-secondary btn-small';
