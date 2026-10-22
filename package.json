@@ -1,0 +1,13 @@
+{
+  "name": "adw-gestion-tests",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tests fonctionnels de rendu (Playwright) — Gestion Membres Atelier du Web",
+  "scripts": {
+    "test": "node tests/render/run.js",
+    "test:ci": "node tests/render/run.js --ci"
+  },
+  "devDependencies": {
+    "playwright": "^1.50.0"
+  }
+}

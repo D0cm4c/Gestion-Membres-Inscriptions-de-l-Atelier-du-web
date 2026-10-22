@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntaxe JavaScript (node --check)
+        run: |
+          status=0
+          for f in *.js tests/*.js tests/render/*.js; do
+            [ -f "$f" ] || continue
+            if ! node --check "$f"; then
+              echo "::error file=$f::Erreur de syntaxe dans $f"
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Smoke test des pages (structure, layout, versions ?v=)
+        run: node tests/smoke-pages.js
+
+      - name: Cache navigateurs Playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-v1248
+
+      - name: Tests de rendu Playwright (Chromium headless)
+        run: |
+          npm install --no-fund --no-audit
+          npx playwright install chromium --with-deps
+          node tests/render/run.js --ci

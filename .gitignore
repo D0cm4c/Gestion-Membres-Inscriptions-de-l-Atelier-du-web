@@ -1,5 +1,6 @@
 # Ignorer les fichiers temporaires et les dépendances
 node_modules/
+package-lock.json
 .env
 *.log
 
