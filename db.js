@@ -540,6 +540,33 @@
             "FROM formations f WHERE f.room_id IS NULL ORDER BY f.start_date ASC");
     };
 
+    // ============ RGPD : effacement ============
+
+    // Effacement complet d'un membre (droit à l'effacement) :
+    // membre + visites + impressions + liens formations + notifications liées
+    Database.deleteMemberCompletely = function (memberId) {
+        var self = this;
+        return Promise.resolve().then(function () {
+            self.run('DELETE FROM visits WHERE member_id = ?', [memberId]);
+            self.run('DELETE FROM prints WHERE member_id = ?', [memberId]);
+            self.run('DELETE FROM formations_members WHERE member_id = ?', [memberId]);
+            self.run('DELETE FROM members WHERE id = ?', [memberId]);
+            try { self.flush(); } catch (e) { /* best effort */ }
+        });
+    };
+
+    // Purge RGPD de toutes les données personnelles (garde les formations/salles du site) :
+    // membres, visites, impressions, liens formations, inscriptions en attente, suggestions
+    Database.purgeAllPersonalData = function () {
+        var self = this;
+        return Promise.resolve().then(function () {
+            ['visits', 'prints', 'formations_members', 'members', 'bookings_remote', 'suggestions'].forEach(function (table) {
+                self.run('DELETE FROM ' + table);
+            });
+            try { self.flush(); } catch (e) { /* best effort */ }
+        });
+    };
+
     // ============ Suggestions ============
 
     Database.addSuggestion = function (message, page, author) {
