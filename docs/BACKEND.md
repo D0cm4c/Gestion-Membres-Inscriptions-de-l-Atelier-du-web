@@ -141,7 +141,7 @@ Les scripts de pages (app.js, formations.html…) appellent déjà `ADWDatabase.
 
 ## 6. Logique métier à connaître avant de coder
 
-- **Sync formations** (`mec.js` + `syncFormations`) : le site WordPress expose ses formations via `wp-json/wp/v2/mec-events` (public, sans clé). Les dates FR des extraits (« le lundi 23 novembre », « Les 08 et 10 décembre 2026 ») sont parsées par `parseFrDates()`. Côté serveur, ce sync peut tourner en cron (15 min de cache localStorage → un cron serveur équivalent).
+- **Sync formations** (`mec.js` + `syncFormations`) : la maquette utilise l'API publique `wp-json/wp/v2/mec-events` (sans clé) et parse les dates FR des extraits (« le lundi 23 novembre »…) via `parseFrDates()`. **Côté serveur, privilégier l'API officielle MEC** (§ sécurité point 3) : dates structurées (`/next-occurrences`) et tarifs (`/tickets`) sans parsing, en cron (l'équivalent du cache 15 min de la maquette).
 - **Matching des réservations** (`matchBookingToMember`, db.js ~620) : hiérarchie stricte — (1) n° de membre exact → auto, (2) email exact → auto, (3) nom+prénom → **toujours validation humaine**, (4) sinon création de membre. **Règle du projet : toute action automatique est notifiée et journalisée** (table `notifications`).
 - **Miroir site → app** : l'inscription se fait sur atelierduweb.be (jamais dans l'app) ; l'app rapproche (`applyMirror`) et retire automatiquement les annulations — toujours avec notification.
 - **Conflits de salle** : NON bloquants par décision — avertissement + journal, l'humain tranche.
@@ -150,7 +150,14 @@ Les scripts de pages (app.js, formations.html…) appellent déjà `ADWDatabase.
 ## 7. Sécurité — décisions déjà prises (ne pas les contredire)
 
 1. **Aucune clé API dans le JS public** (décision utilisateur explicite) : la synchro des bookings MEC doit rester **server-to-server**, jamais appelée depuis le navigateur. Le plugin WordPress prévoit une route protégée par secret.
-2. L'API WP utilisée est **publique et sans clé** (`wp/v2/mec-events`) — c'est un choix assumé.
+2. L'API WP utilisée dans la maquette est **publique et sans clé** (`wp/v2/mec-events`) — c'est un choix assumé côté navigateur.
+3. **API officielle MEC (`wp-json/mec/v1.0`, header `mec-token`) — testée le 22 oct. 2026, fonctionne avec clé.** Réserves au serveur (clé en config serveur, JAMAIS dans le JS) :
+   - `GET /events` : formations + **contenu complet** (mieux que l'excerpt de l'API publique).
+   - `GET /events/{id}/tickets` : 🎯 **tarifs** (« Stage de vacance : 30 € ») — complète les fiches (champ tarif aujourd'hui « à confirmer »).
+   - `GET /events/{id}/next-occurrences` : **dates + horaires structurés** (`start.date`, `hour`, `minutes`) — remplace le parseur d'extraits FR (`parseFrDates` de mec.js) par des données propres.
+   - `GET /events/{id}/related-events` : formations liées.
+   - ❌ **`/bookers` n'existe pas** (404) : les réservations ne sont PAS exposées par l'API officielle, même avec clé. La synchro des inscriptions devra passer par le plugin WordPress prévu (module bookings avec secret) ou une lecture directe de la table `wp_mec_bookings`.
+   - ⚠️ Ne pas oublier le piège CORS : l'API officielle exige un header custom → preflight bloqué depuis un navigateur. C'est une API **server-to-server**.
 3. **À ajouter par le backend** (hors périmètre maquette) : authentification des postes (au minimum un token d'accès app + éventuellement login par utilisateur de l'équipe), HTTPS si exposition hors réseau local.
 4. Le fichier `membres.db` contient des données personnelles (RGPD) : accès disque restreint, sauvegardes chiffrées si externes.
 
