@@ -73,6 +73,7 @@ Fait :
 - **Système Suggestions (oct. 2026)** : bouton volant (suggestions.js, toutes pages, Ctrl+Entrée, page d'origine) + page `suggestions.html` (statuts, filtres) + cartouche Ouvert/Fermé partout (openstatus.js).
 - **Uniformité totale (oct. 2026)** : 8 pages, sidebar identique (6 liens PLATS — sections Général/Espace/Système SUPPRIMÉES : source de 3 bugs de duplication) et topbar complète. Versionnage : 1 version unique par asset (styles v18, theme v14, db v18, mec v15, composants v2).
 - **Bug emojis corrigé** : la séquence \U0001F... (syntaxe Python) ne marche pas en JS — vrais caractères UTF-8 ou surrogate pairs (\uD83D\uDCDD). 6 occurrences corrigées.
+- **Session du 22 oct. 2026 (PRs #19 à #31)** : fixes layout (barre de filtres, compteur, recherche topbar à droite), header/sidebar externalisés dans `layout.js` (slots `data-layout-*`, page active auto), fix catégories MEC numériques (cache invalidé si IDs non résolus), CI GitHub Actions + smoke test + rendu Playwright, audit cache-busting complet, échappement HTML unifié (`escape.js`), RGPD (effacement cascade + purge globale), administration des salles (Paramètres), refonte visuelle Paramètres, README refait + `docs/BACKEND.md` (guide migration serveur Node pour le collègue en charge).
 
 En cours / ouvert :
 - **⚠️ MAQUETTE vs FINAL — décisions utilisateur (session oct. 2026) pour la synchro des inscriptions MEC :**
@@ -112,7 +113,7 @@ En cours / ouvert :
 12. **Résumer et faire valider avant de pousser** : présenter le résumé de chaque action (fichiers, but, impact) et obtenir l'aval explicite de l'utilisateur avant commit/push — l'utilisateur garde le contrôle du dépôt.
 13. **Le préfill peut remplacer le tracking** : quand l'app fournit elle-même les données du formulaire distant (n° de membre), la donnée revient avec la réservation → le matching automatique fait la réconciliation. Pas besoin d'un système de vérification que personne n'utiliserait.
 14. **Modale pour le parcours rapide, page pour le lien profond** : dans une liste de gestion (inscrits), l'aperçu en modale évite la navigation ; la page dédiée reste pour le partage/deep-linking.
-15. **Sidebar et topbar partagées = risque de divergence** : chaque page duplique la sidebar/topbar en dur. Toute modification sur une page (nouveau lien, nouvelle section) DOIT être suivie d'une passe de vérification sur TOUTES les pages (grep : compter les sections, comparer les href, vérifier les composants topbar — cartouche, notifCenter, thème). Les bugs de ce type (section « Système » dupliquée sur 5 pages en 2 occurrences distinctes, liens désactivés alors que la page existe, notifications absentes d'une page) ne se voient qu'à l'audit systématique.
+15. **Sidebar et topbar partagées = risque de divergence** (leçon historique, RESOLUE par la PR #21) : depuis l'externalisation dans `layout.js`, une seule source de vérité — le risque de divergence entre pages n'existe plus. Ancienne règle d'audit page-par-page supprimée.
 
 ## 📜 Historique des PRs
 
@@ -127,6 +128,12 @@ En cours / ouvert :
 9. Header + sidebar externalisés dans `layout.js` (slots `data-layout-*`, injection synchrone) + fix catégories numériques MEC (PR #21).
 10. Fix recherche topbar alignée à droite (PR #22) : double `margin-left:auto` supprimé.
 11. CI GitHub Actions : `node --check` sur tous les `.js` + smoke test des pages (`tests/smoke-pages.js` — structure, layout en premier script, slots, versions `?v=` cohérentes).
+12. Tests de rendu Playwright (`tests/render/run.js`, PR #24) : chaque page chargée dans Chromium headless — zéro erreur JS, layout injecté, IDs partagés, lien actif correct. A attrapé 2 bugs réels au premier run (faux positif icône nav ; page Paramètres sans init de base — PR #30).
+13. Échappement HTML unifié dans `escape.js` (`ADWEscape.html`, chargé en 2e script — PR #27) : les 10 définitions locales `esc()`/`escapeHtml()` délèguent. Faille corrigée : `c.title` (donnée du site WP) injecté sans échappement dans formation.html.
+14. RGPD (PR #28) : `deleteMemberCompletely()` en cascade (visites+impressions+liens — avant, seul le membre était supprimé) + `purgeAllPersonalData()` avec double confirmation dans Paramètres.
+15. Administration des salles dans Paramètres (PR #29) : addRoom/renameRoom/deleteRoom (suppression refusée si formations attribuées). Fix associé (PR #30) : parametres.html n'initialisait jamais la base — `ensureDb()` mémoïsé + `vendor/sql-wasm.js` ajouté ; le smoke test CI vérifie désormais que toute page chargeant db.js charge sql-wasm.js avant.
+16. Refonte visuelle page Paramètres (PR #31) : grille responsive `settings-grid`, en-têtes pastillés, classes dédiées (plus de style inline).
+17. Docs révisées pour l'arrivée du collègue backend : README refait, `docs/BACKEND.md` créé (guide migration Node/better-sqlite3 : inventaire des 36 méthodes ADWDatabase, schéma, sécurité, pièges).
 
 ## 📌 Règle pour toute future session
 
@@ -136,7 +143,7 @@ En cours / ouvert :
 2. Vérifier `git log`, les PRs ouvertes et `git status` avant de toucher au code.
 3. À la fin de la session : **mettre à jour ce fichier** (état, décisions, leçons) dans la même PR que le travail livré.
 4. **Avant tout commit/push : résumer l'action (fichiers, but) et attendre la validation explicite de l'utilisateur.** Jamais de push automatique en fin de tâche.
-5. **Après tout changement de sidebar ou topbar sur une page : passer toutes les pages en revue** (sections, liens, composants) — la mise en page est dupliquée page par page, donc une modification localisée crée des divergences invisibles. Audit rapide : `for f in *.html; do grep -c 'side-section' $f; done` + comparaison des href de chaque nav.
+5. **Sidebar/topbar : tout se passe dans `layout.js`** (injection via slots `data-layout-*` sur toutes les pages — PR #21). L'ancienne règle d'audit page par page est obsolète : une seule source de vérité. La CI vérifie l'ordre des scripts (layout.js → escape.js → sql-wasm.js → db.js).
 
 ## 🔧 Autonomie de livraison
 

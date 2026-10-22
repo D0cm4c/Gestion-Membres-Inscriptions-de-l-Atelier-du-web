@@ -1,6 +1,11 @@
 (function () {
     'use strict';
 
+    // Client de l'API WordPress de atelierduweb.be (formations M.E. Calendar).
+    // Source : wp-json/wp/v2/mec-events (public, sans clé) + fallback RSS.
+    // Parse les extraits FR (durée/dates/horaires), résout les catégories (IDs → noms),
+    // cache localStorage 15 min. Expose window.ADWMec.
+
     var WP_BASE = 'https://atelierduweb.be/wp-json/wp/v2';
     var RSS_URL = 'https://atelierduweb.be/feed/';
     var CACHE_KEY = 'atelierduweb_mec_events';

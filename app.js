@@ -1,6 +1,9 @@
 (function () {
     'use strict';
 
+    // Page Membres (membres.html) : CRUD fiches, recherche/tri/filtres, visites (pointage),
+    // impressions (solde), abonnements, vues cartes/liste, export CSV. Dépend de : db.js, escape.js, layout.js.
+
     var PREFS_KEY = 'atelierduweb_members_prefs';
     var VISIT_PRICE = 1;
 

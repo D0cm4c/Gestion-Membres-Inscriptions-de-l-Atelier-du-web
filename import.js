@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    // Import XML de l'ancienne base Access (membres) : mappings de champs, création des fiches.
+
     var STATUS_MAP = {
         'actiris': 'actiris',
         'orbem': 'cpas',

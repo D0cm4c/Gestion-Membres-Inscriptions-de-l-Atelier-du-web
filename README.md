@@ -1,90 +1,131 @@
 # Gestion des Membres et Inscriptions — Atelier du Web
 
-Un système unifié en ligne pour gérer les membres du cyberespace et les participants aux formations de l'[Atelier du Web](https://atelierduweb.be), avec une base de données **SQLite**.
+Application de gestion pour l'[Atelier du Web](https://atelierduweb.be) (EPN de Saint-Gilles) : **membres du cyberespace** (25 postes), **formations** et **salles** — dans un seul outil, avec le design du site.
 
-## 🎯 Objectif du projet
+**App en ligne (maquette) : [d0cm4c.github.io/Gestion-Membres-Inscriptions-de-l-Atelier-du-web](https://d0cm4c.github.io/Gestion-Membres-Inscriptions-de-l-Atelier-du-web/)**
 
-Une **application en ligne** (accessible par plusieurs postes via le navigateur, sans installation) qui réunit dans un outil unique :
+---
 
-- Les **fiches membres** du cyberespace (25 postes, accès sur inscription).
-- Les **fiches formations** (tarifs, dates, participants).
-- Le **calendrier et les fiches des 2 salles de formation**.
+## ⚠️ Maquette, pas production — lisez ceci
 
-Le design correspond à l'identité visuelle d'atelierduweb.be.
+> **Ce dépôt est une MAQUETTE 100 % statique** (GitHub Pages). La base de données vit **dans le navigateur** de chaque poste (SQLite via sql.js/WebAssembly, persistée en IndexedDB) : chaque poste a sa propre copie, répliquée manuellement via import/export.
+>
+> **La cible finale** est une app multi-poste : un serveur Node.js avec une **base SQLite unique partagée** (voir [`docs/BACKEND.md`](docs/BACKEND.md)). Le schéma SQL et les requêtes de cette maquette sont **écrits pour migrer tels quels** — c'est la contrainte de conception n°1 du projet.
+>
+> Conséquences :
+> - Les données saisies ici **ne sont pas définitives** (mais le schéma, lui, est bon).
+> - Aucune donnée ne circule sur le réseau (tout reste dans le navigateur).
 
-## 📌 État actuel
+## 🎯 Périmètre fonctionnel
 
-L'application est **en ligne** : **[d0cm4c.github.io/Gestion-Membres-Inscriptions-de-l-Atelier-du-web](https://d0cm4c.github.io/Gestion-Membres-Inscriptions-de-l-Atelier-du-web/)**
+| Partie | Page | Contenu |
+|---|---|---|
+| **Tableau de bord** | `index.html` | KPI temps réel, agenda du jour, alertes, analyses, usagers du jour, rapport annuel |
+| **Membres** | `membres.html` + `membre.html` | Fiches complètes (identité, contact, statut social), n° auto (#1000…), abonnements, pointage de visites, impressions, recherche/tri/filtres, export CSV, import XML Access |
+| **Formations** | `formations.html` + `formation.html` | Sync depuis atelierduweb.be (WordPress/M.E. Calendar), cartes par mois, filtres, inscriptions liées aux membres, validation des réservations du site |
+| **Salles** | `salles.html` | Planning mensuel (salles × créneaux Matin/A-midi), conflits, attribution des formations |
+| **À faire / Suggestions** | `suggestions.html` | Demandes d'amélioration, statuts |
+| **Paramètres** | `parametres.html` | Salles (CRUD), cartes du dashboard, RGPD (purge) |
 
-- **Base de données SQLite** (via [sql.js](https://sql.js.org)/WebAssembly), persistée dans le navigateur (IndexedDB). Le schéma SQL est standard : l'objectif d'évolution est de la brancher sur un hébergement avec BDD SQLite partagée entre postes.
-- Les données de l'instance hébergée sur GitHub Pages restent locales au navigateur ; l'import/export permet la réplication manuelle dans l'attente d'un vrai hébergement BDD.
-
-### Tableau de bord (`index.html`)
-- Indicateurs en temps réel : membres, inscriptions actives, visites du jour, revenus du mois.
-- Alertes automatiques (inscriptions expirées, expirations proches, visites du jour, impressions à solder).
-- Analyses croisées, nouveaux usagers du jour, rapport annuel exportable, thème sombre.
-
-### Gestion des membres (`membres.html`)
-- **Fiches membres** : nom, prénom, âge, genre, adresse, code postal (autocomplétion), téléphone, email, statut social, dates d'inscription.
-- **Numéro de membre unique** à 4 chiffres, généré automatiquement (#1000, #1001…).
-- **Abonnements** : mensuel (3 €), annuel (30 €) ou aucun.
-- **Suivi des visites** : pointage du jour (1 € sans abonnement, incluse avec abonnement), historique complet, refus du double pointage.
-- **Suivi des impressions** (solde à solder, impression rapide).
-- Recherche, tri (11 critères), filtres (statut, abonnés), vues cartes/liste, export CSV, import XML (Access).
-- Données réelles : import de 3 806 membres depuis l'ancienne base Access.
-
-### Formations (`formations.html`) *(en cours, PR #7)*
-- Intégration des formations du site via l'API REST M.E. Calendar (`wp-json/mec/v1.0`), clé API stockée uniquement dans le navigateur.
-- Recherche, filtres (à venir/toutes, mois, catégorie), cartes au design du projet, lien direct vers la réservation sur atelierduweb.be.
-- Repli automatique via proxy si l'API bloque les appels directs (CORS).
-
-### Paramètres (`parametres.html`)
-- Configuration de l'application, gestion du thème partagé sur toutes les pages.
+Fonctionnalités transverses : centre de notifications 🔔, recherche globale, thème clair/sombre, accessibilité (AA, clavier, lecteurs d'écran), responsive mobile, RGPD (effacement en cascade).
 
 ## 🛠️ Technologies
 
-- **Frontend** : HTML5, CSS3, JavaScript (sans framework)
-- **Base de données** : SQLite via [sql.js](https://sql.js.org) (WebAssembly), persistée dans IndexedDB — prêt pour une migration vers un hébergement avec BDD SQLite partagée
-- **Polices** : [Public Sans (Google Fonts)](https://fonts.google.com/specimen/Public+Sans)
-- **Accessibilité** : contrastes AA, navigation clavier, lecteurs d'écran, mode sombre automatique
-
-## 🤖 Assistance IA (sessions d'agents)
-
-- Les sessions d'assistance (agents IA) peuvent **commiter et pousser elles-mêmes** sur des branches de travail (`vibe/…`) et ouvrir des PRs ; la fusion dans `main` reste manuelle depuis GitHub.
-- **Mémoire du projet** : [`CONTEXT.md`](CONTEXT.md) (état, décisions, leçons) — lu et mis à jour automatiquement par chaque session, voir [`AGENTS.md`](AGENTS.md).
+- **Frontend** : HTML5, CSS3, JavaScript vanilla — **aucun framework, aucun build**
+- **Données** : SQLite via [sql.js](https://sql.js.org) (WebAssembly) → schéma SQL standard, 10 tables (voir `db.js`)
+- **Source externe** : API REST publique WordPress (`wp-json/wp/v2/mec-events`) de atelierduweb.be, repli RSS — aucune clé API
+- **Qualité** : CI GitHub Actions (syntaxe, smoke test structure, tests de rendu Playwright — voir [`tests/`](tests/))
+- **Police** : [Public Sans](https://fonts.google.com/specimen/Public+Sans) · **Hébergement maquette** : GitHub Pages
 
 ## 📂 Structure du projet
 
 ```
-Gestion-Membres-Inscriptions-de-l-Atelier-du-web/
-├── index.html              # Tableau de bord (stats temps réel)
-├── membres.html             # Gestion des membres
-├── formations.html          # Formations (API M.E. Calendar)
-├── parametres.html          # Paramètres de l'application
-├── dashboard.js             # Statistiques du tableau de bord
-├── app.js                   # Logique membres (CRUD, tri, filtres, visites)
-├── db.js                    # Couche BDD SQLite + persistance IndexedDB
-├── mec.js                   # Client API M.E. Calendar
-├── import.js                # Import XML (base Access)
-├── postal-codes.js          # Autocomplétion codes postaux (Belgique)
-├── settings.js / theme.js   # Paramètres et thème
-├── demo-data.js             # Membres fictifs de démonstration
-├── styles.css               # Styles (design accessible, mode sombre)
-├── vendor/                  # sql.js (SQLite WebAssembly)
-└── assets/                  # Images (logo, etc.)
+├── index.html, membres.html, membre.html          # pages (1 page = 1 vue)
+│   formations.html, formation.html, salles.html,
+│   parametres.html, suggestions.html
+│
+├── layout.js        # ← COMMENCER ICI : génère sidebar + topbar de TOUTES les pages
+├── escape.js        # échappement HTML partagé (ADWEscape.html)
+├── db.js            # COUCHE DONNÉES : schéma SQLite + API métier (36 méthodes ADWDatabase.*)
+├── mec.js           # client API WordPress (formations de atelierduweb.be)
+│
+├── app.js           # page Membres (CRUD, visites, impressions)
+├── dashboard.js     # page Tableau de bord
+├── salles.html (js) # page Salles (planning)
+├── settings.js      # page Paramètres (salles, tuiles, RGPD)
+├── suggestions.js   # bouton volant « suggestion » (toutes pages)
+│
+├── booking.js       # inscrire un membre via le site (modale de choix)
+├── import.js        # import XML (ancienne base Access)
+├── demo-data.js     # 20 membres fictifs de démo
+├── postal-codes.js  # autocomplétion codes postaux (Belgique)
+│
+├── theme.js nav.js openstatus.js notifications.js globalsearch.js   # composants partagés
+│
+├── styles.css       # tout le design (variables CSS, mode sombre, responsive)
+├── vendor/          # sql.js v1.15.0 (SQLite WebAssembly)
+├── assets/          # images
+├── tests/           # smoke test (node) + rendu Playwright (node)
+└── .github/         # CI
 ```
+
+**Ordre de chargement des scripts** (identique sur chaque page, vérifié par la CI) :
+`layout.js` (injection du header/sidebar) → `escape.js` → `vendor/sql-wasm.js` → `db.js` → composants partagés → script de page.
+
+## 🚀 Démarrage rapide
+
+La maquette est déjà en ligne (lien en haut). Pour travailler dessus :
+
+```bash
+git clone https://github.com/D0cm4c/Gestion-Membres-Inscriptions-de-l-Atelier-du-web.git
+cd Gestion-Membres-Inscriptions-de-l-Atelier-du-web
+```
+
+Servir localement (obligatoire — sql.js ne charge pas en `file://`) :
+
+```bash
+# au choix :
+python3 -m http.server 8080        # puis http://localhost:8080
+npx serve .                        # ou n'importe quel serveur statique
+```
+
+Les données sont vides au premier lancement : utilise l'import XML ou le bouton démo (page Membres).
+
+Tests (optionnel, nécessite Node 20+) :
+
+```bash
+npm install && npx playwright install chromium   # une fois
+node tests/smoke-pages.js                        # structure des 8 pages
+node tests/render/run.js                         # rendu réel (Chromium headless)
+```
+
+## 🧭 Pour le backend Node.js — [`docs/BACKEND.md`](docs/BACKEND.md)
+
+Ton collègue lira ce guide en premier. Il décrit :
+- l'**architecture cible** (Express + better-sqlite3, l'app servie par le même serveur)
+- l'**inventaire complet** des 36 méthodes `ADWDatabase.*` à exposer en endpoints REST
+- le **schéma SQL** à reprendre tel quel (10 tables)
+- ce qui doit être **réécrit** (persistance IndexedDB → disque) et ce qui est **réutilisable** (requêtes, logique de matching, parseurs)
+- les **décisions de sécurité** déjà prises (clé MEC jamais publique, synchro bookings server-to-server)
+
+## 🤖 Assistance IA (sessions d'agents)
+
+Les agents IA peuvent committer et pousser sur des branches `vibe/…` et ouvrir des PRs ; la fusion dans `main` se fait après validation du propriétaire.
+
+- [`AGENTS.md`](AGENTS.md) — règles de travail des sessions (check-list avant PR)
+- [`CONTEXT.md`](CONTEXT.md) — **mémoire du projet** : décisions figées, état, leçons, historique. Toute session le lit d'abord et le met à jour.
+- [`templates/`](templates/) — kit pour reproduire cette méthode sur d'autres dépôts
 
 ## 🗺️ Feuille de route
 
-- [x] Tableau de bord avec statistiques
-- [x] Fiches membres + CRUD complet
-- [x] Abonnements et suivi des visites
-- [x] Suivi des impressions
-- [ ] Formations : finaliser l'intégration M.E. Calendar (PR #7)
-- [ ] Fiches formations (tarifs, dates, participants)
-- [ ] Calendrier des 2 salles de formation
-- [ ] BDD SQLite partagée en ligne (hébergement avec backend léger)
+- [x] Membres : CRUD, visites, impressions, abonnements, import/export
+- [x] Formations : sync site, inscriptions, validation des réservations
+- [x] Salles : planning, conflits, administration
+- [x] Tableau de bord : KPI, agenda du jour, analyses
+- [x] Qualité : CI, tests de rendu, échappement unifié, RGPD
+- [ ] **Serveur Node.js + SQLite partagé** → [`docs/BACKEND.md`](docs/BACKEND.md)
+- [ ] Plugin WordPress (organisateur, lieu, places restantes, bookings sécurisés)
 
-## 📬 Contact
+## ✉️ Contact
 
-Pour toute question ou suggestion, contactez l'[Atelier du Web](https://atelierduweb.be).
+[Atelier du Web](https://atelierduweb.be) — Espace Public Numérique de Saint-Gilles.

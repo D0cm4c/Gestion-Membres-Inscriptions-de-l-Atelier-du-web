@@ -1,6 +1,11 @@
 (function () {
     'use strict';
 
+    // Couche données : SQLite via sql.js (WebAssembly) persisté en IndexedDB.
+    // Expose window.ADWDatabase — 36 méthodes métier (schéma, CRUD, sync, matching, RGPD).
+    // ⚠️ Schéma et requêtes STANDARD : prévus pour migrer tels quels vers better-sqlite3
+    // côté serveur (voir docs/BACKEND.md). Ne pas introduire d'API navigateur dans la logique métier.
+
     var DB_NAME = 'atelierduweb-db';
     var STORE = 'sqlite';
     var DB_KEY = 'db';

@@ -1,6 +1,9 @@
 (function () {
     'use strict';
 
+    // Page Paramètres (parametres.html) : cartes du dashboard (tuiles), administration des salles,
+    // purge RGPD. Expose window.ADWSettings. Dépend de : db.js, escape.js.
+
     var TILES_HIDDEN_KEY = 'atelierduweb_tiles_hidden';
 
     var TILE_LABELS = {

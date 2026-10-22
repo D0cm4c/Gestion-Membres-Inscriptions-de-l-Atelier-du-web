@@ -1,6 +1,9 @@
 (function () {
     'use strict';
 
+    // Page Tableau de bord (index.html) : KPI temps réel, agenda du jour, alertes,
+    // analyses croisées, usagers du jour, rapport annuel, mosaïque de tuiles (drag'n'drop).
+
     var todayDateEl = document.getElementById('todayDate');
     if (todayDateEl) {
         todayDateEl.textContent = new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });

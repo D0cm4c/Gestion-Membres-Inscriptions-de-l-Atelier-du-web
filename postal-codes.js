@@ -1,3 +1,4 @@
+// Codes postaux de Belgique (autocomplétion champ adresse, page Membres). Expose ADW_POSTAL_CODES.
 var ADW_POSTAL_CODES = [
     ['1000', 'Bruxelles 1'],
     ['1020', 'Laeken'],
