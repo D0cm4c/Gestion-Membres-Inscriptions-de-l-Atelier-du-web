@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    // Navigation mobile : bouton ☰, sidebar en tiroir ≤ 860px (overlay, Échap, fermeture au clic).
+
     var DESKTOP = window.matchMedia('(min-width: 861px)');
 
     function getSidebar() { return document.querySelector('.sidebar'); }

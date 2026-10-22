@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    // Thème clair/sombre : bascule, mémorisation localStorage, application au chargement (anti-flash).
+
     var THEME_KEY = 'atelierduweb_theme';
 
     function applyTheme(mode) {
