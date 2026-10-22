@@ -54,7 +54,7 @@
             html += '<input type="text" id="' + cfg.searchId + '" placeholder="' + cfg.searchPlaceholder + '">';
             html += '</div>';
         }
-        html += '<span id="notifCenter" style="display:inline-flex;margin-left:auto;"></span>';
+        html += '<span id="notifCenter" style="display:inline-flex' + (cfg.searchId ? '' : ';margin-left:auto') + '"></span>';
         html += '<button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">\uD83C\uDF17</button>';
         html += '</header>';
         return html;
