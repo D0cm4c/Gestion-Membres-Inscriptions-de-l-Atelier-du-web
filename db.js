@@ -487,6 +487,30 @@
         return this.queryAll('SELECT * FROM rooms ORDER BY sort_order ASC, name ASC');
     };
 
+    Database.addRoom = function (name, capacity) {
+        var id = 'room-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        var maxRow = this.queryAll('SELECT COALESCE(MAX(sort_order), 0) AS v FROM rooms')[0];
+        var maxOrder = maxRow ? maxRow.v : 0;
+        this.run('INSERT INTO rooms (id, name, capacity, sort_order) VALUES (?, ?, ?, ?)',
+            [id, String(name || '').trim(), parseInt(capacity, 10) || null, (maxOrder || 0) + 1]);
+        try { this.flush(); } catch (e) { /* best effort */ }
+        return id;
+    };
+
+    Database.renameRoom = function (roomId, name) {
+        this.run('UPDATE rooms SET name = ? WHERE id = ?', [String(name || '').trim(), roomId]);
+        try { this.flush(); } catch (e) { /* best effort */ }
+    };
+
+    // Suppression refusée si des formations y sont attribuées : renvoyer la liste bloquante
+    Database.deleteRoom = function (roomId) {
+        var used = this.queryAll('SELECT title FROM formations WHERE room_id = ?', [roomId]);
+        if (used.length) return { ok: false, blocked: used };
+        this.run('DELETE FROM rooms WHERE id = ?', [roomId]);
+        try { this.flush(); } catch (e) { /* best effort */ }
+        return { ok: true };
+    };
+
     Database.setFormationRoom = function (formationId, roomId) {
         this.run('UPDATE formations SET room_id = ? WHERE id = ?', [roomId || null, formationId]);
     };

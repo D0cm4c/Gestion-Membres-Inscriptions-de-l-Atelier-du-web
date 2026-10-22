@@ -19,6 +19,21 @@
 
     <main id="main">
         <section class="stat-card" style="max-width:720px;">
+            <h2>🏫 Salles de formation</h2>
+            <p class="form-hint" style="margin-bottom:1rem;">Salles utilisées pour le planning et l'attribution des formations (page Salles). Une salle occupée par au moins une formation ne peut pas être supprimée.</p>
+            <ul style="list-style:none;" id="roomsList"></ul>
+            <div class="modal-actions" style="justify-content:flex-start;">
+                <div class="form-group" style="margin:0;">
+                    <input type="text" id="newRoomName" placeholder="Nom de la nouvelle salle…" style="max-width:220px;" aria-label="Nom de la nouvelle salle">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <input type="number" id="newRoomCapacity" placeholder="Capacité" min="1" style="max-width:100px;" aria-label="Capacité de la salle">
+                </div>
+                <button class="btn btn-primary" id="addRoomBtn">+ Ajouter la salle</button>
+            </div>
+        </section>
+
+        <section class="stat-card" style="max-width:720px;">
             <h2>🧩 Cartes du tableau de bord</h2>
             <p class="form-hint" style="margin-bottom:1rem;">Cochez les cartes à afficher sur le tableau de bord. La disposition (glisser-déposer) et ce réglage sont mémorisés sur ce navigateur.</p>
             <ul style="list-style:none;" id="tilesList"></ul>
@@ -49,7 +64,7 @@
 
     <script src="layout.js?v=2"></script>
     <script src="escape.js?v=1"></script>
-    <script src="db.js?v=19"></script>
+    <script src="db.js?v=20"></script>
     <script src="theme.js?v=14"></script>
     <script src="notifications.js?v=3"></script>
     <script src="suggestions.js?v=2"></script>
@@ -60,6 +75,6 @@
         document.getElementById('todayDate').textContent =
             new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     </script>
-    <script src="settings.js?v=14"></script>
+    <script src="settings.js?v=15"></script>
 </body>
 </html>
