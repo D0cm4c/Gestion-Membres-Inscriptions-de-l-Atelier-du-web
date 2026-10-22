@@ -78,11 +78,18 @@ function main() {
                                         ids[id] = !!document.getElementById(id);
                                     });
                                     var active = document.querySelector('.side-nav a.active');
+                                    var activeLabel = null;
+                                    if (active) {
+                                        var clone = active.cloneNode(true);
+                                        var ico = clone.querySelector('.nav-ico');
+                                        if (ico) ico.remove();
+                                        activeLabel = clone.textContent.trim();
+                                    }
                                     return {
                                         hasSidebar: !!side,
                                         hasTopbar: !!top,
                                         ids: ids,
-                                        activeNav: active ? active.textContent.trim() : null,
+                                        activeNav: activeLabel,
                                         mainPopulated: !!document.querySelector('#main') &&
                                             document.querySelector('#main').children.length > 0
                                     };
