@@ -170,6 +170,13 @@
         var rev = document.getElementById('statRevenueMonth');
         if (rev) rev.textContent = revenueMonth.toFixed(2).replace('.', ',') + ' €';
 
+        var ticketsEl = document.getElementById('statTicketsOpen');
+        if (ticketsEl) {
+            var openT = 0;
+            try { openT = one('SELECT COUNT(*) v FROM tickets WHERE status IN (\'open\', \'in_progress\')'); } catch (e) { /* table absente : 0 */ }
+            ticketsEl.textContent = openT;
+        }
+
         var activePct = total ? Math.round((active / total) * 100) : 0;
         setText('statActivePct', activePct + ' %');
 
@@ -203,6 +210,16 @@
         if (visitsToday === 0) {
             alerts.push({ text: 'Aucune visite pointée aujourd\'hui', icon: '📌' });
         }
+        try {
+            var openTickets = one('SELECT COUNT(*) v FROM tickets WHERE status IN (\'open\', \'in_progress\')');
+            var urgentOld = one('SELECT COUNT(*) v FROM tickets WHERE priority = \'urgent\' AND status IN (\'open\', \'in_progress\') AND created_at < datetime(\'now\', \'-2 days\')');
+            if (openTickets > 0) {
+                alerts.push({ text: openTickets + ' ticket' + (openTickets > 1 ? 's' : '') + ' ouvert' + (openTickets > 1 ? 's' : '') + ' (page Tickets)', icon: '🎫' });
+            }
+            if (urgentOld > 0) {
+                alerts.push({ text: urgentOld + ' ticket' + (urgentOld > 1 ? 's' : '') + ' urgent' + (urgentOld > 1 ? 's' : '') + ' de plus de 48h sans résolution', icon: '🚨' });
+            }
+        } catch (e) { /* table tickets absente (vieille base) : ignorer */ }
         if (alerts.length === 0) {
             alerts.push({ text: 'Tout est en ordre ✨', icon: '✅' });
         }

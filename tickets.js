@@ -196,7 +196,19 @@
 
     // ============ Init ============
 
-    window.ADWDatabase.init().then(refresh).catch(function () {
+    window.ADWDatabase.init().then(function () {
+        // Rappel : tickets urgents de plus de 48h sans résolution (règle projet : toute alerte est notifiée)
+        if (window.ADWNotifications) {
+            var urgentOld = window.ADWDatabase.queryAll(
+                'SELECT title FROM tickets WHERE priority = \'urgent\' AND status IN (\'open\', \'in_progress\') AND created_at < datetime(\'now\', \'-2 days\')'
+            );
+            urgentOld.forEach(function (t) {
+                window.ADWNotifications.push('ticket_urgent',
+                    '🚨 Ticket urgent sans résolution depuis plus de 48h : « ' + t.title + ' »', 'warning');
+            });
+        }
+        refresh();
+    }).catch(function () {
         loading.hidden = true;
         empty.hidden = false;
         empty.querySelector('p').textContent = 'Impossible de charger la base de données locale.';
