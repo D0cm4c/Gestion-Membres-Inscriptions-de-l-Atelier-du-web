@@ -115,6 +115,23 @@
             <p class="form-hint" id="authStatus" style="margin-top:0.7rem;margin-bottom:0;"></p>
         </section>
 
+        <section class="settings-card" aria-labelledby="backupTitle">
+            <div class="settings-head">
+                <span class="settings-ico orange" aria-hidden="true">💾</span>
+                <div>
+                    <h2 id="backupTitle">Sauvegarde de la base</h2>
+                    <p>Membres, formations, inscriptions — tout en un fichier</p>
+                </div>
+            </div>
+            <p class="settings-note">La sauvegarde exporte la base SQLite complète (membres, formations, inscriptions, incidents, salles, équipe) dans un seul fichier. Sur Chrome/Edge, l'emplacement (clé USB par ex.) est mémorisé après le premier choix. Sur Firefox, le fichier passe par les téléchargements — glisse-le ensuite sur la clé. L'app rappelle de sauvegarder si des données ont changé depuis 3 jours.</p>
+            <p class="form-hint" id="backupStatus" style="margin-bottom:0.9rem;"></p>
+            <div class="settings-foot">
+                <button class="btn btn-primary" id="backupChooseBtn">📁 Choisir l'emplacement…</button>
+                <button class="btn btn-primary" id="backupSaveBtn">💾 Sauvegarder maintenant</button>
+                <button class="btn btn-secondary" id="backupRestoreBtn">♻️ Restaurer une sauvegarde…</button>
+            </div>
+        </section>
+
         <section class="settings-card" aria-labelledby="rgpdTitle">
             <div class="settings-head">
                 <span class="settings-ico red" aria-hidden="true">🔒</span>
@@ -146,7 +163,7 @@
     <script src="escape.js?v=1"></script>
     <script src="auth.js?v=1"></script>
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=26"></script>
+    <script src="db.js?v=27"></script>
     <script src="theme.js?v=15"></script>
     <script src="notifications.js?v=3"></script>
     <script src="suggestions.js?v=2"></script>
@@ -157,6 +174,7 @@
         document.getElementById('todayDate').textContent =
             new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     </script>
-    <script src="settings.js?v=24"></script>
+    <script src="backup.js?v=1"></script>
+    <script src="settings.js?v=26"></script>
 </body>
 </html>

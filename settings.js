@@ -266,6 +266,58 @@
     if (document.readyState !== 'loading') initTeamAdmin();
     else document.addEventListener('DOMContentLoaded', initTeamAdmin);
 
+    // ============ Sauvegarde de la base (carte « Sauvegarde » de parametres.html) ============
+
+    function initBackupCard() {
+        var chooseBtn = document.getElementById('backupChooseBtn');
+        var saveBtn = document.getElementById('backupSaveBtn');
+        var restoreBtn = document.getElementById('backupRestoreBtn');
+        var statusEl = document.getElementById('backupStatus');
+        if (!saveBtn || !window.ADWBackup) return;
+
+        function esc(v) { return window.ADWEscape.html(v); }
+
+        function refreshStatus() {
+            if (!statusEl) return;
+            var last = window.ADWBackup.getLastBackup();
+            if (!last) {
+                statusEl.innerHTML = 'Aucune sauvegarde encore faite — fais la première pour protéger les données.';
+                return;
+            }
+            var d = new Date(last.date);
+            var label = d.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' }) +
+                ' à ' + d.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+            statusEl.innerHTML = '✓ Dernière sauvegarde : <strong>' + esc(label) + '</strong>' +
+                (last.file ? ' (' + esc(last.file) + ', ' + Math.round((last.size || 0) / 1024) + ' Ko)' : '');
+        }
+
+        if (chooseBtn) chooseBtn.addEventListener('click', function () {
+            window.ADWBackup.chooseLocation().then(function () {
+                if (statusEl) statusEl.textContent = 'Emplacement choisi — « Sauvegarder maintenant » écrira à cet endroit.';
+            }).catch(function () { /* annulé ou navigateur non supporté */ });
+        });
+        if (!window.ADWBackup.isLocationSupported() && chooseBtn) chooseBtn.disabled = true;
+
+        saveBtn.addEventListener('click', function () {
+            saveBtn.disabled = true;
+            window.ADWBackup.saveNow().then(function (res) {
+                if (res && res.cancelled) return;
+                refreshStatus();
+            }).catch(function (err) {
+                alert('Échec de la sauvegarde : ' + (err && err.message ? err.message : 'erreur inconnue'));
+            }).then(function () { saveBtn.disabled = false; });
+        });
+
+        if (restoreBtn) restoreBtn.addEventListener('click', function () {
+            window.ADWBackup.restore();
+        });
+
+        refreshStatus();
+    }
+
+    if (document.readyState !== 'loading') initBackupCard();
+    else document.addEventListener('DOMContentLoaded', initBackupCard);
+
     // Garde admin : la page Paramètres est réservée à l'équipe (mot de passe admin, voir auth.js)
     function guardSettingsPage() {
         if (!window.ADWAuth) return; // auth.js absent : pas de garde (robustesse)
