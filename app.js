@@ -255,12 +255,15 @@
             });
             actions.children[1].addEventListener('click', function (e) {
                 e.stopPropagation();
-                if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?')) {
-                    ADWDatabase.deleteMemberCompletely(member.id).then(function () {
-                        render();
-                        showToast('Membre supprimé', 'success');
-                    });
-                }
+                ADWAuth.ensureUnlocked('Supprimer un membre — action réservée à l\u2019équipe.').then(function (ok) {
+                    if (!ok) return;
+                    if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?')) {
+                        ADWDatabase.deleteMemberCompletely(member.id).then(function () {
+                            render();
+                            showToast('Membre supprimé', 'success');
+                        });
+                    }
+                });
             });
             item.appendChild(actions);
             grid.appendChild(item);
@@ -435,6 +438,8 @@
     });
     if (detailDeleteBtn) detailDeleteBtn.addEventListener('click', function () {
         if (!detailMember) return;
+        ADWAuth.ensureUnlocked('Supprimer un membre — action réservée à l\u2019équipe.').then(function (ok) {
+        if (!ok) return;
         if (confirm('Supprimer le membre "' + detailMember.first_name + ' ' + detailMember.last_name + '" ?')) {
             ADWDatabase.deleteMemberCompletely(detailMember.id).then(function () {
                 closeDetail();
@@ -442,6 +447,7 @@
                 showToast('Membre supprimé', 'success');
             });
         }
+        })
     });
 
     detailCheckinBtn.addEventListener('click', function () {
@@ -721,6 +727,13 @@
 
     function openImport() {
         if (!importModal) return;
+        ADWAuth.ensureUnlocked('Importer des membres (XML) — action réservée à l\u2019équipe.').then(function (ok) {
+            if (!ok) return;
+            doOpenImport();
+        });
+    }
+
+    function doOpenImport() {
         importModal.hidden = false;
         if (importPreview) importPreview.hidden = true;
         if (importFile) importFile.value = '';

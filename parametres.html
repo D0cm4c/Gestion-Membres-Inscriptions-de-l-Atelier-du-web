@@ -76,6 +76,27 @@
             <p class="form-hint" id="mecKeyStatus" style="margin-top:0.7rem;margin-bottom:0;"></p>
         </section>
 
+        <section class="settings-card" aria-labelledby="authTitle">
+            <div class="settings-head">
+                <span class="settings-ico blue" aria-hidden="true">🔐</span>
+                <div>
+                    <h2 id="authTitle">Mot de passe admin</h2>
+                    <p>Actions sensibles de l'app</p>
+                </div>
+            </div>
+            <p class="settings-note">Le mot de passe admin protège la page Paramètres, la suppression de membres, l'import XML et la purge des données. ⚠️ Le mot de passe par défaut est <strong>admin</strong> — change-le dès maintenant. Il est stocké haché (SHA-256) dans ce navigateur uniquement.</p>
+            <div class="settings-foot">
+                <div class="form-group">
+                    <input type="password" id="authOldPass" placeholder="Mot de passe actuel" autocomplete="off" aria-label="Mot de passe actuel">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="authNewPass" placeholder="Nouveau mot de passe" autocomplete="off" aria-label="Nouveau mot de passe">
+                </div>
+                <button class="btn btn-primary" id="authChangeBtn">💾 Changer</button>
+            </div>
+            <p class="form-hint" id="authStatus" style="margin-top:0.7rem;margin-bottom:0;"></p>
+        </section>
+
         <section class="settings-card" aria-labelledby="rgpdTitle">
             <div class="settings-head">
                 <span class="settings-ico red" aria-hidden="true">🔒</span>
@@ -105,6 +126,7 @@
 
     <script src="layout.js?v=2"></script>
     <script src="escape.js?v=1"></script>
+    <script src="auth.js?v=1"></script>
     <script src="vendor/sql-wasm.js"></script>
     <script src="db.js?v=22"></script>
     <script src="theme.js?v=15"></script>
@@ -117,6 +139,6 @@
         document.getElementById('todayDate').textContent =
             new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     </script>
-    <script src="settings.js?v=18"></script>
+    <script src="settings.js?v=19"></script>
 </body>
 </html>
