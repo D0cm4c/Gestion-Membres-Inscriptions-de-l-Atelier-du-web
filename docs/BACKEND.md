@@ -71,6 +71,8 @@ Il est dans `db.js`, fonction `ensureSchema()` (lignes ~74-220). **10 tables**, 
 | `bookings_remote` | réservations faites sur le site, en attente de rattachement | `event_id` MEC |
 | `notifications` | journal des actions automatiques | type + sévérité |
 | `suggestions` | demandes « à faire » | statut open/done/discarded |
+| `tickets` | incidents du cyberespace (matériel/réseau) | catégorie, matériel, priorité (low→urgent), statut (open→closed), assigné en texte libre (pas de comptes) |
+| `ticket_comments` | suivi du dépannage par ticket | FK ticket_id (suppression en cascade côté app) |
 
 À faire côté serveur : copier les `CREATE TABLE IF NOT EXISTS` dans un script `schema.sql`, exécuté au démarrage. Les requêtes de la maquette (dans les 36 méthodes, §4) sont **standard et paramétrées** — elles tournent sur better-sqlite3 sans réécriture.
 
