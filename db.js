@@ -846,5 +846,14 @@
         try { Database.flush(); } catch (e) { /* best effort */ }
     });
 
+    // Restauration de sauvegarde (backup.js) : remplace la base par les octets du fichier .db
+    Database.replaceDatabase = function (bytes) {
+        var self = this;
+        initSqlJs({ locateFile: function (file) { return 'vendor/' + file; } }).then(function (SQL) {
+            self.db = new SQL.Database(new Uint8Array(bytes));
+            return saveToIndexedDB(self.idb, bytes);
+        });
+    };
+
     window.ADWDatabase = Database;
 })();
