@@ -20,6 +20,24 @@
     <main id="main">
         <div class="settings-grid">
 
+        <section class="settings-card" aria-labelledby="teamTitle">
+            <div class="settings-head">
+                <span class="settings-ico blue" aria-hidden="true">🧑‍🔧</span>
+                <div>
+                    <h2 id="teamTitle">Équipe technique</h2>
+                    <p>Assignables aux incidents</p>
+                </div>
+            </div>
+            <p class="settings-note">Membres de l'équipe qui peuvent être assignés·es aux incidents (page Incidents). Un membre assigné à au moins un incident ne peut pas être supprimé.</p>
+            <ul class="settings-list" id="teamList"></ul>
+            <div class="settings-foot">
+                <div class="form-group" style="flex:1;min-width:180px;">
+                    <input type="text" id="newTeamMemberName" placeholder="Nom du membre de l'équipe…" aria-label="Nom du membre de l'équipe">
+                </div>
+                <button class="btn btn-primary" id="addTeamMemberBtn">+ Ajouter</button>
+            </div>
+        </section>
+
         <section class="settings-card" aria-labelledby="roomsTitle">
             <div class="settings-head">
                 <span class="settings-ico blue" aria-hidden="true">🏫</span>
@@ -128,7 +146,7 @@
     <script src="escape.js?v=1"></script>
     <script src="auth.js?v=1"></script>
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=24"></script>
+    <script src="db.js?v=25"></script>
     <script src="theme.js?v=15"></script>
     <script src="notifications.js?v=3"></script>
     <script src="suggestions.js?v=2"></script>

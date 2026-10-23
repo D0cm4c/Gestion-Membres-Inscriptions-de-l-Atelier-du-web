@@ -104,6 +104,16 @@
 
     function refresh() {
         tickets = window.ADWDatabase.listTickets();
+        // Options d'assignation : membres de l'équipe technique (table team_members)
+        var team = [];
+        try { team = window.ADWDatabase.listTeamMembers() || []; } catch (e) { team = []; }
+        var tkAssignee = document.getElementById('tkAssignee');
+        if (tkAssignee) {
+            tkAssignee.innerHTML = '<option value="">— Non assigné —</option>' +
+                team.map(function (m) {
+                    return '<option value="' + esc(m.name) + '">' + esc(m.name) + '</option>';
+                }).join('');
+        }
         // Peupler le filtre assigné-à avec les valeurs existantes
         var names = {};
         tickets.forEach(function (t) { if (t.assignee) names[t.assignee] = true; });
@@ -159,7 +169,7 @@
     var openBtn = document.getElementById('newTicketBtn');
 
     function openModal() {
-        ['tkTitle', 'tkEquipment', 'tkAssignee', 'tkDescription'].forEach(function (id) {
+        ['tkTitle', 'tkEquipment', 'tkDescription'].forEach(function (id) {
             document.getElementById(id).value = '';
         });
         document.getElementById('tkCategory').value = 'computer';
@@ -184,7 +194,7 @@
             category: document.getElementById('tkCategory').value,
             equipment: document.getElementById('tkEquipment').value.trim() || null,
             priority: document.getElementById('tkPriority').value,
-            assignee: document.getElementById('tkAssignee').value.trim() || null,
+            assignee: document.getElementById('tkAssignee').value || null,
             created_by: null
         });
         if (window.ADWNotifications) {

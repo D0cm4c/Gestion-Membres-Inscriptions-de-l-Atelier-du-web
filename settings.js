@@ -207,6 +207,64 @@
     if (document.readyState !== 'loading') initMecKey();
     else document.addEventListener('DOMContentLoaded', initMecKey);
 
+    // ============ Équipe technique (page Paramètres → assignation des incidents) ============
+
+    function initTeamAdmin() {
+        var list = document.getElementById('teamList');
+        var nameInput = document.getElementById('newTeamMemberName');
+        var addBtn = document.getElementById('addTeamMemberBtn');
+        if (!list || !addBtn || !window.ADWDatabase) return;
+
+        function esc(v) { return window.ADWEscape.html(v); }
+
+        function render() {
+            var team = window.ADWDatabase.listTeamMembers();
+            if (!team.length) {
+                list.innerHTML = '<li class="form-hint" style="padding:0.5rem 0;">Aucun membre — ajoute l\u2019équipe ici pour pouvoir assigner les incidents.</li>';
+                return;
+            }
+            list.innerHTML = '';
+            team.forEach(function (m) {
+                var li = document.createElement('li');
+                li.innerHTML = '<span class="grow" style="font-weight:600;">' + esc(m.name) + '</span>';
+                var del = document.createElement('button');
+                del.className = 'btn btn-danger btn-small';
+                del.textContent = '🗑️';
+                del.title = 'Retirer de l\u2019équipe';
+                del.addEventListener('click', function () {
+                    var res = window.ADWDatabase.deleteTeamMember(m.id);
+                    if (res && res.ok === false) {
+                        alert('Impossible de retirer « ' + m.name + ' » : ' + res.blocked.length +
+                            ' incident(s) lui sont assigné(s) (ex. « ' + res.blocked[0].title + ' »).\n' +
+                            'Réassigne-les depuis la page Incidents d\u2019abord.');
+                        return;
+                    }
+                    render();
+                });
+                li.appendChild(del);
+                list.appendChild(li);
+            });
+        }
+
+        addBtn.addEventListener('click', function () {
+            var name = (nameInput.value || '').trim();
+            if (!name) { nameInput.focus(); return; }
+            try {
+                window.ADWDatabase.addTeamMember(name);
+            } catch (e) {
+                alert('Impossible d\u2019ajouter (ce nom existe déjà ?).');
+                return;
+            }
+            nameInput.value = '';
+            render();
+        });
+
+        ensureDb().then(render).catch(function () { /* base indisponible */ });
+    }
+
+    if (document.readyState !== 'loading') initTeamAdmin();
+    else document.addEventListener('DOMContentLoaded', initTeamAdmin);
+
     // Garde admin : la page Paramètres est réservée à l'équipe (mot de passe admin, voir auth.js)
     function guardSettingsPage() {
         if (!window.ADWAuth) return; // auth.js absent : pas de garde (robustesse)

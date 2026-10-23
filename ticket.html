@@ -40,7 +40,7 @@
     <script src="escape.js?v=1"></script>
     <script src="auth.js?v=1"></script>
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=24"></script>
+    <script src="db.js?v=25"></script>
     <script src="theme.js?v=15"></script>
     <script src="nav.js?v=2"></script>
     <script src="openstatus.js?v=2"></script>
@@ -106,7 +106,7 @@
                             Object.keys(PRIO).map(function (p) {
                                 return '<option value="' + p + '"' + (p === t.priority ? ' selected' : '') + '>' + PRIO[p] + '</option>';
                             }).join('') + '</select></dd></div>' +
-                        '<div><dt>Assigné à</dt><dd><input type="text" id="tAssignee" value="' + esc(t.assignee || '') + '" placeholder="Nom de l\u2019animateur" maxlength="60"></dd></div>' +
+                        '<div><dt>Assign\u00e9 \u00e0</dt><dd><select id="tAssignee"></select></dd></div>' +
                         '<div><dt>Dernière maj</dt><dd id="tUpdated">' + formatDateTime(t.updated_at) + '</dd></div>' +
                     '</dl>' +
                     '<div class="modal-actions" style="justify-content:flex-start;margin-bottom:0;">' +
@@ -128,6 +128,18 @@
             content.innerHTML = html;
             content.hidden = false;
             loading.hidden = true;
+
+            // Assignation : menu déroulant depuis l'équipe technique (Paramètres)
+            var team = [];
+            try { team = window.ADWDatabase.listTeamMembers() || []; } catch (e) { team = []; }
+            var assigneeSel = content.querySelector('#tAssignee');
+            var names = team.map(function (m) { return m.name; });
+            // Ancien ticket assigné à un nom absent de l'équipe : on le garde en option (données historiques)
+            if (t.assignee && names.indexOf(t.assignee) === -1) names.push(t.assignee);
+            assigneeSel.innerHTML = '<option value="">— Non assigné —</option>' +
+                names.map(function (n) {
+                    return '<option value="' + esc(n) + '"' + (n === t.assignee ? ' selected' : '') + '>' + esc(n) + '</option>';
+                }).join('');
 
             // Commentaires
             function renderComments() {
@@ -153,7 +165,7 @@
                 window.ADWDatabase.updateTicket(t.id, {
                     status: content.querySelector('#tStatus').value,
                     priority: content.querySelector('#tPriority').value,
-                    assignee: content.querySelector('#tAssignee').value.trim() || null
+                    assignee: content.querySelector('#tAssignee').value || null
                 });
                 var fresh = window.ADWDatabase.getTicket(t.id);
                 render(fresh);
