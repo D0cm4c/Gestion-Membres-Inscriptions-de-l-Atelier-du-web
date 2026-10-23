@@ -15,7 +15,7 @@ var path = require('path');
 
 var ROOT = path.join(__dirname, '..');
 var PAGES = ['index.html', 'membres.html', 'formations.html', 'salles.html',
-    'suggestions.html', 'parametres.html', 'membre.html', 'formation.html', 'tickets.html'];
+    'suggestions.html', 'parametres.html', 'membre.html', 'formation.html', 'tickets.html', 'ticket.html'];
 
 // IDs fournis par layout.js (topbar/sidebar injectées)
 var LAYOUT_IDS = ['navToggle', 'todayDate', 'openStatus', 'notifCenter', 'themeToggle', 'sidebarNav'];
