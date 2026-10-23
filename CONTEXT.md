@@ -138,6 +138,8 @@ En cours / ouvert :
 
 19. **Cartographie complète de l'API officielle MEC (22 oct. 2026, tests réels)** : `GET /events/{id}` renvoie TOUT (lieu, organisateur, tarifs, places restantes/Complet, catégories avec noms, dates structurées, photos) → **les modules 1-3 du plugin prévu sont couverts par l'API**, le plugin WP se réduit au module bookings. `/config/attendee-fields` : le formulaire MEC récolte déjà email/nom/date naissance/adresse/CP/tél/genre/statut (≈ schéma members) mais **PAS le n° de membre** — à ajouter côté MEC (maillon fort du matching). **Le préfill de modale est PRIORITÉ ABSOLUE utilisateur** : snippet complet prêt dans `docs/BACKEND.md` §8 (sélecteurs à ajuster avec le HTML réel de la modale + champ n° membre à créer côté MEC d'abord).
 
+20. **Sécurité maquette (oct. 2026, décision utilisateur : pas de comptes, app en localhost)** : mot de passe admin unique (`auth.js`, module ADWAuth) — hash SHA-256 en localStorage, défaut « admin » à changer dès la première ouverture, déverrouillage 30 min en session. Gardes : page Paramètres entière (guardPage, contenu flouté), suppression membre, import XML, purge RGPD (via garde de page). ⚠️ Documenté comme garde-fou anti-erreur, pas une barrière cryptographique (DevTools contourne) — la vraie auth sera côté serveur Node, `ensureUnlocked()` est le point d'appel unique prévu pour migrer.
+
 ## 📌 Règle pour toute future session
 
 > Voir aussi la **check-list obligatoire de fin de session** dans `AGENTS.md` : toute PR doit être précédée de la mise à jour de ce fichier quand l état, les décisions ou les leçons ont changé.

@@ -206,6 +206,42 @@
     if (document.readyState !== 'loading') initMecKey();
     else document.addEventListener('DOMContentLoaded', initMecKey);
 
+    // Garde admin : la page Paramètres est réservée à l'équipe (mot de passe admin, voir auth.js)
+    function guardSettingsPage() {
+        if (!window.ADWAuth) return; // auth.js absent : pas de garde (robustesse)
+        window.ADWAuth.guardPage();
+    }
+    if (document.readyState !== 'loading') guardSettingsPage();
+    else document.addEventListener('DOMContentLoaded', guardSettingsPage);
+
+    // Changement du mot de passe admin (carte « Mot de passe admin » de parametres.html)
+    function initAuthCard() {
+        var oldInput = document.getElementById('authOldPass');
+        var newInput = document.getElementById('authNewPass');
+        var changeBtn = document.getElementById('authChangeBtn');
+        var statusEl = document.getElementById('authStatus');
+        if (!changeBtn || !window.ADWAuth) return;
+
+        function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
+
+        changeBtn.addEventListener('click', function () {
+            var oldPass = (oldInput.value || '').trim();
+            var newPass = (newInput.value || '').trim();
+            if (!oldPass || !newPass) { setStatus('Remplis les deux champs.'); return; }
+            if (newPass.length < 4) { setStatus('Le nouveau mot de passe doit faire au moins 4 caractères.'); return; }
+            window.ADWAuth.verify(oldPass).then(function (ok) {
+                if (!ok) { setStatus('⚠️ Mot de passe actuel incorrect.'); oldInput.focus(); return; }
+                return window.ADWAuth.setPassword(newPass).then(function () {
+                    oldInput.value = '';
+                    newInput.value = '';
+                    setStatus('✓ Mot de passe modifié.');
+                });
+            });
+        });
+    }
+    if (document.readyState !== 'loading') initAuthCard();
+    else document.addEventListener('DOMContentLoaded', initAuthCard);
+
     window.ADWSettings = {
         hiddenTiles: getHidden,
         TILE_LABELS: TILE_LABELS
