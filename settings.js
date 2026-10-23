@@ -11,7 +11,7 @@
         kpi1: '✅ Inscriptions actives (KPI)',
         kpi2: '📅 Visites aujourd\'hui (KPI)',
         kpi3: '💶 Revenus visites ce mois (KPI)',
-        kpi4: '🎫 Tickets ouverts (KPI)',
+        kpi4: '🛠️ Incidents ouverts (KPI)',
         members: '📊 Membres (stats détaillées)',
         alerts: '🚨 Alertes',
         recent: '📋 Dernières visites',
