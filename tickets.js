@@ -63,7 +63,7 @@
             return true;
         });
 
-        countEl.textContent = visible.length + ' ticket' + (visible.length > 1 ? 's' : '');
+        countEl.textContent = visible.length + ' incident' + (visible.length > 1 ? 's' : '');
         list.innerHTML = '';
         empty.hidden = visible.length > 0;
         loading.hidden = true;
@@ -74,7 +74,7 @@
             var card = document.createElement('div');
             card.className = 'stat-card';
             card.style.cursor = 'pointer';
-            card.title = 'Ouvrir la fiche du ticket';
+            card.title = 'Ouvrir la fiche de l’incident';
             card.addEventListener('click', function (e) {
                 if (e.target.closest('select, button')) return;
                 location.href = 'ticket.html?id=' + encodeURIComponent(t.id);
@@ -97,7 +97,7 @@
                         return '<option value="' + s + '"' + (s === t.status ? ' selected' : '') + '>' + STATUS[s].label + '</option>';
                     }).join('') +
                 '</select>' +
-                '<button type="button" class="btn btn-danger btn-small" data-act="delete" data-id="' + esc(t.id) + '" title="Supprimer le ticket (admin)">🗑️</button>';
+                '<button type="button" class="btn btn-danger btn-small" data-act="delete" data-id="' + esc(t.id) + '" title="Supprimer l’incident (admin)">🗑️</button>';
             list.appendChild(card);
         });
     }
@@ -143,7 +143,7 @@
         // Suppression : garde admin (décision utilisateur) + confirmation
         window.ADWAuth.ensureUnlocked('Supprimer un ticket — action réservée à l\u2019équipe.').then(function (ok) {
             if (!ok) return;
-            if (confirm('Supprimer le ticket « ' + t.title + ' » ?\n\nCette action est définitive.')) {
+            if (confirm('Supprimer l’incident « ' + t.title + ' » ?\n\nCette action est définitive.')) {
                 window.ADWDatabase.deleteTicket(t.id);
                 refresh();
             }
@@ -198,7 +198,7 @@
             created_by: null
         });
         if (window.ADWNotifications) {
-            window.ADWNotifications.push('ticket_created', '🎫 Nouveau ticket : « ' + title + ' »', 'info');
+            window.ADWNotifications.push('ticket_created', '🛠️ Nouvel incident signalé : « ' + title + ' »', 'info');
         }
         closeModal();
         refresh();

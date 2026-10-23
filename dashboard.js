@@ -214,10 +214,10 @@
             var openTickets = one('SELECT COUNT(*) v FROM tickets WHERE status IN (\'open\', \'in_progress\')');
             var urgentOld = one('SELECT COUNT(*) v FROM tickets WHERE priority = \'urgent\' AND status IN (\'open\', \'in_progress\') AND created_at < datetime(\'now\', \'-2 days\')');
             if (openTickets > 0) {
-                alerts.push({ text: openTickets + ' ticket' + (openTickets > 1 ? 's' : '') + ' ouvert' + (openTickets > 1 ? 's' : '') + ' (page Tickets)', icon: '🎫' });
+                alerts.push({ text: openTickets + ' incident' + (openTickets > 1 ? 's' : '') + ' ouvert' + (openTickets > 1 ? 's' : '') + ' (page Incidents)', icon: '🛠️' });
             }
             if (urgentOld > 0) {
-                alerts.push({ text: urgentOld + ' ticket' + (urgentOld > 1 ? 's' : '') + ' urgent' + (urgentOld > 1 ? 's' : '') + ' de plus de 48h sans résolution', icon: '🚨' });
+                alerts.push({ text: urgentOld + ' incident' + (urgentOld > 1 ? 's' : '') + ' urgent' + (urgentOld > 1 ? 's' : '') + ' de plus de 48h sans résolution', icon: '🚨' });
             }
         } catch (e) { /* table tickets absente (vieille base) : ignorer */ }
         if (alerts.length === 0) {

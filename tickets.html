@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tickets — Atelier du Web</title>
+    <title>Incidents — Atelier du Web</title>
     <link rel="stylesheet" href="styles.css?v=23">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,11 +15,11 @@
     <div class="app-layout">
         <div data-layout-sidebar></div>
 <div class="app-main">
-        <div data-layout-topbar data-title="Tickets" data-search-id="searchInput" data-search-label="Rechercher un ticket" data-search-placeholder="Titre, matériel…"></div>
+        <div data-layout-topbar data-title="Incidents" data-search-id="searchInput" data-search-label="Rechercher un incident" data-search-placeholder="Titre, matériel…"></div>
 
     <main id="main">
         <section class="filters-bar" aria-label="Filtres et tri">
-            <button class="btn btn-primary" id="newTicketBtn">+ Nouveau ticket</button>
+            <button class="btn btn-primary" id="newTicketBtn">🛠️ Signaler un incident</button>
             <div class="filters-more" id="filtersMore">
                 <div class="filter-group">
                     <div class="segmented" role="group" aria-label="Filtrer par statut">
@@ -63,17 +63,17 @@
         <div class="empty-state" id="loadingState">
             <p>⏳ Chargement…</p>
         </div>
-        <div id="ticketsList" style="display:flex;flex-direction:column;gap:0.7rem;" aria-label="Liste des tickets"></div>
+        <div id="ticketsList" style="display:flex;flex-direction:column;gap:0.7rem;" aria-label="Liste des incidents"></div>
         <div class="empty-state" id="emptyState" hidden>
-            <p>Aucun ticket ne correspond aux filtres.</p>
-            <p class="form-hint">Le bouton « + Nouveau ticket » permet de signaler un incident du cyberespace.</p>
+            <p>Aucun incident ne correspond aux filtres.</p>
+            <p class="form-hint">Le bouton « Signaler un incident » permet de déclarer une panne du cyberespace (ordinateur, imprimante, réseau…).</p>
         </div>
     </main>
 
-    <!-- Modale : nouveau ticket -->
+    <!-- Modale : signaler un incident -->
     <div class="modal-overlay" id="ticketModal" hidden>
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ticketModalTitle">
-            <h3 id="ticketModalTitle">🎫 Nouveau ticket</h3>
+            <h3 id="ticketModalTitle">🛠️ Signaler un incident</h3>
             <div class="form-group">
                 <label for="tkTitle">Titre *</label>
                 <input type="text" id="tkTitle" placeholder="Ex. PC 12 ne s'allume pas" maxlength="120">
