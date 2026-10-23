@@ -249,10 +249,11 @@
         addBtn.addEventListener('click', function () {
             var name = (nameInput.value || '').trim();
             if (!name) { nameInput.focus(); return; }
+            if (!window.ADWDatabase) { alert('Base de données non chargée — recharge la page.'); return; }
             try {
                 window.ADWDatabase.addTeamMember(name);
             } catch (e) {
-                alert('Impossible d\u2019ajouter (ce nom existe déjà ?).');
+                alert('Impossible d\u2019ajouter ce membre : ' + (e && e.message ? e.message : 'erreur inconnue'));
                 return;
             }
             nameInput.value = '';
