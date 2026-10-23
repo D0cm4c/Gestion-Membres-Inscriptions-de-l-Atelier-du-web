@@ -1058,11 +1058,14 @@ main {
     .hero-actions { display: grid; grid-template-columns: 1fr; gap: 0.6rem; }
     .hero-actions .btn { width: 100%; justify-content: center; }
     .filters-bar { display: grid; grid-template-columns: 1fr; gap: 0.7rem; padding: 0.9rem; }
-    .filters-bar .btn { width: 100%; justify-content: center; }
+    .filters-bar .btn { width: 100%; justify-content: flex-start; }
+    .filters-bar .btn.btn-small { justify-content: flex-start; }
     .filters-toggle { display: inline-flex !important; }
     .filters-more { display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
     .filters-more[hidden] { display: none !important; }
-    .filter-group { flex-wrap: wrap; }
+    /* Groupe label + champ : empilés proprement (label au-dessus, champ pleine largeur) */
+    .filter-group { display: grid; grid-template-columns: 1fr; gap: 0.35rem; align-items: stretch; }
+    .filter-group label { font-size: 0.72rem; }
     .segmented { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
     .seg-btn { width: 100%; text-align: center; padding: 0.55rem 0.4rem; }
     .filters-bar select { width: 100%; padding: 0.6rem 0.8rem; }
