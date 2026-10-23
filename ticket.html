@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=23">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+        <div data-layout-sidebar></div>
+<div class="app-main">
+        <div data-layout-topbar data-title="Ticket" data-title-id="pageTitle" data-back-href="tickets.html" data-back-label="Retour aux tickets"></div>
+
+    <main id="main">
+        <div class="empty-state" id="loadingState">
+            <p>⏳ Chargement du ticket…</p>
+        </div>
+        <div id="notFoundState" class="empty-state" hidden>
+            <p>Ticket introuvable.</p>
+            <div class="action-buttons" style="justify-content:center;">
+                <a class="btn btn-primary" href="tickets.html">← Retour aux tickets</a>
+            </div>
+        </div>
+        <div id="ticketContent" hidden></div>
+    </main>
+
+    </div>
+    </div>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="layout.js?v=3"></script>
+    <script src="escape.js?v=1"></script>
+    <script src="auth.js?v=1"></script>
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js?v=24"></script>
+    <script src="theme.js?v=15"></script>
+    <script src="nav.js?v=2"></script>
+    <script src="openstatus.js?v=2"></script>
+    <script src="notifications.js?v=3"></script>
+    <script src="suggestions.js?v=2"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        // Fiche ticket (ticket.html?id=…) : détails, changement statut/priorité/assignation,
+        // fil de commentaires (historique du dépannage). Dépend de : db.js, escape.js, auth.js.
+
+        var loading = document.getElementById('loadingState');
+        var notFound = document.getElementById('notFoundState');
+        var content = document.getElementById('ticketContent');
+        var pageTitle = document.getElementById('pageTitle');
+
+        function esc(s) { return window.ADWEscape.html(s); }
+
+        var PRIO = { urgent: '🔴 Urgente', high: '🟠 Haute', normal: '🟡 Normale', low: '🟢 Basse' };
+        var CAT = {
+            computer: '💻 Ordinateur', printer: '🖨️ Imprimante', network: '🌐 Réseau',
+            software: '💿 Logiciel', furniture: '🪑 Mobilier', other: '❓ Autre'
+        };
+        var STATUS = { open: 'Nouveau', in_progress: 'En cours', resolved: 'Résolu', closed: 'Fermé' };
+
+        function formatDateTime(iso) {
+            if (!iso) return '';
+            try {
+                return new Date(iso.replace(' ', 'T') + 'Z').toLocaleString('fr-BE', {
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                });
+            } catch (e) { return iso; }
+        }
+
+        var ticketId = new URLSearchParams(location.search).get('id');
+
+        function render(t) {
+            document.title = t.title + ' — Atelier du Web';
+            if (pageTitle) pageTitle.textContent = t.title;
+
+            var html =
+                '<div class="stat-card" style="max-width:860px;">' +
+                    '<div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;">' +
+                        '<div style="flex:1;min-width:240px;">' +
+                            '<h2 style="margin:0 0 0.4rem;">' + esc(t.title) + '</h2>' +
+                            '<div class="form-hint">' +
+                                (t.equipment ? '📍 ' + esc(t.equipment) + ' · ' : '') +
+                                CAT[t.category || 'other'] +
+                                ' · ouvert le ' + formatDateTime(t.created_at) +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="badge ticket-prio-' + esc(t.priority) + '">' + (PRIO[t.priority] || t.priority) + '</span>' +
+                        '<span class="badge ticket-status-' + esc(t.status) + '">' + (STATUS[t.status] || t.status) + '</span>' +
+                    '</div>' +
+                    (t.description ? '<p style="margin:0.9rem 0 0;white-space:pre-wrap;">' + esc(t.description) + '</p>' : '') +
+                    '<dl class="detail-list" style="margin-top:1rem;">' +
+                        '<div><dt>Statut</dt><dd><select id="tStatus">' +
+                            Object.keys(STATUS).map(function (s) {
+                                return '<option value="' + s + '"' + (s === t.status ? ' selected' : '') + '>' + STATUS[s] + '</option>';
+                            }).join('') + '</select></dd></div>' +
+                        '<div><dt>Priorité</dt><dd><select id="tPriority">' +
+                            Object.keys(PRIO).map(function (p) {
+                                return '<option value="' + p + '"' + (p === t.priority ? ' selected' : '') + '>' + PRIO[p] + '</option>';
+                            }).join('') + '</select></dd></div>' +
+                        '<div><dt>Assigné à</dt><dd><input type="text" id="tAssignee" value="' + esc(t.assignee || '') + '" placeholder="Nom de l\u2019animateur" maxlength="60"></dd></div>' +
+                        '<div><dt>Dernière maj</dt><dd id="tUpdated">' + formatDateTime(t.updated_at) + '</dd></div>' +
+                    '</dl>' +
+                    '<div class="modal-actions" style="justify-content:flex-start;margin-bottom:0;">' +
+                        '<button class="btn btn-primary btn-small" id="tSave">💾 Enregistrer</button>' +
+                        '<button class="btn btn-danger btn-small" id="tDelete">🗑️ Supprimer le ticket</button>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="stat-card" style="max-width:860px;margin-top:1.1rem;">' +
+                    '<h3>💬 Suivi du dépannage</h3>' +
+                    '<div id="commentsList" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;"></div>' +
+                    '<div class="modal-actions" style="align-items:flex-start;flex-wrap:wrap;">' +
+                        '<div class="form-group" style="min-width:160px;"><input type="text" id="commentAuthor" placeholder="Ton nom (optionnel)" maxlength="60"></div>' +
+                        '<div class="form-group" style="flex:1;min-width:220px;"><input type="text" id="commentText" placeholder="Ajouter un commentaire — ce qui a été essayé, la suite…" maxlength="500"></div>' +
+                        '<button class="btn btn-primary" id="commentAdd">Envoyer</button>' +
+                    '</div>' +
+                '</div>';
+
+            content.innerHTML = html;
+            content.hidden = false;
+            loading.hidden = true;
+
+            // Commentaires
+            function renderComments() {
+                var comments = window.ADWDatabase.listTicketComments(t.id);
+                var cl = content.querySelector('#commentsList');
+                if (!comments.length) {
+                    cl.innerHTML = '<p class="form-hint">Aucun commentaire pour le moment — documente le dépannage ici.</p>';
+                    return;
+                }
+                cl.innerHTML = comments.map(function (c) {
+                    return '<div style="border-left:3px solid var(--accent);padding:0.35rem 0 0.35rem 0.8rem;">' +
+                        '<div style="font-size:0.8rem;color:var(--text-soft);">' +
+                            (c.author ? '<strong>' + esc(c.author) + '</strong> · ' : '') +
+                            formatDateTime(c.created_at) +
+                        '</div>' +
+                        '<div style="white-space:pre-wrap;">' + esc(c.message) + '</div>' +
+                    '</div>';
+                }).join('');
+            }
+            renderComments();
+
+            content.querySelector('#tSave').addEventListener('click', function () {
+                window.ADWDatabase.updateTicket(t.id, {
+                    status: content.querySelector('#tStatus').value,
+                    priority: content.querySelector('#tPriority').value,
+                    assignee: content.querySelector('#tAssignee').value.trim() || null
+                });
+                var fresh = window.ADWDatabase.getTicket(t.id);
+                render(fresh);
+            });
+
+            content.querySelector('#tDelete').addEventListener('click', function () {
+                window.ADWAuth.ensureUnlocked('Supprimer un ticket — action réservée à l\u2019équipe.').then(function (ok) {
+                    if (!ok) return;
+                    if (confirm('Supprimer le ticket « ' + t.title + ' » et tous ses commentaires ?\n\nCette action est définitive.')) {
+                        window.ADWDatabase.deleteTicket(t.id);
+                        location.href = 'tickets.html';
+                    }
+                });
+            });
+
+            content.querySelector('#commentAdd').addEventListener('click', function () {
+                var msg = content.querySelector('#commentText').value.trim();
+                if (!msg) { content.querySelector('#commentText').focus(); return; }
+                window.ADWDatabase.addTicketComment(t.id, content.querySelector('#commentAuthor').value.trim(), msg);
+                content.querySelector('#commentText').value = '';
+                renderComments();
+            });
+        }
+
+        window.ADWDatabase.init().then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
+            if (!ticketId) { loading.hidden = true; notFound.hidden = false; return; }
+            var t = window.ADWDatabase.getTicket(ticketId);
+            if (!t) { loading.hidden = true; notFound.hidden = false; return; }
+            render(t);
+        }).catch(function () {
+            loading.hidden = true;
+            notFound.hidden = false;
+            notFound.querySelector('p').textContent = 'Impossible de charger la base de données locale.';
+        });
+
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+    })();
+    </script>
+</body>
+</html>

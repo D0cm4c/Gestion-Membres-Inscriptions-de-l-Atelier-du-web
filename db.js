@@ -241,6 +241,16 @@
             ')'
         );
         db.run('CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status, priority, created_at)');
+        db.run(
+            'CREATE TABLE IF NOT EXISTS ticket_comments (' +
+            'id TEXT PRIMARY KEY,' +
+            'ticket_id TEXT NOT NULL,' +
+            'author TEXT,' +                 // nom de l'animateur (texte libre)
+            'message TEXT NOT NULL,' +
+            'created_at TEXT DEFAULT (datetime(\'now\'))' +
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_tcomments ON ticket_comments(ticket_id, created_at)');
         var cols = {};
         var res = db.exec('PRAGMA table_info(members)');
         if (res.length) {
@@ -687,6 +697,27 @@
     Database.deleteTicket = function (id) {
         this.run('DELETE FROM tickets WHERE id = ?', [String(id)]);
         try { this.flush(); } catch (e) { /* best effort */ }
+    };
+
+    Database.addTicketComment = function (ticketId, author, message) {
+        var id = 'tc-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        this.run('INSERT INTO ticket_comments (id, ticket_id, author, message, created_at) VALUES (?, ?, ?, ?, datetime(\'now\'))',
+            [id, String(ticketId), author || null, String(message || '').trim()]);
+        // Un commentaire fait vivre le ticket (updated_at) sans changer son statut
+        this.run('UPDATE tickets SET updated_at = datetime(\'now\') WHERE id = ?', [String(ticketId)]);
+        try { this.flush(); } catch (e) { /* best effort */ }
+        return id;
+    };
+
+    Database.listTicketComments = function (ticketId) {
+        return this.queryAll('SELECT * FROM ticket_comments WHERE ticket_id = ? ORDER BY created_at ASC', [String(ticketId)]);
+    };
+
+    // deleteTicket : supprime aussi les commentaires (pas de FK cascade en sql.js ici)
+    var deleteTicketBase = Database.deleteTicket;
+    Database.deleteTicket = function (id) {
+        this.run('DELETE FROM ticket_comments WHERE ticket_id = ?', [String(id)]);
+        deleteTicketBase.call(this, id);
     };
 
     // ============ Miroir : réservation annulée côté site → retrait local notifié ============

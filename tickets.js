@@ -73,6 +73,12 @@
             var st = STATUS[t.status] || STATUS.open;
             var card = document.createElement('div');
             card.className = 'stat-card';
+            card.style.cursor = 'pointer';
+            card.title = 'Ouvrir la fiche du ticket';
+            card.addEventListener('click', function (e) {
+                if (e.target.closest('select, button')) return;
+                location.href = 'ticket.html?id=' + encodeURIComponent(t.id);
+            });
             card.style.cssText = 'padding:0.9rem 1.1rem;display:flex;align-items:center;gap:0.9rem;flex-wrap:wrap;';
             card.innerHTML =
                 '<div style="flex:1;min-width:200px;">' +
