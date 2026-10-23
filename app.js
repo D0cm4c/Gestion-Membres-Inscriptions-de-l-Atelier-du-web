@@ -417,24 +417,10 @@
     });
 
     var detailEditBtn = document.getElementById('detailEditBtn');
-    var detailDeleteBtn = document.getElementById('detailDeleteBtn');
     if (detailEditBtn) detailEditBtn.addEventListener('click', function () {
         if (!detailMember) return;
         closeDetail();
         openModal(detailMember);
-    });
-    if (detailDeleteBtn) detailDeleteBtn.addEventListener('click', function () {
-        if (!detailMember) return;
-        ADWAuth.ensureUnlocked('Supprimer un membre — action réservée à l\u2019équipe.').then(function (ok) {
-        if (!ok) return;
-        if (confirm('Supprimer le membre "' + detailMember.first_name + ' ' + detailMember.last_name + '" ?')) {
-            ADWDatabase.deleteMemberCompletely(detailMember.id).then(function () {
-                closeDetail();
-                render();
-                showToast('Membre supprimé', 'success');
-            });
-        }
-        })
     });
 
     detailCheckinBtn.addEventListener('click', function () {
