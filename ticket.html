@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket — Atelier du Web</title>
+    <title>Incident — Atelier du Web</title>
     <link rel="stylesheet" href="styles.css?v=23">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,16 +15,16 @@
     <div class="app-layout">
         <div data-layout-sidebar></div>
 <div class="app-main">
-        <div data-layout-topbar data-title="Ticket" data-title-id="pageTitle" data-back-href="tickets.html" data-back-label="Retour aux tickets"></div>
+        <div data-layout-topbar data-title="Incident" data-title-id="pageTitle" data-back-href="tickets.html" data-back-label="Retour aux incidents"></div>
 
     <main id="main">
         <div class="empty-state" id="loadingState">
-            <p>⏳ Chargement du ticket…</p>
+            <p>⏳ Chargement de l’incident…</p>
         </div>
         <div id="notFoundState" class="empty-state" hidden>
-            <p>Ticket introuvable.</p>
+            <p>Incident introuvable.</p>
             <div class="action-buttons" style="justify-content:center;">
-                <a class="btn btn-primary" href="tickets.html">← Retour aux tickets</a>
+                <a class="btn btn-primary" href="tickets.html">← Retour aux incidents</a>
             </div>
         </div>
         <div id="ticketContent" hidden></div>
@@ -36,7 +36,7 @@
         <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
     </footer>
 
-    <script src="layout.js?v=3"></script>
+    <script src="layout.js?v=4"></script>
     <script src="escape.js?v=1"></script>
     <script src="auth.js?v=1"></script>
     <script src="vendor/sql-wasm.js"></script>
@@ -111,7 +111,7 @@
                     '</dl>' +
                     '<div class="modal-actions" style="justify-content:flex-start;margin-bottom:0;">' +
                         '<button class="btn btn-primary btn-small" id="tSave">💾 Enregistrer</button>' +
-                        '<button class="btn btn-danger btn-small" id="tDelete">🗑️ Supprimer le ticket</button>' +
+                        '<button class="btn btn-danger btn-small" id="tDelete">🗑️ Supprimer l’incident</button>' +
                     '</div>' +
                 '</div>' +
 
@@ -160,9 +160,9 @@
             });
 
             content.querySelector('#tDelete').addEventListener('click', function () {
-                window.ADWAuth.ensureUnlocked('Supprimer un ticket — action réservée à l\u2019équipe.').then(function (ok) {
+                window.ADWAuth.ensureUnlocked('Supprimer un incident — action réservée à l\u2019équipe.').then(function (ok) {
                     if (!ok) return;
-                    if (confirm('Supprimer le ticket « ' + t.title + ' » et tous ses commentaires ?\n\nCette action est définitive.')) {
+                    if (confirm('Supprimer l\u2019incident « ' + t.title + ' » et tous ses commentaires ?\n\nCette action est définitive.')) {
                         window.ADWDatabase.deleteTicket(t.id);
                         location.href = 'tickets.html';
                     }
