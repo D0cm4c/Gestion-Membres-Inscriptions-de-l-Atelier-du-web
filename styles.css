@@ -690,6 +690,16 @@ main {
 .print-actions-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
 
 /* ============ Empty & loading ============ */
+/* ============ Tickets ============ */
+.ticket-prio-urgent { background: var(--danger-bg); color: var(--danger); }
+.ticket-prio-high { background: #FBE8D4; color: #B26A00; }
+.ticket-prio-normal { background: #FDF6DC; color: #8a6d1a; }
+.ticket-prio-low { background: var(--success-bg); color: var(--success); }
+.ticket-status-open { background: var(--danger-bg); color: var(--danger); }
+.ticket-status-progress { background: var(--accent-light); color: var(--accent-hover); }
+.ticket-status-resolved { background: var(--success-bg); color: var(--success); }
+.ticket-status-closed { background: #EDF1F5; color: var(--text-soft); }
+
 /* ============ Page Paramètres ============ */
 .settings-grid {
     column-count: 2;

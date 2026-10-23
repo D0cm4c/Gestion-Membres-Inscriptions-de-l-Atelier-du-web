@@ -75,6 +75,8 @@ Fait :
 - **Bug emojis corrigé** : la séquence \U0001F... (syntaxe Python) ne marche pas en JS — vrais caractères UTF-8 ou surrogate pairs (\uD83D\uDCDD). 6 occurrences corrigées.
 - **Session du 22 oct. 2026 (PRs #19 à #31)** : fixes layout (barre de filtres, compteur, recherche topbar à droite), header/sidebar externalisés dans `layout.js` (slots `data-layout-*`, page active auto), fix catégories MEC numériques (cache invalidé si IDs non résolus), CI GitHub Actions + smoke test + rendu Playwright, audit cache-busting complet, échappement HTML unifié (`escape.js`), RGPD (effacement cascade + purge globale), administration des salles (Paramètres), refonte visuelle Paramètres, README refait + `docs/BACKEND.md` (guide migration serveur Node pour le collègue en charge).
 
+- **Module Tickets (oct. 2026, étape 1 livrée)** : incidents du cyberespace — table `tickets` (catégorie, matériel, priorité, statut, assigné en texte libre — pas de comptes), page `tickets.html` (liste triée statut×priorité, filtres statut/priorité/catégorie/assigné/recherche, badges dédiés ticket-*), modale de création, suppression derrière **garde admin** (décision utilisateur), lien sidebar 🎫. Étape 2 prévue : fiche ticket.html + commentaires. Étape 3 : notifications/dashboard.
+
 En cours / ouvert :
 - **⚠️ MAQUETTE vs FINAL — décisions utilisateur (session oct. 2026) pour la synchro des inscriptions MEC :**
   1. **Refusé** : clé/secret public dans le JS pour exposer les inscriptions (point sécurité du 19/10). À revoir avec l'hébergeur/DPO — la synchro bookings devra passer par une voie non publique (idéalement le backend SQLite final, ou un endpoint protégé non exposé côté client).

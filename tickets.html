@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tickets — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=23">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+        <div data-layout-sidebar></div>
+<div class="app-main">
+        <div data-layout-topbar data-title="Tickets" data-search-id="searchInput" data-search-label="Rechercher un ticket" data-search-placeholder="Titre, matériel…"></div>
+
+    <main id="main">
+        <section class="filters-bar" aria-label="Filtres et tri">
+            <button class="btn btn-primary" id="newTicketBtn">+ Nouveau ticket</button>
+            <div class="filters-more" id="filtersMore">
+                <div class="filter-group">
+                    <div class="segmented" role="group" aria-label="Filtrer par statut">
+                        <button class="seg-btn active" data-status="all">Tous</button>
+                        <button class="seg-btn" data-status="open">Nouveaux</button>
+                        <button class="seg-btn" data-status="in_progress">En cours</button>
+                        <button class="seg-btn" data-status="resolved">Résolus</button>
+                        <button class="seg-btn" data-status="closed">Fermés</button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="prioSelect">Priorité</label>
+                    <select id="prioSelect">
+                        <option value="">Toutes</option>
+                        <option value="urgent">🔴 Urgente</option>
+                        <option value="high">🟠 Haute</option>
+                        <option value="normal">🟡 Normale</option>
+                        <option value="low">🟢 Basse</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="catSelect">Catégorie</label>
+                    <select id="catSelect">
+                        <option value="">Toutes</option>
+                        <option value="computer">💻 Ordinateur</option>
+                        <option value="printer">🖨️ Imprimante</option>
+                        <option value="network">🌐 Réseau</option>
+                        <option value="software">💿 Logiciel</option>
+                        <option value="furniture">🪑 Mobilier</option>
+                        <option value="other">❓ Autre</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="assigneeSelect">Assigné à</label>
+                    <select id="assigneeSelect"><option value="">Tout le monde</option></select>
+                </div>
+            </div>
+            <span class="members-count" id="ticketsCount" aria-live="polite"></span>
+        </section>
+
+        <div class="empty-state" id="loadingState">
+            <p>⏳ Chargement…</p>
+        </div>
+        <div id="ticketsList" style="display:flex;flex-direction:column;gap:0.7rem;" aria-label="Liste des tickets"></div>
+        <div class="empty-state" id="emptyState" hidden>
+            <p>Aucun ticket ne correspond aux filtres.</p>
+            <p class="form-hint">Le bouton « + Nouveau ticket » permet de signaler un incident du cyberespace.</p>
+        </div>
+    </main>
+
+    <!-- Modale : nouveau ticket -->
+    <div class="modal-overlay" id="ticketModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ticketModalTitle">
+            <h3 id="ticketModalTitle">🎫 Nouveau ticket</h3>
+            <div class="form-group">
+                <label for="tkTitle">Titre *</label>
+                <input type="text" id="tkTitle" placeholder="Ex. PC 12 ne s'allume pas" maxlength="120">
+            </div>
+            <div class="form-group">
+                <label for="tkCategory">Catégorie</label>
+                <select id="tkCategory">
+                    <option value="computer">💻 Ordinateur</option>
+                    <option value="printer">🖨️ Imprimante</option>
+                    <option value="network">🌐 Réseau</option>
+                    <option value="software">💿 Logiciel</option>
+                    <option value="furniture">🪑 Mobilier</option>
+                    <option value="other" selected>❓ Autre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tkEquipment">Matériel concerné</label>
+                <input type="text" id="tkEquipment" placeholder="Ex. PC 12, Imprimante HP accueil…" maxlength="80">
+            </div>
+            <div class="form-group">
+                <label for="tkPriority">Priorité</label>
+                <select id="tkPriority">
+                    <option value="low">🟢 Basse</option>
+                    <option value="normal" selected>🟡 Normale</option>
+                    <option value="high">🟠 Haute</option>
+                    <option value="urgent">🔴 Urgente</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tkAssignee">Assigné à (animateur, optionnel)</label>
+                <input type="text" id="tkAssignee" placeholder="Ex. Sarah" maxlength="60">
+            </div>
+            <div class="form-group">
+                <label for="tkDescription">Description</label>
+                <textarea id="tkDescription" rows="4" placeholder="Contexte, message d'erreur, ce qui a été essayé…"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="tkCancel">Annuler</button>
+                <button class="btn btn-primary" id="tkSave">Créer le ticket</button>
+            </div>
+        </div>
+    </div>
+
+    </div>
+    </div>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="layout.js?v=3"></script>
+    <script src="escape.js?v=1"></script>
+    <script src="auth.js?v=1"></script>
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js?v=23"></script>
+    <script src="theme.js?v=15"></script>
+    <script src="nav.js?v=2"></script>
+    <script src="openstatus.js?v=2"></script>
+    <script src="notifications.js?v=3"></script>
+    <script src="suggestions.js?v=2"></script>
+    <script src="globalsearch.js?v=2"></script>
+    <script src="tickets.js?v=1"></script>
+    <script>
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+    </script>
+</body>
+</html>
