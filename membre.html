@@ -106,6 +106,7 @@
                         '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>' +
                         '<span class="badge ' + s.badge + '">' + s.label + '</span>' +
                     '</div></div>' +
+                    '<button type="button" class="btn btn-danger btn-small" id="deleteMemberBtn" style="margin-left:auto;align-self:flex-start;">🗑️ Supprimer</button>' +
                 '</div>' +
                 '<dl class="detail-list">' +
                     '<div><dt>Âge</dt><dd>' + (member.age ? esc(member.age) + ' ans' : 'Non renseigné') + '</dd></div>' +
@@ -159,6 +160,18 @@
             content.innerHTML = html;
             content.hidden = false;
             loading.hidden = true;
+
+            var deleteBtn = document.getElementById('deleteMemberBtn');
+            if (deleteBtn) deleteBtn.addEventListener('click', function () {
+                ADWAuth.ensureUnlocked('Supprimer un membre — action réservée à l\u2019équipe.').then(function (ok) {
+                    if (!ok) return;
+                    if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?\n\nSes visites, impressions et inscriptions aux formations seront aussi supprimées.')) {
+                        ADWDatabase.deleteMemberCompletely(member.id).then(function () {
+                            location.href = 'membres.html';
+                        });
+                    }
+                });
+            });
         }
 
         ADWDatabase.init().then(function () {

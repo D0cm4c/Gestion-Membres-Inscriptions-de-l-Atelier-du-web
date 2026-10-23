@@ -246,24 +246,11 @@
             var actions = document.createElement('div');
             actions.className = currentView === 'list' ? 'list-actions' : 'card-actions';
             actions.innerHTML =
-                '<button class="btn btn-secondary btn-small">✏️ Modifier</button>' +
-                '<button class="btn btn-danger btn-small">🗑️ Supprimer</button>';
+                '<button class="btn btn-secondary btn-small">✏️ Modifier</button>';
 
             actions.children[0].addEventListener('click', function (e) {
                 e.stopPropagation();
                 openModal(member);
-            });
-            actions.children[1].addEventListener('click', function (e) {
-                e.stopPropagation();
-                ADWAuth.ensureUnlocked('Supprimer un membre — action réservée à l\u2019équipe.').then(function (ok) {
-                    if (!ok) return;
-                    if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?')) {
-                        ADWDatabase.deleteMemberCompletely(member.id).then(function () {
-                            render();
-                            showToast('Membre supprimé', 'success');
-                        });
-                    }
-                });
             });
             item.appendChild(actions);
             grid.appendChild(item);
