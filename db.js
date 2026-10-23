@@ -720,6 +720,31 @@
         deleteTicketBase.call(this, id);
     };
 
+    // ============ Équipe technique (assignation des tickets) ============
+
+    Database.listTeamMembers = function () {
+        return this.queryAll('SELECT * FROM team_members ORDER BY sort_order ASC, name ASC');
+    };
+
+    Database.addTeamMember = function (name) {
+        var id = 'tm-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        var maxRow = this.queryAll('SELECT COALESCE(MAX(sort_order), 0) AS v FROM team_members')[0];
+        this.run('INSERT INTO team_members (id, name, sort_order) VALUES (?, ?, ?)',
+            [id, String(name || '').trim(), (maxRow ? maxRow.v : 0) + 1]);
+        try { this.flush(); } catch (e) { /* best effort */ }
+        return id;
+    };
+
+    // Suppression refusée si des tickets sont assignés à ce membre : renvoyer la liste bloquante
+    Database.deleteTeamMember = function (id) {
+        var nameRow = this.queryAll('SELECT name FROM team_members WHERE id = ?', [String(id)])[0];
+        var used = this.queryAll('SELECT title FROM tickets WHERE assignee = ?', [nameRow ? nameRow.name : '']);
+        if (used.length) return { ok: false, blocked: used };
+        this.run('DELETE FROM team_members WHERE id = ?', [String(id)]);
+        try { this.flush(); } catch (e) { /* best effort */ }
+        return { ok: true };
+    };
+
     // ============ Miroir : réservation annulée côté site → retrait local notifié ============
     // Règles décidées avec l'utilisateur (oct. 2026) :
     //  - booking traité (linked/auto_linked/created) + statut canceled → retirer l'inscription locale,
