@@ -23,7 +23,8 @@ var PAGES = [
     { file: 'formations.html', title: 'Formations', activeNav: 'Formations', searchId: 'searchInput' },
     { file: 'salles.html', title: 'Planning des salles', activeNav: 'Salles', searchId: null },
     { file: 'suggestions.html', title: 'À faire / Suggestions', activeNav: 'À faire', searchId: null },
-    { file: 'parametres.html', title: 'Paramètres', activeNav: 'Paramètres', searchId: null }
+    { file: 'parametres.html', title: 'Paramètres', activeNav: 'Paramètres', searchId: null },
+    { file: 'tickets.html', title: 'Tickets', activeNav: 'Tickets', searchId: 'searchInput' }
 ];
 
 var MIME = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.wasm': 'application/wasm' };

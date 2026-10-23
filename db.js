@@ -224,6 +224,23 @@
         db.run('CREATE INDEX IF NOT EXISTS idx_sugg_status ON suggestions(status, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_notif_unread ON notifications(is_read, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_booking_unprocessed ON bookings_remote(processed, booked_at)');
+        db.run(
+            'CREATE TABLE IF NOT EXISTS tickets (' +
+            'id TEXT PRIMARY KEY,' +
+            'title TEXT NOT NULL,' +
+            'description TEXT,' +
+            'category TEXT DEFAULT \'other\',' +      // computer | printer | network | software | furniture | other
+            'equipment TEXT,' +                        // ex. « PC 12 », « Imprimante HP accueil »
+            'priority TEXT DEFAULT \'normal\',' +     // low | normal | high | urgent
+            'status TEXT DEFAULT \'open\',' +        // open | in_progress | resolved | closed
+            'assignee TEXT,' +                         // nom de l'animateur (texte libre, pas de comptes)
+            'created_by TEXT,' +
+            'created_at TEXT DEFAULT (datetime(\'now\')),' +
+            'updated_at TEXT DEFAULT (datetime(\'now\')),' +
+            'resolved_at TEXT' +
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status, priority, created_at)');
         var cols = {};
         var res = db.exec('PRAGMA table_info(members)');
         if (res.length) {
@@ -618,6 +635,58 @@
 
     Database.setSuggestionStatus = function (id, status) {
         this.run('UPDATE suggestions SET status = ?, handled_at = datetime(\'now\') WHERE id = ?', [status, String(id)]);
+    };
+
+    // ============ Tickets (incidents du cyberespace) ============
+
+    Database.addTicket = function (t) {
+        var id = 'tk-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        this.run(
+            'INSERT INTO tickets (id, title, description, category, equipment, priority, status, assignee, created_by, created_at, updated_at) ' +
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+            [id, String(t.title || '').trim(), t.description || null, t.category || 'other',
+             t.equipment || null, t.priority || 'normal', t.status || 'open',
+             t.assignee || null, t.created_by || null]
+        );
+        try { this.flush(); } catch (e) { /* best effort */ }
+        return id;
+    };
+
+    Database.getTicket = function (id) {
+        return (this.queryAll('SELECT * FROM tickets WHERE id = ?', [String(id)])[0]) || null;
+    };
+
+    Database.listTickets = function () {
+        return this.queryAll(
+            'SELECT * FROM tickets ORDER BY ' +
+            'CASE status WHEN \'open\' THEN 0 WHEN \'in_progress\' THEN 1 WHEN \'resolved\' THEN 2 ELSE 3 END, ' +
+            'CASE priority WHEN \'urgent\' THEN 0 WHEN \'high\' THEN 1 WHEN \'normal\' THEN 2 ELSE 3 END, ' +
+            'created_at DESC'
+        );
+    };
+
+    // Les statuts/priorités/assignations passent par updateTicket(champs autorisés uniquement)
+    var TICKET_MUTABLE = ['title', 'description', 'category', 'equipment', 'priority', 'status', 'assignee'];
+    Database.updateTicket = function (id, fields) {
+        var sets = [];
+        var params = [];
+        Object.keys(fields || {}).forEach(function (k) {
+            if (TICKET_MUTABLE.indexOf(k) === -1) return;
+            sets.push(k + ' = ?');
+            params.push(fields[k]);
+        });
+        if (!sets.length) return;
+        sets.push('updated_at = datetime(\'now\')');
+        if (fields.status === 'resolved' || fields.status === 'closed') sets.push('resolved_at = datetime(\'now\')');
+        params.push(String(id));
+        this.run('UPDATE tickets SET ' + sets.join(', ') + ' WHERE id = ?', params);
+        try { this.flush(); } catch (e) { /* best effort */ }
+    };
+
+    // Suppression : protégée par garde admin côté UI (auth.js) — la règle est ici documentée
+    Database.deleteTicket = function (id) {
+        this.run('DELETE FROM tickets WHERE id = ?', [String(id)]);
+        try { this.flush(); } catch (e) { /* best effort */ }
     };
 
     // ============ Miroir : réservation annulée côté site → retrait local notifié ============
