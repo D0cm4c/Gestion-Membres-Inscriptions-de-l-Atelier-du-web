@@ -251,6 +251,14 @@
             ')'
         );
         db.run('CREATE INDEX IF NOT EXISTS idx_tcomments ON ticket_comments(ticket_id, created_at)');
+        db.run(
+            'CREATE TABLE IF NOT EXISTS team_members (' +
+            'id TEXT PRIMARY KEY,' +
+            'name TEXT NOT NULL UNIQUE,' +   // nom de l'animateur/bénévole (équipe technique)
+            'sort_order INTEGER DEFAULT 0,' +
+            'created_at TEXT DEFAULT (datetime(\'now\'))' +
+            ')'
+        );
         var cols = {};
         var res = db.exec('PRAGMA table_info(members)');
         if (res.length) {
