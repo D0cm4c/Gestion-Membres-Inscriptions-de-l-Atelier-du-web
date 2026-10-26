@@ -701,11 +701,21 @@ main {
 .ticket-status-closed { background: #EDF1F5; color: var(--text-soft); }
 
 /* ============ Page Paramètres ============ */
-.settings-grid {
-    column-count: 2;
-    column-gap: 1.2rem;
-    max-width: 1100px;
+/* ============ Page Paramètres : sections thématisées (1 colonne, par ordre d'importance) ============ */
+.settings-sections { max-width: 780px; }
+.settings-group-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    text-transform: none;
+    margin: 1.6rem 0 0.4rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 2px solid var(--accent);
+    letter-spacing: 0.2px;
 }
+.settings-sections .settings-group-title:first-child { margin-top: 0.2rem; }
+.settings-group { display: flex; flex-direction: column; gap: 1rem; margin-top: 0.8rem; }
+.settings-group .settings-card { margin-bottom: 0; }
+.settings-group-danger { border-left: 3px solid var(--danger); padding-left: 0.9rem; }
 
 .settings-card {
     background: var(--surface);
