@@ -18,6 +18,9 @@
     var modal = null;
     var pendingResolve = null;
 
+    var SALT_KEY = 'atelierduweb_admin_salt';
+    var ITERATIONS = 5000; // ralentit le bruteforce hors-ligne si le localStorage est exfiltré
+
     function sha256(text) {
         // Web Crypto (natif navigateur) — retourne un hash hexadécimal
         var data = new TextEncoder().encode(text);
@@ -26,6 +29,27 @@
                 return b.toString(16).padStart(2, '0');
             }).join('');
         });
+    }
+
+    function getSalt() {
+        // Sel aléatoire par installation (généré une fois, stocké à côté du hash)
+        var salt = null;
+        try { salt = localStorage.getItem(SALT_KEY); } catch (e) { /* ignore */ }
+        if (!salt) {
+            salt = String(crypto.getRandomValues(new Uint32Array(4)).join(''));
+            try { localStorage.setItem(SALT_KEY, salt); } catch (e) { /* ignore */ }
+        }
+        return salt;
+    }
+
+    function hashPassword(password) {
+        // Sel + itérations : un localStorage exfiltré ne se bruteforce plus en une seconde.
+        // ⚠️ 5000 chaînages de promesses ≈ 1-2 s — acceptable pour une ouverture de session.
+        var h = sha256(getSalt() + ':' + password);
+        for (var i = 1; i < ITERATIONS; i++) {
+            (function (n) { h = h.then(function (prev) { return sha256(prev + ':' + n); }); })(i);
+        }
+        return h;
     }
 
     function getStoredHash() {
@@ -38,7 +62,7 @@
 
     function ensureDefaultHash() {
         // Premier lancement : initialise le hash avec le mot de passe par défaut.
-        return getStoredHash() ? Promise.resolve(getStoredHash()) : sha256(DEFAULT_PASSWORD).then(function (h) {
+        return getStoredHash() ? Promise.resolve(getStoredHash()) : hashPassword(DEFAULT_PASSWORD).then(function (h) {
             setStoredHash(h);
             return h;
         });
@@ -115,16 +139,27 @@
             function onOk() {
                 var val = (input.value || '').trim();
                 if (!val) { input.focus(); return; }
-                sha256(val).then(function (h) {
+                hashPassword(val).then(function (h) {
                     var stored = getStoredHash();
                     if (stored && h === stored) {
                         markUnlocked(keepCb.checked ? UNLOCK_DURATION_MS : 0);
                         close(true);
-                    } else {
+                        return;
+                    }
+                    // Migration ancien schéma (SHA-256 simple, pré-oct. 2026) : si le mot de passe
+                    // correspond à l'ancien hash, l'adopter ET le re-hacher au nouveau schéma salé.
+                    sha256(val).then(function (oldH) {
+                        if (stored && oldH === stored) {
+                            setStoredHash(h);
+                            markUnlocked(keepCb.checked ? UNLOCK_DURATION_MS : 0);
+                            close(true);
+                            return;
+                        }
+                        // Aucune correspondance : mot de passe incorrect
                         errorEl.hidden = false;
                         input.value = '';
                         input.focus();
-                    }
+                    });
                 });
             }
             function onCancel() { close(false); }
@@ -161,13 +196,13 @@
         // Vérifie un mot de passe sans modale (ex. pour changer le mot de passe)
         verify: function (password) {
             return ensureDefaultHash().then(function () {
-                return sha256(password || '').then(function (h) { return h === getStoredHash(); });
+                return hashPassword(password || '').then(function (h) { return h === getStoredHash(); });
             });
         },
 
         // Définit un nouveau mot de passe (doit être appelé après verify)
         setPassword: function (newPassword) {
-            return sha256(newPassword || '').then(function (h) {
+            return hashPassword(newPassword || '').then(function (h) {
                 setStoredHash(h);
                 return true;
             });

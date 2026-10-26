@@ -702,7 +702,10 @@
     };
 
     // Suppression : protégée par garde admin côté UI (auth.js) — la règle est ici documentée
+    // Suppression : supprime les commentaires PUIS le ticket, en une seule passe persistée
+    // (pas de FK cascade en sql.js ici — la suppression des commentaires est explicite)
     Database.deleteTicket = function (id) {
+        this.run('DELETE FROM ticket_comments WHERE ticket_id = ?', [String(id)]);
         this.run('DELETE FROM tickets WHERE id = ?', [String(id)]);
         try { this.flush(); } catch (e) { /* best effort */ }
     };
@@ -719,13 +722,6 @@
 
     Database.listTicketComments = function (ticketId) {
         return this.queryAll('SELECT * FROM ticket_comments WHERE ticket_id = ? ORDER BY created_at ASC', [String(ticketId)]);
-    };
-
-    // deleteTicket : supprime aussi les commentaires (pas de FK cascade en sql.js ici)
-    var deleteTicketBase = Database.deleteTicket;
-    Database.deleteTicket = function (id) {
-        this.run('DELETE FROM ticket_comments WHERE ticket_id = ?', [String(id)]);
-        deleteTicketBase.call(this, id);
     };
 
     // ============ Équipe technique (assignation des tickets) ============
@@ -847,11 +843,29 @@
     });
 
     // Restauration de sauvegarde (backup.js) : remplace la base par les octets du fichier .db
+    // Restauration de sauvegarde (backup.js) : remplace la base par les octets du fichier .db.
+    // Résilience : le fichier est d'abord ouvert dans une instance TEMPORAIRE et validé
+    // (PRAGMA integrity_check) — la base courante n'est écrasée que si le fichier est sain.
+    // Retourne une Promise résolue ({ ok, error }) — jamais de base cassée en place.
     Database.replaceDatabase = function (bytes) {
         var self = this;
-        initSqlJs({ locateFile: function (file) { return 'vendor/' + file; } }).then(function (SQL) {
+        return initSqlJs({ locateFile: function (file) { return 'vendor/' + file; } }).then(function (SQL) {
+            var candidate;
+            try {
+                candidate = new SQL.Database(new Uint8Array(bytes));
+            } catch (e) {
+                return { ok: false, error: 'fichier illisible : ' + (e && e.message ? e.message : 'erreur') };
+            }
+            var check = candidate.exec('PRAGMA integrity_check');
+            var verdict = (check && check[0] && check[0].values && check[0].values[0] && check[0].values[0][0]) || 'error';
+            if (verdict !== 'ok') {
+                try { candidate.close(); } catch (e) { /* ignore */ }
+                return { ok: false, error: 'fichier corrompu (integrity_check : ' + verdict + ')' };
+            }
+            // Fichier sain : refermer le candidat puis adopter une base fraîche sur ces octets
+            try { candidate.close(); } catch (e) { /* ignore */ }
             self.db = new SQL.Database(new Uint8Array(bytes));
-            return saveToIndexedDB(self.idb, bytes);
+            return saveToIndexedDB(self.idb, bytes).then(function () { return { ok: true }; });
         });
     };
 
