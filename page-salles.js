@@ -1,0 +1,190 @@
+    (function () {
+        'use strict';
+
+        var planningWrap = document.getElementById('planningWrap');
+        var monthLabel = document.getElementById('monthLabel');
+        var monthCount = document.getElementById('monthCount');
+        var unassignedBadge = document.getElementById('unassignedBadge');
+        var unassignedModal = document.getElementById('unassignedModal');
+        var unassignedList = document.getElementById('unassignedList');
+
+        // Mois courant par défaut
+        var view = new Date();
+        view.setDate(1);
+
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        function esc(s) { return window.ADWEscape.html(s); }
+
+        // Couleur déterministe par catégorie (même logique que formations)
+        function toneFor(name) {
+            var s = (name || '').toLowerCase();
+            var h = 0;
+            for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+            return h % 10;
+        }
+        var TONE_SOLID = ['#0F3D5C', '#6C5CE7', '#2F9BE4', '#18A55F', '#E8734A', '#B26A00', '#D8434B', '#7A5230', '#556B2F', '#4A4E69'];
+
+        // Format ISO local (YYYY-MM-DD) — toISOString() decalerait d'un jour en UTC+1/+2 !
+        function isoLocal(d) {
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        function monthBounds(d) {
+            var start = new Date(d.getFullYear(), d.getMonth(), 1);
+            var end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+            return [isoLocal(start), isoLocal(end)];
+        }
+
+        function mainCatOf(categories) {
+            return (categories || '').split(',').map(function (c) { return c.trim(); }).filter(function (c) { return c && !/^\d+$/.test(c); })[0] || '';
+        }
+
+        function shortTitle(t) {
+            t = t || '';
+            return t.length > 22 ? t.slice(0, 20) + '…' : t;
+        }
+
+        function render() {
+            var bounds = monthBounds(view);
+            monthLabel.textContent = view.toLocaleDateString('fr-BE', { month: 'long', year: 'numeric' });
+
+            var rooms = window.ADWDatabase.listRooms();
+            var planning = window.ADWDatabase.getRoomPlanning(bounds[0], bounds[1]);
+            var formations = {};
+            planning.forEach(function (p) {
+                // ordonne par fid
+                formations[p.fid] = formations[p.fid] || [];
+                formations[p.fid].push(p);
+            });
+
+            // Index: date -> [{room, slot, fid, title, event_id, categories}]
+            var byCell = {};
+            planning.forEach(function (p) {
+                var f = window.ADWDatabase.getFormationByEventId(p.event_id);
+                if (!f || !f.room_id) return;
+                var key = p.date + '|' + f.room_id + '|' + p.slot;
+                byCell[key] = { fid: p.fid, title: p.title, event_id: p.event_id, cat: mainCatOf(p.categories) };
+            });
+
+            var daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+            var todayStr = isoLocal(new Date());
+            var occupied = 0;
+
+            var html = '<table class="room-planning"><thead><tr><th style="text-align:left;">Jour</th>';
+            rooms.forEach(function (r, ri) {
+                html += '<th colspan="2" class="room-h room-' + ri + '">' + esc(r.name) + '</th>';
+            });
+            html += '</tr><tr><th></th>';
+            rooms.forEach(function (r, ri) {
+                html += '<th class="slot-h slot-am room-' + ri + '">☀️ Matin</th><th class="slot-h slot-pm room-' + ri + '">🕐 A-midi</th>';
+            });
+            html += '</tr></thead><tbody>';
+
+            for (var day = 1; day <= daysInMonth; day++) {
+                var d = new Date(view.getFullYear(), view.getMonth(), day);
+                var dateStr = isoLocal(d);
+                var weekday = d.getDay(); // 0=dim, 6=sam
+                var isWeekend = weekday === 0 || weekday === 6;
+                var isToday = dateStr === todayStr;
+                // Creneau actuel (si aujourd'hui et dans la plage 9h30-16h30)
+                var nowH = new Date().getHours() + new Date().getMinutes() / 60;
+                var currentSlot = null;
+                if (isToday) {
+                    if (nowH >= 9.5 && nowH < 12.5) currentSlot = 'AM';
+                    else if (nowH >= 13.5 && nowH < 16.5) currentSlot = 'PM';
+                }
+                var dayLabel = d.toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric' });
+
+                html += '<tr class="' + (isWeekend ? 'weekend' : '') + (isToday ? ' today' : '') + '">';
+                html += '<td class="day-cell' + (isWeekend ? ' muted' : '') + '">' + (isToday ? '<strong>● </strong>' : '') + esc(dayLabel) + '</td>';
+
+                rooms.forEach(function (r, ri) {
+                    ['AM', 'PM'].forEach(function (slot) {
+                        var cell = byCell[dateStr + '|' + r.id + '|' + slot];
+                        var colClass = ' room-' + ri + (currentSlot === slot ? ' now' : '');
+                        if (cell) {
+                            occupied++;
+                            var tone = cell.cat ? toneFor(cell.cat) : -1;
+                            var bg = tone >= 0 ? TONE_SOLID[tone] : 'var(--primary)';
+                            html += '<td class="slot-cell busy' + colClass + '"><a href="formation.html?id=' + encodeURIComponent(cell.event_id) + '" class="slot-busy" style="background:' + bg + ';" title="' + esc(cell.title) + '">' + esc(shortTitle(cell.title)) + '</a></td>';
+                        } else {
+                            html += '<td class="slot-cell' + colClass + (isWeekend ? ' muted' : '') + '"></td>';
+                        }
+                    });
+                });
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            planningWrap.innerHTML = html;
+            monthCount.textContent = occupied + ' créneau' + (occupied > 1 ? 'x' : '') + ' occupé' + (occupied > 1 ? 's' : '');
+
+            // Badge sans salle
+            var without = window.ADWDatabase.formationsWithoutRoom();
+            unassignedBadge.textContent = without.length;
+            unassignedBadge.style.display = without.length ? '' : 'none';
+        }
+
+        function renderUnassigned() {
+            var rooms = window.ADWDatabase.listRooms();
+            var without = window.ADWDatabase.formationsWithoutRoom();
+            unassignedList.innerHTML = without.length ? '' : '<p class="form-hint" style="padding:1rem;">Toutes les formations ont une salle. 🎉</p>';
+            without.forEach(function (f) {
+                var li = document.createElement('div');
+                li.className = 'checkin-item';
+                li.style.flexWrap = 'wrap';
+                var dates = window.ADWDatabase.getFormationDates(f.id);
+                li.innerHTML =
+                    '<div style="flex:1;min-width:200px;"><strong>' + esc(f.title) + '</strong>' +
+                    '<div class="form-hint">' + esc(f.date_text || f.start_date || 'dates à confirmer') + ' · ' + dates.length + ' séance' + (dates.length > 1 ? 's' : '') + (dates.length ? ' (' + dates[0].slot + ')' : '') + '</div></div>' +
+                    '<select class="unassigned-select" data-fid="' + esc(f.id) + '">' +
+                    '<option value="">— Choisir une salle —</option>' +
+                    rooms.map(function (r) { return '<option value="' + esc(r.id) + '">' + esc(r.name) + '</option>'; }).join('') +
+                    '</select>';
+                unassignedList.appendChild(li);
+            });
+            unassignedList.querySelectorAll('.unassigned-select').forEach(function (sel) {
+                sel.addEventListener('change', function () {
+                    if (!sel.value) return;
+                    var fid = sel.getAttribute('data-fid');
+                    var f = window.ADWDatabase.queryAll('SELECT title, event_id FROM formations WHERE id = ?', [fid])[0];
+                    var conflicts = window.ADWDatabase.getRoomConflicts(fid, sel.value);
+                    window.ADWDatabase.setFormationRoom(fid, sel.value);
+                    var roomName = sel.options[sel.selectedIndex].textContent;
+                    if (window.ADWNotifications) {
+                        window.ADWNotifications.push('info', '📝 « ' + f.title + ' » attribuée à ' + roomName +
+                            (conflicts.length ? ' — ⚠️ ' + conflicts.length + ' conflit(s) de créneau' : ''), conflicts.length ? 'warning' : 'success');
+                    }
+                    renderUnassigned();
+                    render();
+                });
+            });
+        }
+
+        document.getElementById('prevMonthBtn').addEventListener('click', function () {
+            view.setMonth(view.getMonth() - 1); render();
+        });
+        document.getElementById('nextMonthBtn').addEventListener('click', function () {
+            view.setMonth(view.getMonth() + 1); render();
+        });
+        document.getElementById('todayBtn').addEventListener('click', function () {
+            view = new Date(); view.setDate(1); render();
+        });
+        document.getElementById('unassignedBtn').addEventListener('click', function () {
+            renderUnassigned();
+            unassignedModal.hidden = false;
+        });
+        document.getElementById('unassignedCloseBtn').addEventListener('click', function () { unassignedModal.hidden = true; });
+        unassignedModal.addEventListener('click', function (e) { if (e.target === unassignedModal) unassignedModal.hidden = true; });
+
+        window.ADWDatabase.init().then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
+            render();
+            // Le creneau actuel change en cours de journee : re-render chaque minute
+            setInterval(render, 60000);
+        }).catch(function () {
+            planningWrap.innerHTML = '<div class="empty-state"><p>Erreur de chargement de la base.</p></div>';
+        });
+    })();

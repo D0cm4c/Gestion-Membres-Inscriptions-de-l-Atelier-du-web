@@ -1,0 +1,153 @@
+    (function () {
+        'use strict';
+
+        var loading = document.getElementById('loadingState');
+        var content = document.getElementById('memberContent');
+        var notFound = document.getElementById('notFoundState');
+        var pageTitle = document.getElementById('pageTitle');
+
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        function esc(s) { return window.ADWEscape.html(s); }
+        function formatDate(v) {
+            if (!v) return '—';
+            var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!m) return v;
+            return m[3] + '/' + m[2] + '/' + m[1];
+        }
+
+        var GENDER_LABELS = { F: 'Femme', M: 'Homme', X: 'Autre / Non-binaire' };
+        var STATUS_LABELS = {
+            travailleur: 'Travailleur.se', interim: 'Intérim', actiris: 'Actiris',
+            mutuelle: 'Mutuelle', cpas: 'CPAS', pensionne: 'Pensionné.e',
+            etudiant: 'Étudiant.e', enfant: 'Enfant'
+        };
+        var SUB_LABELS = {
+            none: { label: 'Aucun abo', badge: 'badge-sub-none' },
+            monthly: { label: 'Abo mensuel · 3 €', badge: 'badge-sub-monthly' },
+            yearly: { label: 'Abo annuel · 30 €', badge: 'badge-sub-yearly' }
+        };
+
+        function isExpired(m) {
+            if (!m.end_date) return false;
+            return m.end_date < new Date().toISOString().slice(0, 10);
+        }
+
+        function render(member) {
+            var visits = ADWDatabase.queryAll(
+                'SELECT * FROM visits WHERE member_id = ? ORDER BY visit_date DESC, created_at DESC LIMIT 30', [member.id]);
+            var formations = [];
+            try { formations = ADWDatabase.getMemberFormations(member.id) || []; } catch (e) { formations = []; }
+
+            pageTitle.textContent = member.first_name + ' ' + member.last_name;
+            document.title = member.first_name + ' ' + member.last_name + ' — Atelier du Web';
+
+            var s = SUB_LABELS[member.subscription] || SUB_LABELS.none;
+            var expired = isExpired(member);
+
+            var html = '<div class="detail-head">' +
+                    '<div class="member-avatar">' + esc(((member.first_name || '?')[0] || '') + ((member.last_name || '')[0] || '')) + '</div>' +
+                    '<div><div class="member-name">' + esc(member.first_name) + ' ' + esc(member.last_name) + '</div>' +
+                    '<div class="member-no-detail">N° de membre : <strong>' + (member.member_no || '—') + '</strong></div>' +
+                    '<div class="member-badges">' +
+                        '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>' +
+                        '<span class="badge ' + s.badge + '">' + s.label + '</span>' +
+                    '</div></div>' +
+                    '<button type="button" class="btn btn-danger btn-small" id="deleteMemberBtn" style="margin-left:auto;align-self:flex-start;">🗑️ Supprimer</button>' +
+                '</div>' +
+                '<dl class="detail-list">' +
+                    '<div><dt>Âge</dt><dd>' + (member.age ? esc(member.age) + ' ans' : 'Non renseigné') + '</dd></div>' +
+                    '<div><dt>Genre</dt><dd>' + (member.gender ? esc(GENDER_LABELS[member.gender] || member.gender) : 'Non renseigné') + '</dd></div>' +
+                    '<div><dt>Code postal</dt><dd>' + (member.postal_code
+                        ? esc(member.postal_code) + (typeof ADW_POSTAL_CODES !== 'undefined' && ADW_POSTAL_CODES.some(function (p) { return p[0] === member.postal_code; }) ? ' — ' + esc(ADW_POSTAL_CODES.filter(function (p) { return p[0] === member.postal_code; })[0][1]) : '')
+                        : 'Non renseigné') + '</dd></div>' +
+                    '<div><dt>Statut social</dt><dd>' + (member.social_status ? esc(STATUS_LABELS[member.social_status] || member.social_status) : 'Non renseigné') + '</dd></div>' +
+                    (member.email ? '<div><dt>Email</dt><dd><a href="mailto:' + esc(member.email) + '">' + esc(member.email) + '</a></dd></div>' : '') +
+                    (member.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + esc(member.phone.replace(/\s/g, '')) + '">' + esc(member.phone) + '</a></dd></div>' : '') +
+                    (member.address ? '<div><dt>Adresse</dt><dd>' + esc(member.address) + '</dd></div>' : '') +
+                    '<div><dt>Inscription</dt><dd>du ' + esc(formatDate(member.start_date)) + ' au ' + esc(formatDate(member.end_date)) + '</dd></div>' +
+                '</dl>';
+
+            // Formations
+            html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
+                '<h4>🎓 Inscriptions aux formations <span class="members-count">' + formations.length + '</span></h4>';
+            if (formations.length) {
+                html += '<ul class="visits-list">';
+                formations.forEach(function (f) {
+                    html += '<li><span>🎓 ' + esc(f.title) +
+                        (f.time_label ? ' · <span class="form-hint">' + esc(f.time_label) + '</span>' : '') +
+                        ' · <span class="form-hint">📅 ' + (f.start_date ? esc(formatDate(f.start_date)) : 'date à confirmer') + '</span></span>' +
+                        '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="badge badge-sub-monthly" title="Voir la fiche formation">fiche →</a>' +
+                        (f.url ? ' <a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">site</a>' : '') +
+                        '</li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="form-hint">Aucune inscription à une formation. <a href="formations.html">Inscrire à une formation →</a></p>';
+            }
+            html += '</div>';
+
+            // Visites
+            html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
+                '<h4>Historique des visites <span class="members-count">' + member.visit_count + ' au total</span></h4>';
+            if (visits.length) {
+                html += '<ul class="visits-list">';
+                visits.forEach(function (v) {
+                    html += '<li><span>📅 ' + esc(formatDate(v.visit_date)) + '</span>' +
+                        (member.subscription === 'none'
+                            ? '<span class="badge badge-sub-none">' + v.amount.toFixed(2).replace('.', ',') + ' € payé</span>'
+                            : '<span class="badge badge-ok">incluse (abonnement)</span>') + '</li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="form-hint">Aucune visite enregistrée pour le moment.</p>';
+            }
+            html += '</div>';
+
+            content.innerHTML = html;
+            content.hidden = false;
+            loading.hidden = true;
+
+            var deleteBtn = document.getElementById('deleteMemberBtn');
+            if (deleteBtn) deleteBtn.addEventListener('click', function () {
+                ADWAuth.ensureUnlocked('Supprimer un membre — action réservée à l\u2019équipe.').then(function (ok) {
+                    if (!ok) return;
+                    if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?\n\nSes visites, impressions et inscriptions aux formations seront aussi supprimées.')) {
+                        ADWDatabase.deleteMemberCompletely(member.id).then(function () {
+                            location.href = 'membres.html';
+                        });
+                    }
+                });
+            });
+        }
+
+        ADWDatabase.init().then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
+            var id = null;
+            var m = location.search.match(/[?&]id=([^&]+)/) || location.hash.match(/^#member=(.+)$/);
+            if (m) id = decodeURIComponent(m[1]);
+            if (!id) {
+                loading.hidden = true;
+                notFound.hidden = false;
+                notFound.querySelector('p').textContent = 'Aucun membre spécifié dans l\'URL.';
+                return;
+            }
+            var rows = ADWDatabase.queryAll(
+                'SELECT m.*, ' +
+                '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visit_count, ' +
+                '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = m.id AND paid = 0) AS print_balance ' +
+                'FROM members m WHERE m.id = ?', [id]);
+            if (!rows.length) {
+                loading.hidden = true;
+                notFound.hidden = false;
+                return;
+            }
+            render(rows[0]);
+        }).catch(function (err) {
+            loading.hidden = true;
+            notFound.hidden = false;
+            notFound.querySelector('p').textContent = 'Erreur de chargement de la base : ' + err.message;
+        });
+    })();

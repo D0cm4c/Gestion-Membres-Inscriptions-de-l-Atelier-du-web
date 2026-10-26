@@ -1,0 +1,159 @@
+    (function () {
+        'use strict';
+
+        // Fiche ticket (ticket.html?id=…) : détails, changement statut/priorité/assignation,
+        // fil de commentaires (historique du dépannage). Dépend de : db.js, escape.js, auth.js.
+
+        var loading = document.getElementById('loadingState');
+        var notFound = document.getElementById('notFoundState');
+        var content = document.getElementById('ticketContent');
+        var pageTitle = document.getElementById('pageTitle');
+
+        function esc(s) { return window.ADWEscape.html(s); }
+
+        var PRIO = { urgent: '🔴 Urgente', high: '🟠 Haute', normal: '🟡 Normale', low: '🟢 Basse' };
+        var CAT = {
+            computer: '💻 Ordinateur', printer: '🖨️ Imprimante', network: '🌐 Réseau',
+            software: '💿 Logiciel', furniture: '🪑 Mobilier', other: '❓ Autre'
+        };
+        var STATUS = { open: 'Nouveau', in_progress: 'En cours', resolved: 'Résolu', closed: 'Fermé' };
+
+        function formatDateTime(iso) {
+            if (!iso) return '';
+            try {
+                return new Date(iso.replace(' ', 'T') + 'Z').toLocaleString('fr-BE', {
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                });
+            } catch (e) { return iso; }
+        }
+
+        var ticketId = new URLSearchParams(location.search).get('id');
+
+        function render(t) {
+            document.title = t.title + ' — Atelier du Web';
+            if (pageTitle) pageTitle.textContent = t.title;
+
+            var html =
+                '<div class="stat-card" style="max-width:860px;">' +
+                    '<div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;">' +
+                        '<div style="flex:1;min-width:240px;">' +
+                            '<h2 style="margin:0 0 0.4rem;">' + esc(t.title) + '</h2>' +
+                            '<div class="form-hint">' +
+                                (t.equipment ? '📍 ' + esc(t.equipment) + ' · ' : '') +
+                                CAT[t.category || 'other'] +
+                                ' · ouvert le ' + formatDateTime(t.created_at) +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="badge ticket-prio-' + esc(t.priority) + '">' + (PRIO[t.priority] || t.priority) + '</span>' +
+                        '<span class="badge ticket-status-' + esc(t.status) + '">' + (STATUS[t.status] || t.status) + '</span>' +
+                    '</div>' +
+                    (t.description ? '<p style="margin:0.9rem 0 0;white-space:pre-wrap;">' + esc(t.description) + '</p>' : '') +
+                    '<dl class="detail-list" style="margin-top:1rem;">' +
+                        '<div><dt>Statut</dt><dd><select id="tStatus">' +
+                            Object.keys(STATUS).map(function (s) {
+                                return '<option value="' + s + '"' + (s === t.status ? ' selected' : '') + '>' + STATUS[s] + '</option>';
+                            }).join('') + '</select></dd></div>' +
+                        '<div><dt>Priorité</dt><dd><select id="tPriority">' +
+                            Object.keys(PRIO).map(function (p) {
+                                return '<option value="' + p + '"' + (p === t.priority ? ' selected' : '') + '>' + PRIO[p] + '</option>';
+                            }).join('') + '</select></dd></div>' +
+                        '<div><dt>Assign\u00e9 \u00e0</dt><dd><select id="tAssignee"></select></dd></div>' +
+                        '<div><dt>Dernière maj</dt><dd id="tUpdated">' + formatDateTime(t.updated_at) + '</dd></div>' +
+                    '</dl>' +
+                    '<div class="modal-actions" style="justify-content:flex-start;margin-bottom:0;">' +
+                        '<button class="btn btn-primary btn-small" id="tSave">💾 Enregistrer</button>' +
+                        '<button class="btn btn-danger btn-small" id="tDelete">🗑️ Supprimer le ticket</button>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="stat-card" style="max-width:860px;margin-top:1.1rem;">' +
+                    '<h3>💬 Suivi du dépannage</h3>' +
+                    '<div id="commentsList" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;"></div>' +
+                    '<div class="modal-actions" style="align-items:flex-start;flex-wrap:wrap;">' +
+                        '<div class="form-group" style="min-width:160px;"><input type="text" id="commentAuthor" placeholder="Ton nom (optionnel)" maxlength="60"></div>' +
+                        '<div class="form-group" style="flex:1;min-width:220px;"><input type="text" id="commentText" placeholder="Ajouter un commentaire — ce qui a été essayé, la suite…" maxlength="500"></div>' +
+                        '<button class="btn btn-primary" id="commentAdd">Envoyer</button>' +
+                    '</div>' +
+                '</div>';
+
+            content.innerHTML = html;
+            content.hidden = false;
+            loading.hidden = true;
+
+            // Assignation : menu déroulant depuis l'équipe technique (Paramètres)
+            var team = [];
+            try { team = window.ADWDatabase.listTeamMembers() || []; } catch (e) { team = []; }
+            var assigneeSel = content.querySelector('#tAssignee');
+            var names = team.map(function (m) { return m.name; });
+            // Ancien ticket assigné à un nom absent de l'équipe : on le garde en option (données historiques)
+            if (t.assignee && names.indexOf(t.assignee) === -1) names.push(t.assignee);
+            assigneeSel.innerHTML = '<option value="">— Non assigné —</option>' +
+                names.map(function (n) {
+                    return '<option value="' + esc(n) + '"' + (n === t.assignee ? ' selected' : '') + '>' + esc(n) + '</option>';
+                }).join('');
+
+            // Commentaires
+            function renderComments() {
+                var comments = window.ADWDatabase.listTicketComments(t.id);
+                var cl = content.querySelector('#commentsList');
+                if (!comments.length) {
+                    cl.innerHTML = '<p class="form-hint">Aucun commentaire pour le moment — documente le dépannage ici.</p>';
+                    return;
+                }
+                cl.innerHTML = comments.map(function (c) {
+                    return '<div style="border-left:3px solid var(--accent);padding:0.35rem 0 0.35rem 0.8rem;">' +
+                        '<div style="font-size:0.8rem;color:var(--text-soft);">' +
+                            (c.author ? '<strong>' + esc(c.author) + '</strong> · ' : '') +
+                            formatDateTime(c.created_at) +
+                        '</div>' +
+                        '<div style="white-space:pre-wrap;">' + esc(c.message) + '</div>' +
+                    '</div>';
+                }).join('');
+            }
+            renderComments();
+
+            content.querySelector('#tSave').addEventListener('click', function () {
+                window.ADWDatabase.updateTicket(t.id, {
+                    status: content.querySelector('#tStatus').value,
+                    priority: content.querySelector('#tPriority').value,
+                    assignee: content.querySelector('#tAssignee').value || null
+                });
+                var fresh = window.ADWDatabase.getTicket(t.id);
+                render(fresh);
+            });
+
+            content.querySelector('#tDelete').addEventListener('click', function () {
+                window.ADWAuth.ensureUnlocked('Supprimer un ticket — action réservée à l\u2019équipe.').then(function (ok) {
+                    if (!ok) return;
+                    if (confirm('Supprimer le ticket « ' + t.title + ' » et tous ses commentaires ?\n\nCette action est définitive.')) {
+                        window.ADWDatabase.deleteTicket(t.id);
+                        location.href = 'tickets.html';
+                    }
+                });
+            });
+
+            content.querySelector('#commentAdd').addEventListener('click', function () {
+                var msg = content.querySelector('#commentText').value.trim();
+                if (!msg) { content.querySelector('#commentText').focus(); return; }
+                window.ADWDatabase.addTicketComment(t.id, content.querySelector('#commentAuthor').value.trim(), msg);
+                content.querySelector('#commentText').value = '';
+                renderComments();
+            });
+        }
+
+        window.ADWDatabase.init().then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.refresh();
+            if (!ticketId) { loading.hidden = true; notFound.hidden = false; return; }
+            var t = window.ADWDatabase.getTicket(ticketId);
+            if (!t) { loading.hidden = true; notFound.hidden = false; return; }
+            render(t);
+        }).catch(function () {
+            loading.hidden = true;
+            notFound.hidden = false;
+            notFound.querySelector('p').textContent = 'Impossible de charger la base de données locale.';
+        });
+
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('fr-BE', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+    })();
