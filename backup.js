@@ -129,13 +129,16 @@
                     alert('Ce fichier n\u2019est pas une sauvegarde valide (en-tête SQLite manquant).');
                     return;
                 }
-                try {
-                    window.ADWDatabase.replaceDatabase(bytes);
-                    notify('backup_restored', '✅ Sauvegarde restaurée : ' + esc(file.name) + '. Recharge la page pour voir les données.', 'success');
-                    setTimeout(function () { location.reload(); }, 1500);
-                } catch (e) {
+                window.ADWDatabase.replaceDatabase(bytes).then(function (res) {
+                    if (res && res.ok) {
+                        notify('backup_restored', '✅ Sauvegarde restaurée : ' + esc(file.name) + '. Rechargement…', 'success');
+                        setTimeout(function () { location.reload(); }, 1500);
+                    } else {
+                        alert('Restauration refusée — la base actuelle est INTACTE.\n\nCause : ' + (res && res.error ? res.error : 'erreur inconnue'));
+                    }
+                }).catch(function (e) {
                     alert('Échec de la restauration : ' + (e && e.message ? e.message : 'erreur inconnue'));
-                }
+                });
             });
         };
         input.click();

@@ -74,6 +74,11 @@ Il est dans `db.js`, fonction `ensureSchema()` (lignes ~74-220). **10 tables**, 
 | `tickets` | incidents du cyberespace (matériel/réseau) | catégorie, matériel, priorité (low→urgent), statut (open→closed), assigné en texte libre (pas de comptes) |
 | `ticket_comments` | suivi du dépannage par ticket | FK ticket_id (suppression en cascade côté app) |
 
+### Index recommandés pour better-sqlite3 (audit oct. 2026)
+- `CREATE INDEX IF NOT EXISTS idx_visits_member_date ON visits(member_id, visit_date)` — le dashboard et la fiche membre filtrent par membre+date à chaque chargement
+- `CREATE INDEX IF NOT EXISTS idx_members_enddate ON members(end_date)` — alertes d'expiration (dashboard, 2 requêtes/jour)
+- Les index existants (idx_fdates, idx_sugg_status, idx_notif_unread, idx_booking_unprocessed, idx_tickets_status, idx_tcomments) migrent tels quels.
+
 À faire côté serveur : copier les `CREATE TABLE IF NOT EXISTS` dans un script `schema.sql`, exécuté au démarrage. Les requêtes de la maquette (dans les 36 méthodes, §4) sont **standard et paramétrées** — elles tournent sur better-sqlite3 sans réécriture.
 
 ## 4. L'API métier existante — inventaire complet
