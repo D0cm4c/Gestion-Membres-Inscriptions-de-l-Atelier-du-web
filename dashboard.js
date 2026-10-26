@@ -720,6 +720,32 @@
     }
 
     if (quickCheckinBtn) quickCheckinBtn.addEventListener('click', openCheckin);
+
+    // Visite anonyme : passage sans fiche membre — compteur simple à 1 EUR (décision utilisateur).
+    // member_id sentinel 'anon' (colonne NOT NULL) — comptée dans les stats visites/revenus.
+    var anonVisitBtn = document.getElementById('anonVisitBtn');
+    if (anonVisitBtn) anonVisitBtn.addEventListener('click', function () {
+        var today = new Date().toISOString().slice(0, 10);
+        var visitId = 'av-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        window.ADWDatabase.run('INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, ?, ?)',
+            [visitId, 'anon', today, 1.0]).then(function () {
+            if (window.ADWNotifications) window.ADWNotifications.push('anon_visit', '👤 Visite anonyme enregistrée (1 €)', 'success');
+            closeCheckin();
+            render();
+        });
+    });
+    // Raccourci A : visible seulement modale ouverte (sinon A en saisie libre serait piégé)
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if ((e.key || '').toLowerCase() !== 'a') return;
+        if (!checkinModal || checkinModal.hidden) return;
+        // Si l'utilisateur tape dans le champ de recherche, « a » est une lettre, pas un raccourci
+        var active = document.activeElement;
+        var typing = active && (active.id === 'checkinSearch' || (active.tagName || '').toLowerCase() === 'input');
+        if (typing) return;
+        e.preventDefault();
+        anonVisitBtn.click();
+    });
     if (checkinCloseBtn) checkinCloseBtn.addEventListener('click', closeCheckin);
     if (checkinModal) checkinModal.addEventListener('click', function (e) {
         if (e.target === checkinModal) closeCheckin();

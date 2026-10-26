@@ -279,8 +279,6 @@
             'FROM members m WHERE m.id = ?', [id]);
         if (!rows.length) return;
         var member = rows[0];
-        var visits = ADWDatabase.queryAll(
-            'SELECT * FROM visits WHERE member_id = ? ORDER BY visit_date DESC, created_at DESC LIMIT 30', [id]);
         detailMember = member;
 
         detailTitle.textContent = 'Fiche de ' + member.first_name + ' ' + member.last_name;
@@ -304,23 +302,7 @@
                 (member.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + escapeHtml(member.phone.replace(/\s/g, '')) + '">' + escapeHtml(member.phone) + '</a></dd></div>' : '') +
                 (member.address ? '<div><dt>Adresse</dt><dd>' + escapeHtml(member.address) + '</dd></div>' : '') +
                 '<div><dt>Inscription</dt><dd>du ' + escapeHtml(formatDate(member.start_date)) + ' au ' + escapeHtml(formatDate(member.end_date)) + '</dd></div>' +
-            '</dl>' +
-            '<div class="detail-visits">' +
-                '<h4>Historique des visites <span class="members-count">' + member.visit_count + ' au total</span></h4>';
-
-        if (visits.length) {
-            html += '<ul class="visits-list">';
-            visits.forEach(function (v) {
-                html += '<li><span>📅 ' + escapeHtml(formatDate(v.visit_date)) + '</span>' +
-                    (member.subscription === 'none'
-                        ? '<span class="badge badge-sub-none">' + v.amount.toFixed(2).replace('.', ',') + ' € payé</span>'
-                        : '<span class="badge badge-ok">incluse (abonnement)</span>') + '</li>';
-            });
-            html += '</ul>';
-        } else {
-            html += '<p class="form-hint">Aucune visite enregistrée pour le moment.</p>';
-        }
-        html += '</div>';
+            '</dl>'; // historique des visites volontairement absent de la modale — sur la fiche complète (membre.html)
 
         // Formations du membre (inscriptions)
         var memberFormations = [];
@@ -440,6 +422,18 @@
             render();
             openDetail(detailMember.id);
         });
+    });
+
+    // Renouveler l'abonnement : prolonge l'inscription selon la formule (db.js)
+    var detailRenewBtn = document.getElementById('detailRenewBtn');
+    if (detailRenewBtn) detailRenewBtn.addEventListener('click', function () {
+        if (!detailMember) return;
+        var newEnd = ADWDatabase.renewSubscription(detailMember.id);
+        if (!newEnd) return;
+        if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd, 'success');
+        showToast('♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd);
+        openDetail(detailMember.id);
+        render();
     });
 
     /* ---------- Toast ---------- */
