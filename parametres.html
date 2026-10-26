@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://atelierduweb.be; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
     <title>Paramètres — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=23">
+    <link rel="stylesheet" href="styles.css?v=24">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -19,9 +19,31 @@
         <div data-layout-topbar data-title="Paramètres"></div>
 
     <main id="main">
-        <div class="settings-grid">
+        <div class="settings-sections">
 
-        <section class="settings-card" aria-labelledby="teamTitle">
+        <h2 class="settings-group-title">💾 Sauvegarde</h2>
+        <div class="settings-group">
+                <section class="settings-card" aria-labelledby="backupTitle">
+            <div class="settings-head">
+                <span class="settings-ico orange" aria-hidden="true">💾</span>
+                <div>
+                    <h2 id="backupTitle">Sauvegarde de la base</h2>
+                    <p>Membres, formations, inscriptions — tout en un fichier</p>
+                </div>
+            </div>
+            <p class="settings-note">La sauvegarde exporte la base SQLite complète (membres, formations, inscriptions, incidents, salles, équipe) dans un seul fichier. Sur Chrome/Edge, l'emplacement (clé USB par ex.) est mémorisé après le premier choix. Sur Firefox, le fichier passe par les téléchargements — glisse-le ensuite sur la clé. L'app rappelle de sauvegarder si des données ont changé depuis 3 jours.</p>
+            <p class="form-hint" id="backupStatus" style="margin-bottom:0.9rem;"></p>
+            <div class="settings-foot">
+                <button class="btn btn-primary" id="backupChooseBtn">📁 Choisir l'emplacement…</button>
+                <button class="btn btn-primary" id="backupSaveBtn">💾 Sauvegarder maintenant</button>
+                <button class="btn btn-secondary" id="backupRestoreBtn">♻️ Restaurer une sauvegarde…</button>
+            </div>
+        </section>
+        </div>
+
+        <h2 class="settings-group-title">🧑‍🔧 Équipe &amp; salles</h2>
+        <div class="settings-group">
+                <section class="settings-card" aria-labelledby="teamTitle">
             <div class="settings-head">
                 <span class="settings-ico blue" aria-hidden="true">🧑‍🔧</span>
                 <div>
@@ -38,8 +60,7 @@
                 <button class="btn btn-primary" id="addTeamMemberBtn">+ Ajouter</button>
             </div>
         </section>
-
-        <section class="settings-card" aria-labelledby="roomsTitle">
+                <section class="settings-card" aria-labelledby="roomsTitle">
             <div class="settings-head">
                 <span class="settings-ico blue" aria-hidden="true">🏫</span>
                 <div>
@@ -59,8 +80,11 @@
                 <button class="btn btn-primary" id="addRoomBtn">+ Ajouter</button>
             </div>
         </section>
+        </div>
 
-        <section class="settings-card" aria-labelledby="tilesTitle">
+        <h2 class="settings-group-title">🎨 Affichage</h2>
+        <div class="settings-group">
+                <section class="settings-card" aria-labelledby="tilesTitle">
             <div class="settings-head">
                 <span class="settings-ico orange" aria-hidden="true">🧩</span>
                 <div>
@@ -75,8 +99,11 @@
                 <button class="btn btn-secondary btn-small" id="tilesNoneBtn">☐ Tout masquer</button>
             </div>
         </section>
+        </div>
 
-        <section class="settings-card" aria-labelledby="mecTitle">
+        <h2 class="settings-group-title">🔌 Intégrations</h2>
+        <div class="settings-group">
+                <section class="settings-card" aria-labelledby="mecTitle">
             <div class="settings-head">
                 <span class="settings-ico orange" aria-hidden="true">🔑</span>
                 <div>
@@ -94,8 +121,11 @@
             </div>
             <p class="form-hint" id="mecKeyStatus" style="margin-top:0.7rem;margin-bottom:0;"></p>
         </section>
+        </div>
 
-        <section class="settings-card" aria-labelledby="authTitle">
+        <h2 class="settings-group-title">🔒 Sécurité &amp; données</h2>
+        <div class="settings-group settings-group-danger">
+                <section class="settings-card" aria-labelledby="authTitle">
             <div class="settings-head">
                 <span class="settings-ico blue" aria-hidden="true">🔐</span>
                 <div>
@@ -115,25 +145,7 @@
             </div>
             <p class="form-hint" id="authStatus" style="margin-top:0.7rem;margin-bottom:0;"></p>
         </section>
-
-        <section class="settings-card" aria-labelledby="backupTitle">
-            <div class="settings-head">
-                <span class="settings-ico orange" aria-hidden="true">💾</span>
-                <div>
-                    <h2 id="backupTitle">Sauvegarde de la base</h2>
-                    <p>Membres, formations, inscriptions — tout en un fichier</p>
-                </div>
-            </div>
-            <p class="settings-note">La sauvegarde exporte la base SQLite complète (membres, formations, inscriptions, incidents, salles, équipe) dans un seul fichier. Sur Chrome/Edge, l'emplacement (clé USB par ex.) est mémorisé après le premier choix. Sur Firefox, le fichier passe par les téléchargements — glisse-le ensuite sur la clé. L'app rappelle de sauvegarder si des données ont changé depuis 3 jours.</p>
-            <p class="form-hint" id="backupStatus" style="margin-bottom:0.9rem;"></p>
-            <div class="settings-foot">
-                <button class="btn btn-primary" id="backupChooseBtn">📁 Choisir l'emplacement…</button>
-                <button class="btn btn-primary" id="backupSaveBtn">💾 Sauvegarder maintenant</button>
-                <button class="btn btn-secondary" id="backupRestoreBtn">♻️ Restaurer une sauvegarde…</button>
-            </div>
-        </section>
-
-        <section class="settings-card" aria-labelledby="rgpdTitle">
+                <section class="settings-card" aria-labelledby="rgpdTitle">
             <div class="settings-head">
                 <span class="settings-ico red" aria-hidden="true">🔒</span>
                 <div>
@@ -150,6 +162,7 @@
                 <button class="btn btn-danger" id="purgeAllBtn">🗑️ Purger toutes les données personnelles</button>
             </div>
         </section>
+        </div>
 
         </div>
     </main>
