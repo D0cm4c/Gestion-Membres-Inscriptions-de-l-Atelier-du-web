@@ -82,6 +82,20 @@
 
         // Couleur déterministe par catégorie : hash du nom → ton 0-9
         var TONE_SOLID = ['#0F3D5C', '#6C5CE7', '#2F9BE4', '#18A55F', '#E8734A', '#B26A00', '#D8434B', '#7A5230', '#556B2F', '#4A4E69'];
+        // Re-résolution des catégories : le cache ou la base locale peuvent contenir des IDs
+        // numériques non résolus (fenêtre d'erreur réseau/échec de résolution) — on repasse
+        // par resolveCategories pour garantir les noms (et donc les couleurs par catégorie).
+        function ensureCategoryNames(events, fallback) {
+            var needs = events.some(function (ev) {
+                return !(ev.categories || []).length || (ev.categories || []).some(function (c) { return /^\d+$/.test(String(c)); });
+            });
+            if (!needs) return Promise.resolve(events);
+            if (window.ADWMec && window.ADWMec.resolveCategories) {
+                return window.ADWMec.resolveCategories(events).catch(function () { return fallback(events); });
+            }
+            return Promise.resolve(fallback(events));
+        }
+
         function toneFor(name) {
             var s = (name || '').toLowerCase();
             var h = 0;
@@ -217,9 +231,11 @@
                 } else {
                     dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
                 }
-                status('');
-                fillSelects();
-                applyFilters();
+                ensureCategoryNames(events, function (evs) { return evs; }).then(function () {
+                    status('');
+                    fillSelects();
+                    applyFilters();
+                });
             }).catch(function (err) {
                 // Repli : afficher depuis la DB si le flux est inaccessible
                 if (db) {
@@ -240,10 +256,12 @@
                         });
                         formationRows = {};
                         rows.forEach(function (r) { formationRows[r.event_id] = r; });
-                        status('');
-                        dataSource.textContent = events.length + ' formations (base locale — flux inaccessible).';
-                        fillSelects();
-                        applyFilters();
+                        ensureCategoryNames(events, function (evs) { return evs; }).then(function () {
+                            status('');
+                            dataSource.textContent = events.length + ' formations (base locale — flux inaccessible).';
+                            fillSelects();
+                            applyFilters();
+                        });
                         return;
                     }
                 }
