@@ -343,7 +343,6 @@
         var detailFullBtn = document.getElementById('detailFullBtn');
         if (detailFullBtn) detailFullBtn.href = 'membre.html?id=' + encodeURIComponent(member.id);
         detailModal.hidden = false;
-        detailCloseBtn.focus();
     }
 
     function closeDetail() {
@@ -351,7 +350,7 @@
         detailMember = null;
     }
 
-    detailCloseBtn.addEventListener('click', closeDetail);
+    if (detailCloseBtn) detailCloseBtn.addEventListener('click', closeDetail);
     detailModal.addEventListener('click', function (e) {
         if (e.target === detailModal) closeDetail();
     });
@@ -390,22 +389,50 @@
     });
 
     // Renouveler depuis la modale fiche : prolonge selon la formule + toast + rafraîchit la fiche
+    // Renouveler : double validation avec affichage des nouvelles dates (décision utilisateur).
+    // 1er clic → calcul + aperçu des dates ; 2e clic (dans la foulée) → application effective.
     var detailRenewBtn = document.getElementById('detailRenewBtn');
-    if (detailRenewBtn) detailRenewBtn.addEventListener('click', function () {
-        if (!detailMember) return;
-        var newEnd = ADWDatabase.renewSubscription(detailMember.id);
-        if (!newEnd) return;
-        if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu’au ' + newEnd + ' (membre ' + detailMember.member_no + ')', 'success');
-        showToast('♻️ Renouvelé jusqu’au ' + newEnd);
-        render();
-        openDetail(detailMember.id);
-    });
+    var renewArmed = null; // { newStart, newEnd, until } en attente de confirmation
+    var RENEW_ARMED_MS = 6000; // la confirmation doit se faire dans les 6 s, sinon désarmée
+
+    if (detailRenewBtn) {
+        var renewArmTimer = null;
+        detailRenewBtn.addEventListener('click', function () {
+            if (!detailMember) return;
+            if (renewArmed) {
+                // 2e clic = confirmation
+                clearTimeout(renewArmTimer);
+                var r = renewArmed;
+                renewArmed = null;
+                detailRenewBtn.textContent = '♻️ Renouveler l’abo';
+                detailRenewBtn.classList.remove('btn-danger');
+                var res = ADWDatabase.renewSubscription(detailMember.id, r.newStart, r.newEnd);
+                if (!res) return;
+                if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé : du ' + res.newStart + ' au ' + res.newEnd + ' (membre ' + detailMember.member_no + ')', 'success');
+                showToast('♻️ Renouvelé — inscription du ' + res.newStart + ' au ' + res.newEnd);
+                render();
+                openDetail(detailMember.id);
+                return;
+            }
+            // 1er clic : calculer et afficher l'aperçu (rien n'est écrit en base)
+            var r = ADWDatabase.previewRenewal(detailMember.id);
+            if (!r) return;
+            renewArmed = r;
+            detailRenewBtn.textContent = '✅ Confirmer : du ' + r.newStart + ' au ' + r.newEnd + ' ?';
+            detailRenewBtn.classList.add('btn-danger');
+            renewArmTimer = setTimeout(function () {
+                renewArmed = null;
+                detailRenewBtn.textContent = '♻️ Renouveler l’abo';
+                detailRenewBtn.classList.remove('btn-danger');
+            }, RENEW_ARMED_MS);
+        });
+    }
 
     var detailEditBtn = document.getElementById('detailEditBtn');
     if (detailEditBtn) detailEditBtn.addEventListener('click', function () {
         if (!detailMember) return;
+        openModal(detailMember); // AVANT closeDetail — sinon detailMember est remis à null → « Ajouter un membre »
         closeDetail();
-        openModal(detailMember);
     });
 
     detailCheckinBtn.addEventListener('click', function () {
@@ -454,7 +481,7 @@
         if (!newEnd) return;
         document.getElementById('endDate').value = newEnd;
         if (window.ADWNotifications) window.ADWNotifications.push('renew', '\u267b\ufe0f Abonnement renouvelé jusqu\u2019au ' + newEnd + ' (membre ' + memberId + ')', 'success');
-        showToast('\u267b\ufe0f Renouvelé jusqu\u2019au ' + newEnd + ' — pense à enregistrer le formulaire si tu as modifié d\u2019autres champs');
+        showToast('\u267b\ufe0f Renouvelé : du ' + r.newStart + ' au ' + r.newEnd + ' — pense à enregistrer le formulaire');
         render();
     });
 
