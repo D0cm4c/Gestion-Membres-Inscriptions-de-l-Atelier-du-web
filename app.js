@@ -67,6 +67,7 @@
         active: 'date(m.end_date) >= date(\'now\') OR m.end_date IS NULL',
         expired: 'date(m.end_date) < date(\'now\') AND m.end_date IS NOT NULL',
         subscribed: 'm.subscription != \'none\'',
+        inactive: "(m.subscription = 'none' OR m.subscription IS NULL)",
         'prints-due': '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = m.id AND paid = 0) > 0'
     };
 
@@ -185,7 +186,7 @@
         // « Aucun abo » = pas d'inscription dans le temps : ni Active ni Expirée
         // (décision EPN oct. 2026) — badge neutre « Sans abo ».
         if ((member.subscription || 'none') === 'none') {
-            return '<span class="badge badge-sub-none">Sans abo</span>';
+            return '<span class="badge badge-sub-none">Inactif</span>';
         }
         var expired = isExpired(member);
         return '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
@@ -240,7 +241,9 @@
         shown.forEach(function (member) {
             var expired = isExpired(member);
             var item = document.createElement('div');
-            item.className = (currentView === 'list' ? 'member-row' : 'member-card') + (expired ? ' expired' : '');
+            var inactive = (member.subscription || 'none') === 'none';
+            item.className = (currentView === 'list' ? 'member-row' : 'member-card') +
+                (expired ? ' expired' : '') + (inactive ? ' inactive' : '');
             item.innerHTML = currentView === 'list' ? rowHTML(member) : cardHTML(member);
 
             // UX refonte : une seule porte d'entrée — clic sur la carte/ligne → modale fiche
