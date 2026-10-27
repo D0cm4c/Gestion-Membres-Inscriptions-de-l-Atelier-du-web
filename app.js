@@ -64,8 +64,9 @@
 
     var FILTERS = {
         all: null,
-        active: 'date(m.end_date) >= date(\'now\') OR m.end_date IS NULL',
-        expired: 'date(m.end_date) < date(\'now\') AND m.end_date IS NOT NULL',
+        // Actifs / Expirés : uniquement les membres AVEC abonnement (exclut les inactifs — décision EPN)
+        active: "(m.subscription IS NOT NULL AND m.subscription != 'none') AND (date(m.end_date) >= date('now') OR m.end_date IS NULL)",
+        expired: "(m.subscription IS NOT NULL AND m.subscription != 'none') AND date(m.end_date) < date('now') AND m.end_date IS NOT NULL",
         subscribed: 'm.subscription != \'none\'',
         inactive: "(m.subscription = 'none' OR m.subscription IS NULL)",
         'prints-due': '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = m.id AND paid = 0) > 0'
