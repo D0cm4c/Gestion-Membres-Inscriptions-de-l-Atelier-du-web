@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://atelierduweb.be; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
     <title>Membres — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=24">
+    <link rel="stylesheet" href="styles.css?v=25">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -188,11 +188,11 @@
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
             <h3 id="detailTitle">Fiche membre</h3>
             <div id="detailBody"></div>
-            <div class="modal-actions">
+            <div class="modal-actions stack">
                 <button type="button" class="btn btn-secondary" id="detailEditBtn" title="Modifier les informations du membre">✏️ Modifier</button>
                 <button type="button" class="btn btn-secondary" id="detailRenewBtn" title="Prolonger l'inscription selon la formule du membre">♻️ Renouveler l'abo</button>
             </div>
-            <div class="modal-actions">
+            <div class="modal-actions stack">
                 <a class="btn btn-secondary" id="detailFullBtn" href="#">Fiche complète →</a>
                 <button type="button" class="btn btn-primary" id="detailCheckinBtn">✅ Pointer une visite du jour</button>
             </div>
