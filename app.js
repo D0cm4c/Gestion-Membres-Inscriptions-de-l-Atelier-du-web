@@ -238,21 +238,12 @@
             item.className = (currentView === 'list' ? 'member-row' : 'member-card') + (expired ? ' expired' : '');
             item.innerHTML = currentView === 'list' ? rowHTML(member) : cardHTML(member);
 
+            // UX refonte : une seule porte d'entrée — clic sur la carte/ligne → modale fiche
+            // (plus de bouton Modifier dans la liste ; l'édition vit dans la modale fiche)
             item.addEventListener('click', function (e) {
-                if (e.target.closest('button')) return;
+                if (e.target.closest('button, a')) return;
                 openDetail(member.id);
             });
-
-            var actions = document.createElement('div');
-            actions.className = currentView === 'list' ? 'list-actions' : 'card-actions';
-            actions.innerHTML =
-                '<button class="btn btn-secondary btn-small">✏️ Modifier</button>';
-
-            actions.children[0].addEventListener('click', function (e) {
-                e.stopPropagation();
-                openModal(member);
-            });
-            item.appendChild(actions);
             grid.appendChild(item);
         });
 
@@ -398,6 +389,18 @@
         }
     });
 
+    // Renouveler depuis la modale fiche : prolonge selon la formule + toast + rafraîchit la fiche
+    var detailRenewBtn = document.getElementById('detailRenewBtn');
+    if (detailRenewBtn) detailRenewBtn.addEventListener('click', function () {
+        if (!detailMember) return;
+        var newEnd = ADWDatabase.renewSubscription(detailMember.id);
+        if (!newEnd) return;
+        if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu’au ' + newEnd + ' (membre ' + detailMember.member_no + ')', 'success');
+        showToast('♻️ Renouvelé jusqu’au ' + newEnd);
+        render();
+        openDetail(detailMember.id);
+    });
+
     var detailEditBtn = document.getElementById('detailEditBtn');
     if (detailEditBtn) detailEditBtn.addEventListener('click', function () {
         if (!detailMember) return;
@@ -473,7 +476,25 @@
         document.getElementById('socialStatus').value = member && member.social_status ? member.social_status : '';
         document.getElementById('startDate').value = member ? (member.start_date || '') : new Date().toISOString().slice(0, 10);
         document.getElementById('endDate').value = member ? (member.end_date || '') : '';
+        // « Aucun abo » : date de fin neutre (vide) — pas d'inscription dans le temps
+        var noneRadio = form.querySelector('input[name="subscription"][value="none"]');
+        if (noneRadio && noneRadio.checked) document.getElementById('endDate').value = '';
         modalTitle.textContent = member ? 'Modifier le membre' : 'Ajouter un membre';
+        // Live : le changement de formule d'abonnement ajuste la date de fin
+        // — « aucun » la vide (neutre), mensuel/annuel la propose à 1 mois/1 an si vide
+        Array.prototype.forEach.call(form.querySelectorAll('input[name="subscription"]'), function (radio) {
+            radio.addEventListener('change', function () {
+                var endDateInput = document.getElementById('endDate');
+                if (radio.value === 'none' && radio.checked) {
+                    endDateInput.value = '';
+                } else if (radio.checked && !endDateInput.value) {
+                    var months = radio.value === 'yearly' ? 12 : 1;
+                    var d = new Date();
+                    d.setMonth(d.getMonth() + months);
+                    endDateInput.value = d.toISOString().slice(0, 10);
+                }
+            });
+        });
         var renewInEditBtn = document.getElementById('renewInEditBtn');
         if (renewInEditBtn) renewInEditBtn.hidden = !member; // visible uniquement en modification
         modal.hidden = false;
