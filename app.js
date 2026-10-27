@@ -453,6 +453,20 @@
 
     /* ---------- Formulaire ---------- */
 
+    // Renouveler depuis la modale formulaire : prolonge en base et rafraîchit le champ
+    // « Date fin inscription » affiché — l'animateur voit la nouvelle date avant d'enregistrer.
+    var renewInEditBtn = document.getElementById('renewInEditBtn');
+    if (renewInEditBtn) renewInEditBtn.addEventListener('click', function () {
+        var memberId = document.getElementById('memberId').value;
+        if (!memberId) return;
+        var newEnd = ADWDatabase.renewSubscription(memberId);
+        if (!newEnd) return;
+        document.getElementById('endDate').value = newEnd;
+        if (window.ADWNotifications) window.ADWNotifications.push('renew', '\u267b\ufe0f Abonnement renouvelé jusqu\u2019au ' + newEnd + ' (membre ' + memberId + ')', 'success');
+        showToast('\u267b\ufe0f Renouvelé jusqu\u2019au ' + newEnd + ' — pense à enregistrer le formulaire si tu as modifié d\u2019autres champs');
+        render();
+    });
+
     function openModal(member) {
         form.reset();
         formError.hidden = true;
@@ -472,6 +486,8 @@
         document.getElementById('startDate').value = member ? (member.start_date || '') : new Date().toISOString().slice(0, 10);
         document.getElementById('endDate').value = member ? (member.end_date || '') : '';
         modalTitle.textContent = member ? 'Modifier le membre' : 'Ajouter un membre';
+        var renewInEditBtn = document.getElementById('renewInEditBtn');
+        if (renewInEditBtn) renewInEditBtn.hidden = !member; // visible uniquement en modification
         modal.hidden = false;
         document.getElementById('firstName').focus();
     }
