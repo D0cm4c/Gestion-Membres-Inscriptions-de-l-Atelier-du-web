@@ -53,7 +53,7 @@
                     '<div class="member-no-detail">N° de membre : <strong>' + (member.member_no || '—') + '</strong></div>' +
                     '<div class="member-badges">' +
                         ((member.subscription || 'none') === 'none'
-                            ? '<span class="badge badge-sub-none">Sans abo</span>'
+                            ? '<span class="badge badge-sub-none">Inactif</span>'
                             : '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>') +
                         ((member.subscription === 'monthly' || member.subscription === 'yearly') ? '<span class="badge ' + s.badge + '">' + s.label + '</span>' : '') +
                     '</div></div>' +
