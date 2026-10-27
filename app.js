@@ -424,18 +424,6 @@
         });
     });
 
-    // Renouveler l'abonnement : prolonge l'inscription selon la formule (db.js)
-    var detailRenewBtn = document.getElementById('detailRenewBtn');
-    if (detailRenewBtn) detailRenewBtn.addEventListener('click', function () {
-        if (!detailMember) return;
-        var newEnd = ADWDatabase.renewSubscription(detailMember.id);
-        if (!newEnd) return;
-        if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd, 'success');
-        showToast('♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd);
-        openDetail(detailMember.id);
-        render();
-    });
-
     /* ---------- Toast ---------- */
 
     function showToast(message, type) {
