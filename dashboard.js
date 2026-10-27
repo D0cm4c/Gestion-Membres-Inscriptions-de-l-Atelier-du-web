@@ -715,10 +715,20 @@
             closeCheckin();
             render();
             renderChart();
+            pulseVisitsKpi();
             showToast('✅ Visite de ' + member.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)'));
         });
     }
 
+
+    // Design v4 : pulse du KPI Visites après un pointage (récompense visuelle du geste)
+    function pulseVisitsKpi() {
+        var kpi = document.querySelector('.kpi-card[data-tile="kpi2"]');
+        if (!kpi) return;
+        kpi.classList.remove('kpi-pulse');
+        void kpi.offsetWidth; // reflow pour relancer l'animation
+        kpi.classList.add('kpi-pulse');
+    }
     if (quickCheckinBtn) quickCheckinBtn.addEventListener('click', openCheckin);
 
     // Visite anonyme : passage sans fiche membre — compteur simple à 1 EUR (décision utilisateur).
@@ -732,6 +742,7 @@
             if (window.ADWNotifications) window.ADWNotifications.push('anon_visit', '👤 Visite anonyme enregistrée (1 €)', 'success');
             closeCheckin();
             render();
+            pulseVisitsKpi();
         });
     });
     // Raccourci A : visible seulement modale ouverte (sinon A en saisie libre serait piégé)

@@ -690,6 +690,142 @@ main {
 .print-actions-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
 
 /* ============ Empty & loading ============ */
+/* ================================================================
+   DESIGN v4 « Depth & Glow » (oct. 2026) — 3 chantiers :
+   1. Depth & Glass : fond radial + noise, verre topbar, double ombre, glow sidebar
+   2. Accent System : KPI héro dégradé, CTA dégradé, spring easing, bordures data
+   3. Micro-interactions : hover halo, anim modales, toasts, pulse, skeleton
+   Toutes les règles respectent les tokens existants et le mode sombre auto.
+   ================================================================ */
+
+/* ---------- 1. DEPTH & GLASS ---------- */
+
+/* Fond de page : lumière diffusée de l'accent + grain subtil */
+.app-main {
+    background:
+        radial-gradient(1200px 500px at 70% -10%, rgba(232, 115, 74, 0.06) 0%, transparent 60%),
+        var(--bg);
+}
+:root[data-theme="dark"] .app-main,
+:root[data-theme="light"] .app-main { background: radial-gradient(1200px 500px at 70% -10%, rgba(232, 115, 74, 0.05) 0%, transparent 60%), var(--bg); }
+
+/* Topbar : verre dépoli premium */
+.topbar { backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); }
+
+/* Cartes : double ombre = vrai relief */
+.stat-card, .kpi-card, .settings-card, .chart-card {
+    box-shadow: 0 1px 2px rgba(23, 37, 47, 0.06), 0 8px 24px rgba(23, 37, 47, 0.08);
+}
+:root[data-theme="dark"] .stat-card, :root[data-theme="dark"] .kpi-card,
+:root[data-theme="dark"] .settings-card, :root[data-theme="dark"] .chart-card {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Item actif de la sidebar : liseré lumineux dégradé */
+.side-nav a.active {
+    position: relative;
+}
+.side-nav a.active::before {
+    content: '';
+    position: absolute; left: 0; top: 8%; bottom: 8%; width: 3px;
+    background: linear-gradient(180deg, var(--accent) 0%, #F2926B 100%);
+    border-radius: 0 3px 3px 0;
+    box-shadow: 0 0 12px rgba(232, 115, 74, 0.55);
+}
+
+/* ---------- 2. ACCENT SYSTEM ---------- */
+
+/* KPI héro (Visites aujourd'hui — la donnée vedette) : dégradé accent → violet */
+.kpi-card.kpi-hero {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--violet) 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 8px 24px rgba(232, 115, 74, 0.35);
+}
+.kpi-card.kpi-hero .stat-num { color: #fff; font-size: 2.2rem; letter-spacing: -0.5px; }
+.kpi-card.kpi-hero .stat-label { color: rgba(255, 255, 255, 0.85); }
+.kpi-card.kpi-hero .kpi-icon { background: rgba(255, 255, 255, 0.18) !important; }
+
+/* CTA principaux : dégradé + ombre colorée + clic tactile */
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #F2926B 100%);
+    box-shadow: 0 4px 14px rgba(232, 115, 74, 0.35);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s, filter 0.18s;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(232, 115, 74, 0.45); filter: brightness(1.04); }
+.btn-primary:active { transform: translateY(1px); box-shadow: 0 2px 8px rgba(232, 115, 74, 0.3); }
+
+/* Spring easing partagé (boutons et cartes cliquables) */
+.btn, .member-card, .stat-card { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Bordures data-driven sur les tuiles dashboard (lecture instantanée de la mosaïque) */
+.kpi-card[data-tile="kpi2"] { border-top: 3px solid var(--green); }
+.kpi-card[data-tile="kpi4"] { border-top: 3px solid var(--orange); }
+.kpi-card[data-tile="kpi0"] { border-top: 3px solid var(--violet); }
+
+/* ---------- 3. MICRO-INTERACTIONS ---------- */
+
+/* Cartes cliquables au hover : halo lumineux accent */
+.member-card:hover, .kpi-card:hover {
+    box-shadow: 0 1px 2px rgba(23, 37, 47, 0.06), 0 8px 24px rgba(23, 37, 47, 0.08), 0 0 0 3px rgba(232, 115, 74, 0.12);
+}
+
+/* Ouverture des modales : fade + rise + zoom léger */
+@keyframes modal-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-overlay:not([hidden]) .modal { animation: modal-in 0.18s ease-out; }
+.modal-overlay:not([hidden]) {
+    animation: modal-bg-in 0.2s ease-out;
+    background: rgba(13, 27, 42, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+@keyframes modal-bg-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Toasts : slide spring + barre de progression */
+.toast { transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.toast::after {
+    content: '';
+    position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    background: rgba(255, 255, 255, 0.35);
+    transform-origin: left;
+    animation: toast-progress 2.5s linear forwards;
+}
+@keyframes toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* Pulse du compteur vedette après pointage (classe posée par le JS) */
+@keyframes kpi-pulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+.kpi-card.kpi-pulse { animation: kpi-pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Skeleton shimmer (remplace « ⏳ Chargement… » quand la classe .skeleton est posée) */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--border);
+}
+.skeleton::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    animation: skeleton-shimmer 1.4s infinite;
+}
+@keyframes skeleton-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+/* Préférence utilisateurs sensibles : on coupe tout le mouvement */
+@media (prefers-reduced-motion: reduce) {
+    .modal-overlay:not([hidden]) .modal,
+    .modal-overlay:not([hidden]),
+    .toast, .toast::after,
+    .kpi-card.kpi-pulse, .skeleton::after { animation: none !important; transition: none !important; }
+}
+
 /* ============ Tickets ============ */
 .ticket-prio-urgent { background: var(--danger-bg); color: var(--danger); }
 .ticket-prio-high { background: #FBE8D4; color: #B26A00; }
