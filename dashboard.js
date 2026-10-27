@@ -648,7 +648,7 @@
     var checkinHint = document.getElementById('checkinHint');
     var checkinNav = (checkinSearch && checkinResults) ? makeListNavigable(checkinSearch, checkinResults, {}) : null;
 
-    var CHECKIN_SQL = 'SELECT id, first_name, last_name, member_no, subscription, ' +
+    var CHECKIN_SQL = 'SELECT id, first_name, last_name, member_no, subscription, end_date, ' +
         '(SELECT COUNT(*) FROM visits v WHERE v.member_id = members.id AND v.visit_date = date(\'now\')) AS visited_today, ' +
         '(SELECT COALESCE(SUM(amount), 0) FROM prints p WHERE p.member_id = members.id AND paid = 0) AS print_balance ' +
         'FROM members';
@@ -678,6 +678,16 @@
         if (checkinModal) checkinModal.hidden = true;
     }
 
+
+    // Classe de statut pour la vignette (même code couleur que membres.html — décision EPN :
+    // vert = actif, rouge = expiré, gris foncé = inactif)
+    function statusClass(m) {
+        if ((m.subscription || 'none') === 'none') return ' inactive';
+        var today = new Date().toISOString().slice(0, 10);
+        if (m.end_date && m.end_date < today) return ' expired';
+        return '';
+    }
+
     function displayCheckinResults(members) {
         if (!checkinResults) return;
         checkinResults.innerHTML = '';
@@ -688,7 +698,7 @@
         if (checkinNav) checkinNav.setMembers(members);
         members.forEach(function (m) {
             var li = document.createElement('li');
-            li.className = 'checkin-item' + (m.visited_today ? ' done' : '');
+            li.className = 'checkin-item' + statusClass(m) + (m.visited_today ? ' done' : '');
             li.innerHTML =
                 '<span class="member-avatar small" aria-hidden="true">' +
                     escapeHtml(((m.first_name || '?').charAt(0) + (m.last_name || '?').charAt(0)).toUpperCase()) +
@@ -801,7 +811,7 @@
         }
         members.forEach(function (m) {
             var li = document.createElement('li');
-            li.className = 'checkin-item';
+            li.className = 'checkin-item' + statusClass(m);
             li.innerHTML =
                 '<span class="member-avatar small" aria-hidden="true">' +
                     escapeHtml(((m.first_name || '?').charAt(0) + (m.last_name || '?').charAt(0)).toUpperCase()) +
