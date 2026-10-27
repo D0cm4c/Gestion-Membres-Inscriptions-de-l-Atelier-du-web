@@ -604,7 +604,14 @@ main {
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 
-.member-card.expired .member-avatar { background: linear-gradient(135deg, #B4534B, var(--red)); }
+/* Statut visible sur la vignette : actif = dégradé accent→violet, expiré = rouge
+   (spécificité renforcée : gagne contre les règles de thème auto/dark/light) */
+.member-card .member-avatar,
+.member-row .member-avatar { background: linear-gradient(135deg, var(--accent), var(--violet)); }
+.member-card.expired .member-avatar,
+.member-row.expired .member-avatar { background: linear-gradient(135deg, #B4534B, var(--red)) !important; }
+:root[data-theme="dark"] .member-card.expired .member-avatar,
+:root[data-theme="dark"] .member-row.expired .member-avatar { background: linear-gradient(135deg, #B4534B, #7A2E29); }
 .member-avatar.small { width: 34px; height: 34px; font-size: 0.8rem; border-radius: 10px; }
 
 .member-idblock { min-width: 0; }
@@ -1315,7 +1322,7 @@ main {
     .site-footer a { color: var(--accent); }
     .seg-btn.active { background: var(--accent); color: #0E1620; }
     .btn-primary { color: #0E1620; }
-    .member-avatar { background: linear-gradient(135deg, #2E4A5C, #17635A); color: var(--text); }
+    /* avatar : dégradé de statut conservé (cf. règles .member-card/.member-row) */
     .badge-sub-none { background: #223240; color: var(--text-soft); }
 }
 
@@ -1358,7 +1365,7 @@ main {
     :root[data-theme="light"] .topbar { background: rgba(255, 255, 255, 0.85); }
     :root[data-theme="light"] .seg-btn.active { background: var(--primary); color: #fff; }
     :root[data-theme="light"] .btn-primary { color: #fff; }
-    :root[data-theme="light"] .member-avatar { background: linear-gradient(135deg, var(--primary-soft), var(--violet)); color: #fff; }
+    :root[data-theme="light"] .member-card .member-avatar, :root[data-theme="light"] .member-row .member-avatar { background: linear-gradient(135deg, var(--accent), var(--violet)); color: #fff; }
     :root[data-theme="light"] .badge-sub-none { background: #EDF1F5; color: var(--text-soft); }
     :root[data-theme="light"] .site-footer a { color: #F5B79E; }
 }
@@ -1403,7 +1410,7 @@ main {
     :root[data-theme="dark"] .topbar { background: rgba(22, 34, 46, 0.9); }
     :root[data-theme="dark"] .seg-btn.active { background: var(--accent); color: #0E1620; }
     :root[data-theme="dark"] .btn-primary { color: #0E1620; }
-    :root[data-theme="dark"] .member-avatar { background: linear-gradient(135deg, #2E4A5C, #17635A); color: var(--text); }
+    :root[data-theme="dark"] .member-card .member-avatar, :root[data-theme="dark"] .member-row .member-avatar { background: linear-gradient(135deg, var(--accent), var(--violet)); color: #fff; }
     :root[data-theme="dark"] .badge-sub-none { background: #223240; color: var(--text-soft); }
     :root[data-theme="dark"] .site-footer a { color: var(--accent); }
 }

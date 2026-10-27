@@ -8,7 +8,7 @@
 
     var WP_BASE = 'https://atelierduweb.be/wp-json/wp/v2';
     var RSS_URL = 'https://atelierduweb.be/feed/';
-    var CACHE_KEY = 'atelierduweb_mec_events';
+    var CACHE_KEY = 'atelierduweb_mec_v2';
     var CACHE_TTL = 15 * 60 * 1000;
 
     function stripHtml(html) {

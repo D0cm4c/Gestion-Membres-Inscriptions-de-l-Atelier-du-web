@@ -52,8 +52,10 @@
                     '<div><div class="member-name">' + esc(member.first_name) + ' ' + esc(member.last_name) + '</div>' +
                     '<div class="member-no-detail">N° de membre : <strong>' + (member.member_no || '—') + '</strong></div>' +
                     '<div class="member-badges">' +
-                        '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>' +
-                        '<span class="badge ' + s.badge + '">' + s.label + '</span>' +
+                        ((member.subscription || 'none') === 'none'
+                            ? '<span class="badge badge-sub-none">Sans abo</span>'
+                            : '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>') +
+                        ((member.subscription === 'monthly' || member.subscription === 'yearly') ? '<span class="badge ' + s.badge + '">' + s.label + '</span>' : '') +
                     '</div></div>' +
                     '<button type="button" class="btn btn-secondary btn-small" id="renewSubBtn" title="Prolonger l\u2019inscription selon la formule du membre">♻️ Renouveler l\u2019abo</button>' +
                     '<button type="button" class="btn btn-danger btn-small" id="deleteMemberBtn" style="margin-left:auto;align-self:flex-start;">🗑️ Supprimer</button>' +

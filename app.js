@@ -182,6 +182,11 @@
     }
 
     function statusBadge(member) {
+        // « Aucun abo » = pas d'inscription dans le temps : ni Active ni Expirée
+        // (décision EPN oct. 2026) — badge neutre « Sans abo ».
+        if ((member.subscription || 'none') === 'none') {
+            return '<span class="badge badge-sub-none">Sans abo</span>';
+        }
         var expired = isExpired(member);
         return '<span class="badge ' + (expired ? 'expired' : 'active-member') + '">' +
             (expired ? 'Expirée' : 'Active') + '</span>';
