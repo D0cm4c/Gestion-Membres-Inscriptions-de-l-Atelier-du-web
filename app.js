@@ -262,6 +262,12 @@
 
     /* ---------- Fiche détail ---------- */
 
+    // Format date dd/mm/aa (ex. 16/11/26) — aperçus de renouvellement
+    function fmtDMY(iso) {
+        if (!iso || iso.length < 10) return iso || '';
+        return iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(2, 4);
+    }
+
     function openDetail(id) {
         var rows = ADWDatabase.queryAll(
             'SELECT m.*, ' +
@@ -418,7 +424,7 @@
             var r = ADWDatabase.previewRenewal(detailMember.id);
             if (!r) return;
             renewArmed = r;
-            detailRenewBtn.textContent = '✅ Confirmer : du ' + r.newStart + ' au ' + r.newEnd + ' ?';
+            detailRenewBtn.textContent = '✅ Confirmer : du ' + fmtDMY(r.newStart) + ' au ' + fmtDMY(r.newEnd) + ' ?';
             detailRenewBtn.classList.add('btn-danger');
             renewArmTimer = setTimeout(function () {
                 renewArmed = null;
@@ -471,20 +477,6 @@
 
     /* ---------- Formulaire ---------- */
 
-    // Renouveler depuis la modale formulaire : prolonge en base et rafraîchit le champ
-    // « Date fin inscription » affiché — l'animateur voit la nouvelle date avant d'enregistrer.
-    var renewInEditBtn = document.getElementById('renewInEditBtn');
-    if (renewInEditBtn) renewInEditBtn.addEventListener('click', function () {
-        var memberId = document.getElementById('memberId').value;
-        if (!memberId) return;
-        var newEnd = ADWDatabase.renewSubscription(memberId);
-        if (!newEnd) return;
-        document.getElementById('endDate').value = newEnd;
-        if (window.ADWNotifications) window.ADWNotifications.push('renew', '\u267b\ufe0f Abonnement renouvelé jusqu\u2019au ' + newEnd + ' (membre ' + memberId + ')', 'success');
-        showToast('\u267b\ufe0f Renouvelé : du ' + r.newStart + ' au ' + r.newEnd + ' — pense à enregistrer le formulaire');
-        render();
-    });
-
     function openModal(member) {
         form.reset();
         formError.hidden = true;
@@ -522,8 +514,6 @@
                 }
             });
         });
-        var renewInEditBtn = document.getElementById('renewInEditBtn');
-        if (renewInEditBtn) renewInEditBtn.hidden = !member; // visible uniquement en modification
         modal.hidden = false;
         document.getElementById('firstName').focus();
     }
