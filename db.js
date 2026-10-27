@@ -621,6 +621,25 @@
 
     // Purge RGPD de toutes les données personnelles (garde les formations/salles du site) :
     // membres, visites, impressions, liens formations, inscriptions en attente, suggestions
+    // Renouveler l'inscription d'un membre : prolonge end_date selon la formule
+    // (mensuel +1 mois, annuel +1 an, sans abonnement : +1 mois par défaut).
+    // Si l'inscription est encore active : s'ajoute à la fin (aucun jour perdu).
+    // Si expirée : repart de la date du jour. Retourne la nouvelle date de fin (AAAA-MM-JJ).
+    Database.renewSubscription = function (memberId) {
+        var m = this.queryAll('SELECT subscription, end_date FROM members WHERE id = ?', [String(memberId)])[0];
+        if (!m) return null;
+        var today = new Date();
+        var todayStr = today.toISOString().slice(0, 10);
+        var base = (m.end_date && m.end_date >= todayStr) ? new Date(m.end_date + 'T00:00:00') : today;
+        var addMonths = m.subscription === 'yearly' ? 12 : 1;
+        var d = new Date(base.getTime());
+        d.setMonth(d.getMonth() + addMonths);
+        var newEnd = d.toISOString().slice(0, 10);
+        this.run('UPDATE members SET end_date = ? WHERE id = ?', [newEnd, String(memberId)]);
+        try { this.flush(); } catch (e) { /* best effort */ }
+        return newEnd;
+    };
+
     Database.purgeAllPersonalData = function () {
         var self = this;
         return Promise.resolve().then(function () {

@@ -55,6 +55,7 @@
                         '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>' +
                         '<span class="badge ' + s.badge + '">' + s.label + '</span>' +
                     '</div></div>' +
+                    '<button type="button" class="btn btn-secondary btn-small" id="renewSubBtn" title="Prolonger l\u2019inscription selon la formule du membre">♻️ Renouveler l\u2019abo</button>' +
                     '<button type="button" class="btn btn-danger btn-small" id="deleteMemberBtn" style="margin-left:auto;align-self:flex-start;">🗑️ Supprimer</button>' +
                 '</div>' +
                 '<dl class="detail-list">' +
@@ -112,6 +113,14 @@
 
             var deleteBtn = document.getElementById('deleteMemberBtn');
             if (deleteBtn) deleteBtn.addEventListener('click', function () {
+var renewBtn = content.querySelector('#renewSubBtn');
+            if (renewBtn) renewBtn.addEventListener('click', function () {
+                var newEnd = window.ADWDatabase.renewSubscription(member.id);
+                if (!newEnd) return;
+                if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd, 'success');
+                alert('Abonnement renouvelé jusqu\u2019au ' + newEnd + '.');
+                render();
+            });
                 ADWAuth.ensureUnlocked('Supprimer un membre — action réservée à l\u2019équipe.').then(function (ok) {
                     if (!ok) return;
                     if (confirm('Supprimer le membre "' + member.first_name + ' ' + member.last_name + '" ?\n\nSes visites, impressions et inscriptions aux formations seront aussi supprimées.')) {
