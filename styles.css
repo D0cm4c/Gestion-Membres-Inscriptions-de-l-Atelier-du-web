@@ -619,6 +619,13 @@ main {
 :root[data-theme="dark"] .member-row.inactive .member-avatar { background: linear-gradient(135deg, #2A3640, #3A4A56); }
 .member-avatar.small { width: 34px; height: 34px; font-size: 0.8rem; border-radius: 10px; }
 
+/* Vignettes des modales check-in/impression (dashboard) — même code couleur EPN :
+   vert = actif, rouge = expiré, gris foncé = inactif */
+.checkin-item .member-avatar { background: linear-gradient(135deg, #18A55F, #2FC77A); color: #fff; }
+.checkin-item.expired .member-avatar { background: linear-gradient(135deg, #B4534B, #D8434B); }
+.checkin-item.inactive .member-avatar { background: linear-gradient(135deg, #3A4A56, #55677A); }
+:root[data-theme="dark"] .checkin-item.inactive .member-avatar { background: linear-gradient(135deg, #2A3640, #3A4A56); }
+
 .member-idblock { min-width: 0; }
 .member-name { font-size: 1.03rem; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
 .member-badges { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.28rem; }
