@@ -264,6 +264,11 @@
         if (res.length) {
             res[0].values.forEach(function (row) { cols[row[1]] = true; });
         }
+        // 1re inscription historique (préservée lors des renouvellements) — ajout oct. 2026
+        if (!cols.first_start_date) {
+            db.run('ALTER TABLE members ADD COLUMN first_start_date TEXT');
+            db.run('UPDATE members SET first_start_date = start_date WHERE first_start_date IS NULL AND start_date IS NOT NULL');
+        }
         if (!cols.subscription) {
             db.run('ALTER TABLE members ADD COLUMN subscription TEXT DEFAULT \'none\'');
         }
@@ -625,19 +630,46 @@
     // (mensuel +1 mois, annuel +1 an, sans abonnement : +1 mois par défaut).
     // Si l'inscription est encore active : s'ajoute à la fin (aucun jour perdu).
     // Si expirée : repart de la date du jour. Retourne la nouvelle date de fin (AAAA-MM-JJ).
-    Database.renewSubscription = function (memberId) {
+    // Aperçu de renouvellement SANS écriture : calcule les futures dates (double validation UI).
+    // Inscription active : nouveau début = ancienne fin +1 jour, nouveau fin = +1 mois/1 an.
+    // Expirée : nouveau début = aujourd'hui. start_date (1re inscription) reste intacte.
+    Database.previewRenewal = function (memberId) {
         var m = this.queryAll('SELECT subscription, end_date FROM members WHERE id = ?', [String(memberId)])[0];
         if (!m) return null;
         var today = new Date();
         var todayStr = today.toISOString().slice(0, 10);
-        var base = (m.end_date && m.end_date >= todayStr) ? new Date(m.end_date + 'T00:00:00') : today;
+        var active = m.end_date && m.end_date >= todayStr;
+        var base = active ? new Date(m.end_date + 'T00:00:00') : today;
         var addMonths = m.subscription === 'yearly' ? 12 : 1;
+        var newStart;
+        if (active) {
+            newStart = new Date(base.getTime() + 86400000); // lendemain de la fin actuelle
+        } else {
+            newStart = today;
+        }
         var d = new Date(base.getTime());
         d.setMonth(d.getMonth() + addMonths);
         var newEnd = d.toISOString().slice(0, 10);
-        this.run('UPDATE members SET end_date = ? WHERE id = ?', [newEnd, String(memberId)]);
+        return { newStart: newStart.toISOString().slice(0, 10), newEnd: newEnd };
+    };
+
+    // Renouvellement effectif (après double validation UI) : le CYCLE change de dates
+    // (start_date = nouveau début, end_date = nouvelle fin), tandis que first_start_date
+    // fige la date de la TOUTE PREMIÈRE inscription — affichée sur la fiche membre.html.
+    Database.renewSubscription = function (memberId, confirmedStart, confirmedEnd) {
+        var newStart = confirmedStart;
+        var newEnd = confirmedEnd;
+        if (!newStart || !newEnd) {
+            var p = this.previewRenewal(memberId);
+            if (!p) return null;
+            newStart = p.newStart;
+            newEnd = p.newEnd;
+        }
+        // Figer la 1re inscription à la première occasion (si pas encore figée)
+        this.run('UPDATE members SET first_start_date = COALESCE(first_start_date, start_date) WHERE id = ?', [String(memberId)]);
+        this.run('UPDATE members SET start_date = ?, end_date = ? WHERE id = ?', [newStart, newEnd, String(memberId)]);
         try { this.flush(); } catch (e) { /* best effort */ }
-        return newEnd;
+        return { newStart: newStart, newEnd: newEnd };
     };
 
     Database.purgeAllPersonalData = function () {
