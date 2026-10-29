@@ -453,9 +453,9 @@
 
     Database.getMemberFormations = function (memberId) {
         return this.queryAll(
-            'SELECT f.id, f.title, f.start_date, f.time_label, f.url ' +
+            'SELECT f.id, f.title, f.start_date, f.date_text, f.time_label, f.url, f.categories ' +
             'FROM formations_members fm JOIN formations f ON f.id = fm.formation_id ' +
-            'WHERE fm.member_id = ? ORDER BY f.start_date ASC', [memberId]
+            'WHERE fm.member_id = ? ORDER BY f.start_date DESC', [memberId]
         );
     };
 

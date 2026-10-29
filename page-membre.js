@@ -73,22 +73,41 @@
                     '<div><dt>Inscription</dt><dd>du ' + esc(formatDate(member.start_date)) + ' au ' + esc(formatDate(member.end_date)) + '</dd></div>' +
                 '</dl>';
 
-            // Formations
+            // Formations : à venir vs déjà suivies (historique) — décision EPN oct. 2026
+            var todayStr = new Date().toISOString().slice(0, 10);
+            var upcoming = formations.filter(function (f) { return f.start_date && f.start_date >= todayStr; });
+            var past = formations.filter(function (f) { return f.start_date && f.start_date < todayStr; });
+            var nodate = formations.filter(function (f) { return !f.start_date; });
+
+            function formationLine(f) {
+                return '<li><span>🎓 ' + esc(f.title) +
+                    (f.time_label ? ' · <span class="form-hint">' + esc(f.time_label) + '</span>' : '') +
+                    ' · <span class="form-hint">📅 ' + (f.date_text || (f.start_date ? esc(formatDate(f.start_date)) : 'date à confirmer')) + '</span></span>' +
+                    '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="badge badge-sub-monthly" title="Voir la fiche formation">fiche →</a>' +
+                    (f.url ? ' <a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">site</a>' : '') +
+                    '</li>';
+            }
+
             html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
-                '<h4>🎓 Inscriptions aux formations <span class="members-count">' + formations.length + '</span></h4>';
-            if (formations.length) {
+                '<h4>🎓 Formations à venir <span class="members-count">' + upcoming.length + '</span></h4>';
+            if (upcoming.length || nodate.length) {
                 html += '<ul class="visits-list">';
-                formations.forEach(function (f) {
-                    html += '<li><span>🎓 ' + esc(f.title) +
-                        (f.time_label ? ' · <span class="form-hint">' + esc(f.time_label) + '</span>' : '') +
-                        ' · <span class="form-hint">📅 ' + (f.start_date ? esc(formatDate(f.start_date)) : 'date à confirmer') + '</span></span>' +
-                        '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="badge badge-sub-monthly" title="Voir la fiche formation">fiche →</a>' +
-                        (f.url ? ' <a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">site</a>' : '') +
-                        '</li>';
-                });
+                upcoming.forEach(function (f) { html += formationLine(f); });
+                nodate.forEach(function (f) { html += formationLine(f); });
                 html += '</ul>';
             } else {
-                html += '<p class="form-hint">Aucune inscription à une formation. <a href="formations.html">Inscrire à une formation →</a></p>';
+                html += '<p class="form-hint">Aucune formation à venir.</p>';
+            }
+            html += '</div>';
+
+            html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
+                '<h4>📚 Formations suivies <span class="members-count">' + past.length + '</span></h4>';
+            if (past.length) {
+                html += '<ul class="visits-list">';
+                past.forEach(function (f) { html += formationLine(f); });
+                html += '</ul>';
+            } else {
+                html += '<p class="form-hint">Aucune formation suivie pour le moment.</p>';
             }
             html += '</div>';
 
