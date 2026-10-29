@@ -114,10 +114,33 @@
                 (f.time_label ? ' · ' + esc(f.time_label) : '') +
                 (f.duration ? ' · ' + esc(f.duration) : '') +
                 '</p>' +
+                (f.price ? '<p style="opacity:0.95;font-size:1.05rem;font-weight:700;margin-top:0.3rem;">💶 ' + esc(f.price) + ' €</p>' : '') +
                 '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button></div>' +
-                '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1rem;bottom:0.9rem;font-size:1.9rem;" href="#inscrits" title="Voir les inscrits">' +
-                '<span class="f-count-num" style="font-size:2.2rem;">' + attendees.length + '</span>' +
-                '<span class="f-count-lbl">inscrit' + (attendees.length > 1 ? 's' : '') + '</span></a>' +
+                '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1.4rem;bottom:1rem;text-align:center;" href="#inscrits" title="Voir les inscrits">' +
+                '<span class="f-count-num" style="font-size:3.4rem;line-height:1;font-weight:800;">' + attendees.length + '</span>' +
+                '<span class="f-count-lbl" style="font-size:0.95rem;">inscrit' + (attendees.length > 1 ? 's' : '') + '</span></a>' +
+                '</div>';
+
+            // ---- KPI de la formation : aperçu de son fonctionnement (oct. 2026) ----
+            var paidCount = attendees.filter(function (m) { return m.payment === 'bancontact' || m.payment === 'cash'; }).length;
+            var presentCount = attendees.filter(function (m) { return m.attendance === 'present'; }).length;
+            var canceledCount = attendees.filter(function (m) { return m.attendance === 'canceled'; }).length;
+            var rateCount = f.price ? paidCount : 0;
+            var revenue = 0;
+            if (f.price) {
+                revenue = paidCount * (parseFloat(String(f.price).replace(',', '.')) || 0);
+            }
+            function fKpi(icon, num, label, cls) {
+                return '<div class="mkpi' + (cls ? ' ' + cls : '') + '">' +
+                    '<span class="mkpi-icon" aria-hidden="true">' + icon + '</span>' +
+                    '<span class="mkpi-num">' + num + '</span>' +
+                    '<span class="mkpi-label">' + label + '</span></div>';
+            }
+            html += '<div class="mkpi-row fkpi-row" style="grid-template-columns:repeat(4,1fr);">' +
+                fKpi('👥', attendees.length, 'inscrits') +
+                fKpi('💳', paidCount, 'payé' + (paidCount > 1 ? 's' : '')) +
+                fKpi('✅', presentCount, 'présent' + (presentCount > 1 ? 's' : ''), presentCount > 0 ? 'fkpi-green' : '') +
+                fKpi('💶', revenue > 0 ? revenue.toFixed(2).replace('.', ',') + ' €' : '—', 'recette' + (revenue > 1 ? 's' : '')) +
                 '</div>';
 
             // Détails structurés (organisateur/lieu/tarif remplis dès que les snippets répondront)
@@ -140,17 +163,24 @@
                 '</div>' +
                 '</div>';
 
-            // Inscriptions (miroir)
-            html += '<div class="stat-card" id="inscrits"><h3>👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>';
+            // Inscriptions (miroir) — marge top : détaché de la grille d'infos au-dessus
+            html += '<div class="stat-card" id="inscrits" style="margin-top:1.2rem;"><h3>👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>';
             if (attendees.length) {
                 html += '<ul class="checkin-results" style="display:flex;flex-direction:column;">';
                 attendees.forEach(function (m) {
-                    html += '<li class="checkin-item done" style="list-style:none;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
-                        '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
-                        '<div style="flex:1;min-width:0;">' +
+                    var paid = m.payment; // 'bancontact' | 'cash' | null
+                    var att = m.attendance; // 'present' | 'canceled' | null
+                    html += '<li class="checkin-item done fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
+                        '<span class="member-avatar small" style="cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
+                        '<div style="flex:1;min-width:0;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
                         '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
                         (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
                         '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">détails</span></div></div>' +
+                        '<span class="fm-actions">' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'bancontact' ? ' is-paid' : '') + '" data-pay="bancontact"' + (paid === 'cash' ? ' disabled' : '') + '>💳 Bancontact</button>' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'cash' ? ' is-paid' : '') + '" data-pay="cash"' + (paid === 'bancontact' ? ' disabled' : '') + '>💵 Cash</button>' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-att' + (att === 'present' ? ' is-present' : att === 'canceled' ? ' is-canceled' : '') + '" data-att="' + (att === 'present' ? 'canceled' : 'present') + '" title="' + (att ? 'Cliquer pour changer le statut' : 'Confirmer la présence') + '">' + (att === 'present' ? '✅ Présent' : att === 'canceled' ? '🚫 Annulé' : '❔ Présent ?') + '</button>' +
+                        '</span>' +
                         '</li>';
                 });
                 html += '</ul>';
@@ -160,8 +190,8 @@
             html += '</div>';
 
 
-            // Catégories (bloc sous la grille)
-            html += '<div class="stats-container" style="margin-bottom:1.3rem;"><div class="stat-card"><h3>🗂 Catégories</h3>' +
+            // Catégories (bloc sous la carte Inscrits)
+            html += '<div class="stats-container" style="margin-top:1.2rem;margin-bottom:1.3rem;"><div class="stat-card"><h3>🗂 Catégories</h3>' +
                 (cats.length ? '<ul style="display:flex;gap:0.4rem;list-style:none;flex-wrap:wrap;">' + cats.map(function (c) {
                     var t = toneFor(c);
                     return '<li><span class="tag" style="background:' + TONE_SOLID[t] + ';color:#fff;"><span class="month-dot" style="display:inline-block;background:rgba(255,255,255,0.6);margin-right:0.35rem;"></span>' + esc(c) + '</span></li>';
@@ -170,8 +200,50 @@
 
             content.innerHTML = html;
             attachRoomLogic(f);
+            attachAttendeeLogic(f);
             content.hidden = false;
             loading.hidden = true;
+        }
+
+        // ============ Suivi des inscrits : paiement + présence (oct. 2026) ============
+        var attendeeLogicAttached = false;
+        function attachAttendeeLogic(f) {
+            // Délégation sur toute la liste : un listener UNIQUE (flag anti-accumulation au re-render)
+            if (attendeeLogicAttached) return;
+            attendeeLogicAttached = true;
+            var currentFormation = f;
+            attachAttendeeLogic = function (nf) { currentFormation = nf; }; // maj de la formation courante
+            content.addEventListener('click', function (e) {
+                var payBtn = e.target.closest('.fm-pay');
+                if (payBtn) {
+                    var li = payBtn.closest('.fm-line');
+                    var memberId = li && li.getAttribute('data-fm-mid');
+                    if (!memberId) return;
+                    var method = payBtn.getAttribute('data-pay');
+                    var already = payBtn.classList.contains('is-paid');
+                    // clic sur un bouton déjà validé = annulation (toggle)
+                    ADWDatabase.setFmPayment(currentFormation.id, memberId, already ? null : method);
+                    if (window.ADWNotifications && !already) {
+                        window.ADWNotifications.push('info', '💳 ' + (method === 'bancontact' ? 'Bancontact' : 'Cash') + ' enregistré pour un inscrit de « ' + currentFormation.title + ' »', 'success');
+                    }
+                    render(f);
+                    return;
+                }
+                var attBtn = e.target.closest('.fm-att');
+                if (attBtn) {
+                    var li2 = attBtn.closest('.fm-line');
+                    var memberId2 = li2 && li2.getAttribute('data-fm-mid');
+                    if (!memberId2) return;
+                    var target = attBtn.getAttribute('data-att'); // 'present' | 'canceled'
+                    ADWDatabase.setFmAttendance(currentFormation.id, memberId2, target);
+                    if (window.ADWNotifications) {
+                        window.ADWNotifications.push('info', target === 'present'
+                            ? '✅ Présence confirmée (formation « ' + currentFormation.title + ' »)'
+                            : '🚫 Inscription marquée annulée (formation « ' + currentFormation.title + ' »)', target === 'present' ? 'success' : 'warning');
+                    }
+                    render(f);
+                }
+            });
         }
 
         // ============ Apercu membre (modale rapide) ============

@@ -625,6 +625,34 @@ main {
 :root[data-theme="dark"] .member-row.inactive .member-avatar { background: linear-gradient(135deg, #2A3640, #3A4A56); }
 .member-avatar.small { width: 34px; height: 34px; font-size: 0.8rem; border-radius: 10px; }
 
+/* KPI de formation (formation.html) — réutilise .mkpi du mini-dashboard membre */
+.fkpi-row { margin-top: 1.2rem; }
+.fkpi-green { border-top: 3px solid var(--green); }
+.fkpi-green .mkpi-num { color: var(--green); }
+@media (max-width: 700px) { .fkpi-row { grid-template-columns: repeat(2, 1fr) !important; } }
+
+/* Suivi des inscrits (formation.html) : boutons paiement + présence */
+.fm-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+.fm-pay.is-paid {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: var(--green);
+    font-weight: 700;
+}
+.fm-att.is-present { background: var(--green-light); color: var(--green); border-color: var(--green); font-weight: 700; }
+.fm-att.is-canceled { background: #E8ECEF; color: var(--text-soft); border-color: var(--border); }
+.fm-present {
+    border-left: 3px solid var(--green);
+    background: var(--success-bg);
+}
+.fm-canceled {
+    border-left: 3px solid var(--border);
+    opacity: 0.55;
+    filter: saturate(0.5);
+}
+:root[data-theme="dark"] .fm-present { background: rgba(24, 165, 95, 0.12); }
+:root[data-theme="dark"] .fm-canceled { opacity: 0.5; }
+
 /* Lignes de formation (cartes formations membre.html) : titre + boutons liens stylés */
 .m-card .visits-list li {
     display: flex;
