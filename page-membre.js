@@ -183,12 +183,13 @@
             var nodate = formations.filter(function (f) { return !f.start_date; });
 
             function formationLine(f) {
-                return '<li><span>🎓 ' + esc(f.title) +
+                return '<li><span class="f-line-title">🎓 ' + esc(f.title) +
                     (f.time_label ? ' · <span class="form-hint">' + esc(f.time_label) + '</span>' : '') +
                     ' · <span class="form-hint">📅 ' + (f.date_text || (f.start_date ? esc(formatDate(f.start_date)) : 'date à confirmer')) + '</span></span>' +
-                    '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="badge badge-sub-monthly" title="Voir la fiche formation">fiche →</a>' +
-                    (f.url ? ' <a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">site</a>' : '') +
-                    '</li>';
+                    '<span class="f-line-actions">' +
+                    '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="btn btn-secondary btn-small f-link" title="Voir la fiche formation dans l’app">📄 Fiche</a>' +
+                    (f.url ? '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" class="btn btn-secondary btn-small f-link f-link-site" title="Voir la formation sur atelierduweb.be">🌐 Site</a>' : '') +
+                    '</span></li>';
             }
 
             html += '<div class="m-card">' +
