@@ -121,6 +121,25 @@
             </div>
             <p class="form-hint" id="mecKeyStatus" style="margin-top:0.7rem;margin-bottom:0;"></p>
         </section>
+
+        <section class="settings-card" aria-labelledby="adwSecretTitle">
+            <div class="settings-head">
+                <span class="settings-ico orange" aria-hidden="true">🔐</span>
+                <div>
+                    <h2 id="adwSecretTitle">Secret du plugin ADW MEC API</h2>
+                    <p>Retour des inscriptions depuis atelierduweb.be</p>
+                </div>
+            </div>
+            <p class="settings-note">Secret défini dans WordPress (Réglages → ADW MEC API → « Activer l'endpoint inscriptions »). Il authentifiera le futur serveur Node quand il récupérera les réservations faites sur le site (voir <code>docs/BACKEND.md</code> §7-8). Stocké uniquement dans ce navigateur — l'app actuelle ne l'utilise pas.</p>
+            <div class="settings-foot">
+                <div class="form-group" style="flex:1;min-width:200px;">
+                    <input type="password" id="adwPluginSecret" placeholder="Colle le secret ici…" autocomplete="off" aria-label="Secret du plugin ADW MEC API">
+                </div>
+                <button class="btn btn-primary" id="adwSecretSaveBtn">💾 Enregistrer</button>
+                <button class="btn btn-secondary" id="adwSecretClearBtn">🗑️ Effacer</button>
+            </div>
+            <p class="form-hint" id="adwSecretStatus" style="margin-top:0.7rem;margin-bottom:0;"></p>
+        </section>
         </div>
 
         <h2 class="settings-group-title">🔒 Sécurité &amp; données</h2>
@@ -186,6 +205,6 @@
     <script src="nav.js?v=2"></script>
     <script src="page-parametres.js?v=1"></script>
     <script src="backup.js?v=2"></script>
-    <script src="settings.js?v=26"></script>
+    <script src="settings.js?v=27"></script>
 </body>
 </html>
