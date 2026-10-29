@@ -133,7 +133,7 @@
             // Classe de statut pour la vignette (même code couleur EPN que membres.html)
             var avatarStatus = (member.subscription || 'none') === 'none' ? ' inactive' : (expired ? ' expired' : '');
 
-            var html = '<div class="detail-head' + avatarStatus + '">' +
+            var html = '<div class="m-card m-card-head"><div class="detail-head' + avatarStatus + '">' +
                     '<div class="member-avatar">' + esc(((member.first_name || '?')[0] || '') + ((member.last_name || '')[0] || '')) + '</div>' +
                     '<div><div class="member-name">' + esc(member.first_name) + ' ' + esc(member.last_name) + '</div>' +
                     '<div class="member-no-detail">N° de membre : <strong>' + (member.member_no || '—') + '</strong></div>' +
@@ -147,9 +147,14 @@
                     '<button type="button" class="btn btn-primary btn-small" id="checkinBtn" title="Enregistrer la visite du jour pour ce membre">✅ Pointer une visite</button>' +
                     '<button type="button" class="btn btn-danger btn-small" id="deleteMemberBtn" style="margin-left:auto;align-self:flex-start;">🗑️ Supprimer</button>' +
                 '</div>' +
-                // ---- Mini-dashboard : indicateurs pour l'accueillant (décision EPN oct. 2026) ----
+                '</div>' + // fin carte tête
+                // ---- Grille de cartes (mise en page oct. 2026) ----
+                '<div class="m-cards">' +
+                '<div class="m-card">' +
                 memberKpis(member, visits, formations) +
                 memberCareNotes(member, visits, formations) +
+                '</div>' +
+                '<div class="m-card">' +
                 '<dl class="detail-list">' +
                     '<div><dt>Âge</dt><dd>' + (member.age ? esc(member.age) + ' ans' : 'Non renseigné') + '</dd></div>' +
                     '<div><dt>Genre</dt><dd>' + (member.gender ? esc(GENDER_LABELS[member.gender] || member.gender) : 'Non renseigné') + '</dd></div>' +
@@ -161,7 +166,8 @@
                     (member.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + esc(member.phone.replace(/\s/g, '')) + '">' + esc(member.phone) + '</a></dd></div>' : '') +
                     (member.address ? '<div><dt>Adresse</dt><dd>' + esc(member.address) + '</dd></div>' : '') +
                     '<div><dt>Inscription</dt><dd>du ' + esc(formatDate(member.start_date)) + ' au ' + esc(formatDate(member.end_date)) + '</dd></div>' +
-                '</dl>';
+                '</dl>' +
+                '</div>'; // fin carte identité
 
             // Formations : à venir vs déjà suivies (historique) — décision EPN oct. 2026
             var todayStr = new Date().toISOString().slice(0, 10);
@@ -178,7 +184,8 @@
                     '</li>';
             }
 
-            html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
+            html += '<div class="m-card">' +
+                '<div class="detail-visits">' +
                 '<h4>🎓 Formations à venir <span class="members-count">' + upcoming.length + '</span></h4>';
             if (upcoming.length || nodate.length) {
                 html += '<ul class="visits-list">';
@@ -189,8 +196,10 @@
                 html += '<p class="form-hint">Aucune formation à venir.</p>';
             }
             html += '</div>';
+            html += '</div>'; // fin carte
 
-            html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
+            html += '<div class="m-card">' +
+                '<div class="detail-visits">' +
                 '<h4>📚 Formations suivies <span class="members-count">' + past.length + '</span></h4>';
             if (past.length) {
                 html += '<ul class="visits-list">';
@@ -200,10 +209,12 @@
                 html += '<p class="form-hint">Aucune formation suivie pour le moment.</p>';
             }
             html += '</div>';
+            html += '</div>'; // fin carte
 
             // Impressions (même logique que la modale fiche de membres.html)
             var balance = member.print_balance || 0;
-            html += '<div class="detail-prints" style="margin-top:1.2rem;">' +
+            html += '<div class="m-card">' +
+                '<div class="detail-prints">' +
                 '<h4>🖨️ Impressions ' +
                 (balance > 0
                     ? '<span class="badge badge-sub-none">' + balance.toFixed(2).replace('.', ',') + ' € dus</span>'
@@ -215,10 +226,12 @@
                     (balance > 0 ? '<button type="button" class="btn btn-primary btn-small" data-print="pay">💰 Solder ' + balance.toFixed(2).replace('.', ',') + ' €</button>' : '') +
                     (balance > 0 ? '<button type="button" class="btn btn-danger btn-small" data-print="delete" title="Supprimer le solde en cas d\'erreur">🗑️ Erreur de saisie</button>' : '') +
                 '</div>' +
-            '</div>';
+            '</div>' +
+            '</div>'; // fin carte impressions
 
             // Visites
-            html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
+            html += '<div class="m-card">' +
+                '<div class="detail-visits">' +
                 '<h4>Historique des visites <span class="members-count">' + member.visit_count + ' au total</span></h4>';
             if (visits.length) {
                 html += '<ul class="visits-list">';
@@ -233,6 +246,8 @@
                 html += '<p class="form-hint">Aucune visite enregistrée pour le moment.</p>';
             }
             html += '</div>';
+            html += '</div>'; // fin carte
+            html += '</div>'; // fin grille m-cards
 
             content.innerHTML = html;
             content.hidden = false;
