@@ -186,7 +186,7 @@ Les scripts de pages (app.js, formations.html…) appellent déjà `ADWDatabase.
 **Côté app, c'est déjà prêt** (`booking.js`) : l'URL ouverte est
 `{formation.url}?method=mec-booking-modal&adw_name=…&adw_email=…&adw_phone=…&adw_member_no=…`
 
-**Côté WordPress, il manque ce snippet** (JS injecté via `wp_footer`, plugin Code Snippets ou thème enfant) :
+**Côté WordPress — plugin « ADW MEC API » (décision oct. 2026)** : le préfill est intégré au plugin WordPress dédié (développé en parallèle de la maquette), qui **remplace le snippet Code Snippets initialement prévu** (Code Snippets étant en échec 403 sur l'hébergeur). Le plugin injecte le JS de préfill via `wp_footer` — même logique que le snippet de référence ci-dessous, qui reste la spécification du comportement attendu :
 
 ```js
 // ADW — Préfill modale M.E. Calendar depuis l'app de gestion
@@ -235,7 +235,7 @@ Les scripts de pages (app.js, formations.html…) appellent déjà `ADWDatabase.
 **Étapes pour le poser** :
 1. Sur le site, ouvrir une réservation de formation, **F12 sur la modale ouverte**, noter les vrais `name`/`id` des champs (nom, email, tél) → ajuster `FIELDS`.
 2. Ajouter le champ **« n° de membre »** dans M.E. Calendar > Settings > Booking > attendee/fixed fields (c'est le maillon fort du matching) — noter son `name` réel (ex. `mec_fix_custom_field_1`) dans `FIELDS.member_no`.
-3. Coller le snippet (adapté) via plugin Code Snippets : « footer only », ou dans le thème enfant.
+3. ~~Coller le snippet via Code Snippets~~ → **intégré au plugin ADW MEC API** ; côté WordPress, activer : Réglages → ADW MEC API → cocher « Activer l'endpoint inscriptions » + définir le secret (pour l'étape 3 du plan : le retour des réservations vers l'app).
 4. Test : depuis l'app, bouton « Réserver sur le site » sur un membre → la modale doit arriver remplie.
 
 ⚠️ **Pré-requis découvert le 22 oct.** : le champ n° de membre n'existe pas encore dans le formulaire MEC (`/config/attendee-fields` testé — email/nom/date naissance/adresse/CP/tél/genre/statut présents, pas de n° membre). **Il faut l'ajouter côté MEC d'abord.** Le reste des champs du formulaire (adresse, statut…) est déjà récolté → une réservation de nouveau venu ≈ une fiche membre quasi complète.
