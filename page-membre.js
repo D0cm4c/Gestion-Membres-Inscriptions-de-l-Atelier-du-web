@@ -58,6 +58,7 @@
                         ((member.subscription === 'monthly' || member.subscription === 'yearly') ? '<span class="badge ' + s.badge + '">' + s.label + '</span>' : '') +
                     '</div></div>' +
                     '<button type="button" class="btn btn-secondary btn-small" id="renewSubBtn" title="Prolonger l\u2019inscription selon la formule du membre">♻️ Renouveler l\u2019abo</button>' +
+                    '<button type="button" class="btn btn-primary btn-small" id="checkinBtn" title="Enregistrer la visite du jour pour ce membre">✅ Pointer une visite</button>' +
                     '<button type="button" class="btn btn-danger btn-small" id="deleteMemberBtn" style="margin-left:auto;align-self:flex-start;">🗑️ Supprimer</button>' +
                 '</div>' +
                 '<dl class="detail-list">' +
@@ -111,6 +112,22 @@
             }
             html += '</div>';
 
+            // Impressions (même logique que la modale fiche de membres.html)
+            var balance = member.print_balance || 0;
+            html += '<div class="detail-prints" style="margin-top:1.2rem;">' +
+                '<h4>🖨️ Impressions ' +
+                (balance > 0
+                    ? '<span class="badge badge-sub-none">' + balance.toFixed(2).replace('.', ',') + ' € dus</span>'
+                    : '<span class="badge badge-ok">✓ rien à payer</span>') +
+                '</h4>' +
+                '<div class="print-actions-btns">' +
+                    '<button type="button" class="btn btn-secondary btn-small" data-print="bw">+ 1 N&B (0,10 €)</button>' +
+                    '<button type="button" class="btn btn-secondary btn-small" data-print="color">+ 1 Couleur (0,50 €)</button>' +
+                    (balance > 0 ? '<button type="button" class="btn btn-primary btn-small" data-print="pay">💰 Solder ' + balance.toFixed(2).replace('.', ',') + ' €</button>' : '') +
+                    (balance > 0 ? '<button type="button" class="btn btn-danger btn-small" data-print="delete" title="Supprimer le solde en cas d\'erreur">🗑️ Erreur de saisie</button>' : '') +
+                '</div>' +
+            '</div>';
+
             // Visites
             html += '<div class="detail-visits" style="margin-top:1.2rem;">' +
                 '<h4>Historique des visites <span class="members-count">' + member.visit_count + ' au total</span></h4>';
@@ -131,6 +148,56 @@
             content.innerHTML = html;
             content.hidden = false;
             loading.hidden = true;
+
+            // Pointer une visite du jour (garde déjà-pointé, même règle que membres.html)
+            var checkinBtn = document.getElementById('checkinBtn');
+            if (checkinBtn) checkinBtn.addEventListener('click', function () {
+                var today = new Date().toISOString().slice(0, 10);
+                var already = window.ADWDatabase.queryAll(
+                    'SELECT id FROM visits WHERE member_id = ? AND visit_date = ?', [member.id, today]);
+                if (already.length) {
+                    alert('⚠️ Visite déjà pointée aujourd\'hui pour ce membre.');
+                    return;
+                }
+                var amount = member.subscription === 'none' ? 1 : 0;
+                var visitId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                window.ADWDatabase.run('INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, ?, ?)',
+                    [visitId, member.id, today, amount]).then(function () {
+                    if (window.ADWNotifications) window.ADWNotifications.push('checkin', '✅ Visite de ' + member.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)'), 'success');
+                    render();
+                });
+            });
+
+            // Impressions : +N&B, +couleur, solder, erreur (même logique que membres.html)
+            content.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-print]');
+                if (!btn) return;
+                var action = btn.getAttribute('data-print');
+                var today = new Date().toISOString().slice(0, 10);
+                if (action === 'bw' || action === 'color') {
+                    var amount = action === 'bw' ? 0.10 : 0.50;
+                    var printId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                    window.ADWDatabase.run('INSERT INTO prints (id, member_id, print_date, type, amount, paid) VALUES (?, ?, ?, ?, ?, 0)',
+                        [printId, member.id, today, action, amount]).then(function () {
+                        if (window.ADWNotifications) window.ADWNotifications.push('print', '🖨️ Impression ' + (action === 'bw' ? 'N&B' : 'couleur') + ' ajoutée (' + amount.toFixed(2).replace('.', ',') + ' €)', 'success');
+                        render();
+                    });
+                } else if (action === 'pay') {
+                    window.ADWDatabase.run('UPDATE prints SET paid = 1, paid_date = date(\'now\') WHERE member_id = ? AND paid = 0',
+                        [member.id]).then(function () {
+                        if (window.ADWNotifications) window.ADWNotifications.push('print', '💰 Impressions soldées', 'success');
+                        render();
+                    });
+                } else if (action === 'delete') {
+                    if (confirm('Supprimer le solde d\'impressions de ' + member.first_name + ' ? (en cas d\'erreur de saisie)')) {
+                        window.ADWDatabase.run('DELETE FROM prints WHERE member_id = ? AND paid = 0',
+                            [member.id]).then(function () {
+                            if (window.ADWNotifications) window.ADWNotifications.push('print', '🗑️ Solde d\'impressions supprimé', 'success');
+                            render();
+                        });
+                    }
+                }
+            });
 
             var deleteBtn = document.getElementById('deleteMemberBtn');
             if (deleteBtn) deleteBtn.addEventListener('click', function () {
