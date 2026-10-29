@@ -145,12 +145,19 @@
             if (attendees.length) {
                 html += '<ul class="checkin-results" style="display:flex;flex-direction:column;">';
                 attendees.forEach(function (m) {
-                    html += '<li class="checkin-item done" style="list-style:none;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
-                        '<span class="member-avatar small">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
-                        '<div style="flex:1;min-width:0;">' +
+                    var paid = m.payment; // 'bancontact' | 'cash' | null
+                    var att = m.attendance; // 'present' | 'canceled' | null
+                    html += '<li class="checkin-item done fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
+                        '<span class="member-avatar small" style="cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
+                        '<div style="flex:1;min-width:0;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
                         '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
                         (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
                         '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">détails</span></div></div>' +
+                        '<span class="fm-actions">' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'bancontact' ? ' is-paid' : '') + '" data-pay="bancontact"' + (paid === 'cash' ? ' disabled' : '') + '>💳 Bancontact</button>' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'cash' ? ' is-paid' : '') + '" data-pay="cash"' + (paid === 'bancontact' ? ' disabled' : '') + '>💵 Cash</button>' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-att' + (att === 'present' ? ' is-present' : att === 'canceled' ? ' is-canceled' : '') + '" data-att="' + (att === 'present' ? 'canceled' : 'present') + '" title="' + (att ? 'Cliquer pour changer le statut' : 'Confirmer la présence') + '">' + (att === 'present' ? '✅ Présent' : att === 'canceled' ? '🚫 Annulé' : '❔ Présent ?') + '</button>' +
+                        '</span>' +
                         '</li>';
                 });
                 html += '</ul>';
@@ -170,8 +177,50 @@
 
             content.innerHTML = html;
             attachRoomLogic(f);
+            attachAttendeeLogic(f);
             content.hidden = false;
             loading.hidden = true;
+        }
+
+        // ============ Suivi des inscrits : paiement + présence (oct. 2026) ============
+        var attendeeLogicAttached = false;
+        function attachAttendeeLogic(f) {
+            // Délégation sur toute la liste : un listener UNIQUE (flag anti-accumulation au re-render)
+            if (attendeeLogicAttached) return;
+            attendeeLogicAttached = true;
+            var currentFormation = f;
+            attachAttendeeLogic = function (nf) { currentFormation = nf; }; // maj de la formation courante
+            content.addEventListener('click', function (e) {
+                var payBtn = e.target.closest('.fm-pay');
+                if (payBtn) {
+                    var li = payBtn.closest('.fm-line');
+                    var memberId = li && li.getAttribute('data-fm-mid');
+                    if (!memberId) return;
+                    var method = payBtn.getAttribute('data-pay');
+                    var already = payBtn.classList.contains('is-paid');
+                    // clic sur un bouton déjà validé = annulation (toggle)
+                    ADWDatabase.setFmPayment(currentFormation.id, memberId, already ? null : method);
+                    if (window.ADWNotifications && !already) {
+                        window.ADWNotifications.push('info', '💳 ' + (method === 'bancontact' ? 'Bancontact' : 'Cash') + ' enregistré pour un inscrit de « ' + currentFormation.title + ' »', 'success');
+                    }
+                    render(f);
+                    return;
+                }
+                var attBtn = e.target.closest('.fm-att');
+                if (attBtn) {
+                    var li2 = attBtn.closest('.fm-line');
+                    var memberId2 = li2 && li2.getAttribute('data-fm-mid');
+                    if (!memberId2) return;
+                    var target = attBtn.getAttribute('data-att'); // 'present' | 'canceled'
+                    ADWDatabase.setFmAttendance(currentFormation.id, memberId2, target);
+                    if (window.ADWNotifications) {
+                        window.ADWNotifications.push('info', target === 'present'
+                            ? '✅ Présence confirmée (formation « ' + currentFormation.title + ' »)'
+                            : '🚫 Inscription marquée annulée (formation « ' + currentFormation.title + ' »)', target === 'present' ? 'success' : 'warning');
+                    }
+                    render(f);
+                }
+            });
         }
 
         // ============ Apercu membre (modale rapide) ============
