@@ -154,7 +154,14 @@
                 memberKpis(member, visits, formations) +
                 memberCareNotes(member, visits, formations) +
                 '</div>' +
-                '<div class="m-card">' +
+                '<div class="m-card m-card-id">' +
+                '<div class="mid-name">' + esc(member.first_name) + ' ' + esc(member.last_name) + '</div>' +
+                (member.first_start_date && member.first_start_date !== member.start_date
+                    ? '<div class="mid-since">Membre depuis le ' + esc(formatDate(member.first_start_date)) + '</div>'
+                    : '') +
+                ((member.subscription || 'none') !== 'none' && member.start_date
+                    ? '<div class="mid-dates">du ' + esc(formatDate(member.start_date)) + ' <span class="mid-sep">→</span> au ' + esc(formatDate(member.end_date)) + '</div>'
+                    : '') +
                 '<dl class="detail-list">' +
                     '<div><dt>Âge</dt><dd>' + (member.age ? esc(member.age) + ' ans' : 'Non renseigné') + '</dd></div>' +
                     '<div><dt>Genre</dt><dd>' + (member.gender ? esc(GENDER_LABELS[member.gender] || member.gender) : 'Non renseigné') + '</dd></div>' +
@@ -165,7 +172,6 @@
                     (member.email ? '<div><dt>Email</dt><dd><a href="mailto:' + esc(member.email) + '">' + esc(member.email) + '</a></dd></div>' : '') +
                     (member.phone ? '<div><dt>Téléphone</dt><dd><a href="tel:' + esc(member.phone.replace(/\s/g, '')) + '">' + esc(member.phone) + '</a></dd></div>' : '') +
                     (member.address ? '<div><dt>Adresse</dt><dd>' + esc(member.address) + '</dd></div>' : '') +
-                    '<div><dt>Inscription</dt><dd>du ' + esc(formatDate(member.start_date)) + ' au ' + esc(formatDate(member.end_date)) + '</dd></div>' +
                 '</dl>' +
                 '</div>'; // fin carte identité
 
