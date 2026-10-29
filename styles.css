@@ -632,7 +632,12 @@ main {
 @media (max-width: 700px) { .fkpi-row { grid-template-columns: repeat(2, 1fr) !important; } }
 
 /* Suivi des inscrits (formation.html) : boutons paiement + présence */
-.fm-actions { display: flex; gap: 0.4rem; flex-shrink: 0; align-items: center; margin-left: auto; padding-right: 0.2rem; }
+.fm-actions { display: flex; gap: 0.4rem; flex-shrink: 0; align-items: center; margin-left: auto; }
+/* lignes d'inscrits : respiration homogène — vignette et boutons à distance égale des bords */
+.checkin-item.fm-line { padding: 0.6rem 0.9rem; }
+.fm-line .fm-actions { padding-left: 0.5rem; }
+/* les états colorés gardent leur liseré DANS le padding (pas collé au contenu) */
+.fm-present, .fm-canceled, .fm-na { background-clip: padding-box; }
 /* lignes d'inscrits : pas de grisage global (le .done ancien le faisait) */
 .checkin-item.fm-line { opacity: 1; }
 .fm-pay.is-paid {
@@ -646,21 +651,24 @@ main {
 .fm-att.is-na { background: var(--info-bg, #E7F0FA); color: var(--info, #1F5FA8); border-color: var(--info, #1F5FA8); }
 /* l'autre bouton de paiement : grisé + inactif quand l'un est validé */
 .fm-pay.is-muted { opacity: 0.45; filter: saturate(0.3); }
-.fm-present {
+.checkin-item.fm-present {
     border-left: 3px solid var(--green);
     background: var(--success-bg);
 }
-.fm-canceled {
+.checkin-item.fm-canceled {
     border-left: 3px solid var(--border);
     opacity: 0.55;
     filter: saturate(0.5);
 }
-.fm-na {
+.checkin-item.fm-na {
     border-left: 3px solid var(--info, #1F5FA8);
     background: rgba(31, 95, 168, 0.07);
 }
-:root[data-theme="dark"] .fm-present { background: rgba(24, 165, 95, 0.12); }
-:root[data-theme="dark"] .fm-canceled { opacity: 0.5; }
+/* état normal explicite (retour du vert/gris/bleu vers le neutre) */
+.checkin-item.fm-line { background: var(--surface); opacity: 1; filter: none; }
+.checkin-item.fm-present:hover, .checkin-item.fm-canceled:hover, .checkin-item.fm-na:hover { background: inherit; border-color: inherit; transform: none; }
+:root[data-theme="dark"] .checkin-item.fm-present { background: rgba(24, 165, 95, 0.12); }
+:root[data-theme="dark"] .checkin-item.fm-canceled { opacity: 0.5; }
 
 /* Lignes de formation (cartes formations membre.html) : titre + boutons liens stylés */
 .m-card .visits-list li {
