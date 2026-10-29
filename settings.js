@@ -244,6 +244,57 @@
         });
     }
 
+    // ---- Test de connexion au plugin ADW MEC API (endpoint inscriptions) ----
+    // Le plugin expose (convention) : GET {site}/wp-json/adw-mec/v1/inscriptions
+    // authentifié par le secret (header X-ADW-Secret). Réponses attendues :
+    //   200/401 avec JSON → le plugin répond (✓), 401 → secret invalide (⚠)
+    //   réseau/404 → site injoignable ou endpoint inactif (✗)
+    function initAdwSecretTest() {
+        var testBtn = document.getElementById('adwSecretTestBtn');
+        var resultEl = document.getElementById('adwSecretTestResult');
+        if (!testBtn || !resultEl) return;
+
+        var ADW_PLUGIN_ENDPOINT = 'https://atelierduweb.be/wp-json/adw-mec/v1/inscriptions';
+
+        function setResult(ok, msg) {
+            resultEl.textContent = (ok ? '✅ ' : '❌ ') + msg;
+            resultEl.style.color = ok ? 'var(--green)' : 'var(--danger)';
+        }
+
+        testBtn.addEventListener('click', function () {
+            var secret = '';
+            try { secret = localStorage.getItem(ADW_SECRET_STORAGE) || ''; } catch (e) { /* ignore */ }
+            if (!secret) {
+                setResult(false, 'Enregistre d\u2019abord le secret ci-dessus.');
+                return;
+            }
+            resultEl.textContent = '⏳ Test en cours…';
+            resultEl.style.color = 'var(--text-soft)';
+            var done = false;
+            var timer = setTimeout(function () {
+                if (!done) { done = true; setResult(false, 'Pas de réponse du site (délai dépassé).'); }
+            }, 10000);
+
+            fetch(ADW_PLUGIN_ENDPOINT, { headers: { 'X-ADW-Secret': secret, 'Accept': 'application/json' } })
+                .then(function (res) {
+                    done = true; clearTimeout(timer);
+                    if (res.ok) {
+                        setResult(true, 'Plugin joignable — secret accepté (HTTP ' + res.status + ').');
+                    } else if (res.status === 401 || res.status === 403) {
+                        setResult(false, 'Plugin joignable, mais secret refusé (HTTP ' + res.status + ').');
+                    } else {
+                        setResult(false, 'Réponse inattendue (HTTP ' + res.status + ') — endpoint activé ?');
+                    }
+                })
+                .catch(function (err) {
+                    done = true; clearTimeout(timer);
+                    setResult(false, 'Site injoignable ou endpoint absent (erreur réseau).');
+                });
+        });
+    }
+    if (document.readyState !== 'loading') initAdwSecretTest();
+    else document.addEventListener('DOMContentLoaded', initAdwSecretTest);
+
     if (document.readyState !== 'loading') initAdwSecret();
     else document.addEventListener('DOMContentLoaded', initAdwSecret);
 
