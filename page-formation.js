@@ -125,11 +125,6 @@
             var paidCount = attendees.filter(function (m) { return m.payment === 'bancontact' || m.payment === 'cash'; }).length;
             var presentCount = attendees.filter(function (m) { return m.attendance === 'present'; }).length;
             var canceledCount = attendees.filter(function (m) { return m.attendance === 'canceled'; }).length;
-            var rateCount = f.price ? paidCount : 0;
-            var revenue = 0;
-            if (f.price) {
-                revenue = paidCount * (parseFloat(String(f.price).replace(',', '.')) || 0);
-            }
             function fKpi(icon, num, label, cls) {
                 return '<div class="mkpi' + (cls ? ' ' + cls : '') + '">' +
                     '<span class="mkpi-icon" aria-hidden="true">' + icon + '</span>' +
@@ -138,11 +133,21 @@
             }
             var bcCount = attendees.filter(function (m) { return m.payment === 'bancontact'; }).length;
             var cashCount = attendees.filter(function (m) { return m.payment === 'cash'; }).length;
+            var unitPrice = f.price ? (parseFloat(String(f.price).replace(',', '.')) || 0) : 0;
+            var projected = unitPrice * attendees.length;
+            var collected = unitPrice * paidCount;
+            function fKpiMoney(icon, main, sub, cls) {
+                return '<div class="mkpi' + (cls ? ' ' + cls : '') + '">' +
+                    '<span class="mkpi-icon" aria-hidden="true">' + icon + '</span>' +
+                    '<span class="mkpi-num">' + main + '</span>' +
+                    '<span class="mkpi-label">' + sub + '</span></div>';
+            }
             html += '<div class="mkpi-row fkpi-row" style="grid-template-columns:repeat(4,1fr);">' +
                 fKpi('💳', bcCount, 'payés bancontact') +
                 fKpi('💵', cashCount, 'payés cash') +
                 fKpi('✅', presentCount, 'présent' + (presentCount > 1 ? 's' : ''), presentCount > 0 ? 'fkpi-green' : '') +
-                fKpi('💶', revenue > 0 ? revenue.toFixed(2).replace('.', ',') + ' €' : '—', 'recette' + (revenue > 1 ? 's' : '')) +
+                fKpiMoney('💶', collected.toFixed(2).replace('.', ',') + ' €',
+                    'encaissé / ' + (projected > 0 ? projected.toFixed(2).replace('.', ',') + ' € projetés' : 'projeté inconnu')) +
                 '</div>';
 
             // Détails structurés (organisateur/lieu/tarif remplis dès que les snippets répondront)
@@ -172,16 +177,16 @@
                 attendees.forEach(function (m) {
                     var paid = m.payment; // 'bancontact' | 'cash' | null
                     var att = m.attendance; // 'present' | 'canceled' | null
-                    html += '<li class="checkin-item fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
+                    html += '<li class="checkin-item fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : att === 'na' ? ' fm-na' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
                         '<span class="member-avatar small" style="cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
                         '<div style="flex:1;min-width:0;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
                         '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
                         (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
                         '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">détails</span></div></div>' +
                         '<span class="fm-actions">' +
-                        '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'bancontact' ? ' is-paid' : '') + '" data-pay="bancontact"' + (paid === 'cash' ? ' disabled' : '') + '>💳 Bancontact</button>' +
-                        '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'cash' ? ' is-paid' : '') + '" data-pay="cash"' + (paid === 'bancontact' ? ' disabled' : '') + '>💵 Cash</button>' +
-                        '<button type="button" class="btn btn-secondary btn-small fm-att' + (att === 'present' ? ' is-present' : att === 'canceled' ? ' is-canceled' : '') + '" data-att="' + (att === 'present' ? 'canceled' : 'present') + '" title="' + (att ? 'Cliquer pour changer le statut' : 'Confirmer la présence') + '">' + (att === 'present' ? '✅ Présent' : att === 'canceled' ? '🚫 Annulé' : '❔ Présent ?') + '</button>' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'bancontact' ? ' is-paid' : paid === 'cash' ? ' is-muted' : '') + '" data-pay="bancontact"' + (paid === 'cash' ? ' disabled' : '') + '>💳 Bancontact</button>' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'cash' ? ' is-paid' : paid === 'bancontact' ? ' is-muted' : '') + '" data-pay="cash"' + (paid === 'bancontact' ? ' disabled' : '') + '>💵 Cash</button>' +
+                        '<button type="button" class="btn btn-secondary btn-small fm-att' + (att === 'present' ? ' is-present' : att === 'canceled' ? ' is-canceled' : att === 'na' ? ' is-na' : '') + '" data-att="' + (att === 'present' ? 'canceled' : att === 'canceled' ? 'na' : 'present') + '" title="Cycler : présent → annulé → non concerné">' + (att === 'present' ? '✅ Présent' : att === 'canceled' ? '🚫 Annulé' : att === 'na' ? '⬜ Non concerné' : '❔ Présent ?') + '</button>' +
                         '</span>' +
                         '</li>';
                 });
@@ -239,9 +244,12 @@
                     var target = attBtn.getAttribute('data-att'); // 'present' | 'canceled'
                     ADWDatabase.setFmAttendance(currentFormation.id, memberId2, target);
                     if (window.ADWNotifications) {
-                        window.ADWNotifications.push('info', target === 'present'
+                        var msg = target === 'present'
                             ? '✅ Présence confirmée (formation « ' + currentFormation.title + ' »)'
-                            : '🚫 Inscription marquée annulée (formation « ' + currentFormation.title + ' »)', target === 'present' ? 'success' : 'warning');
+                            : target === 'canceled'
+                            ? '🚫 Inscription marquée annulée (formation « ' + currentFormation.title + ' »)'
+                            : '⬜ Marqué non concerné (formation « ' + currentFormation.title + ' »)';
+                        window.ADWNotifications.push('info', msg, target === 'present' ? 'success' : target === 'na' ? 'info' : 'warning');
                     }
                     render(f);
                 }
