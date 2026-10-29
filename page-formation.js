@@ -114,10 +114,33 @@
                 (f.time_label ? ' · ' + esc(f.time_label) : '') +
                 (f.duration ? ' · ' + esc(f.duration) : '') +
                 '</p>' +
+                (f.price ? '<p style="opacity:0.95;font-size:1.05rem;font-weight:700;margin-top:0.3rem;">💶 ' + esc(f.price) + ' €</p>' : '') +
                 '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button></div>' +
-                '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1rem;bottom:0.9rem;font-size:1.9rem;" href="#inscrits" title="Voir les inscrits">' +
-                '<span class="f-count-num" style="font-size:2.2rem;">' + attendees.length + '</span>' +
-                '<span class="f-count-lbl">inscrit' + (attendees.length > 1 ? 's' : '') + '</span></a>' +
+                '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1.4rem;bottom:1rem;text-align:center;" href="#inscrits" title="Voir les inscrits">' +
+                '<span class="f-count-num" style="font-size:3.4rem;line-height:1;font-weight:800;">' + attendees.length + '</span>' +
+                '<span class="f-count-lbl" style="font-size:0.95rem;">inscrit' + (attendees.length > 1 ? 's' : '') + '</span></a>' +
+                '</div>';
+
+            // ---- KPI de la formation : aperçu de son fonctionnement (oct. 2026) ----
+            var paidCount = attendees.filter(function (m) { return m.payment === 'bancontact' || m.payment === 'cash'; }).length;
+            var presentCount = attendees.filter(function (m) { return m.attendance === 'present'; }).length;
+            var canceledCount = attendees.filter(function (m) { return m.attendance === 'canceled'; }).length;
+            var rateCount = f.price ? paidCount : 0;
+            var revenue = 0;
+            if (f.price) {
+                revenue = paidCount * (parseFloat(String(f.price).replace(',', '.')) || 0);
+            }
+            function fKpi(icon, num, label, cls) {
+                return '<div class="mkpi' + (cls ? ' ' + cls : '') + '">' +
+                    '<span class="mkpi-icon" aria-hidden="true">' + icon + '</span>' +
+                    '<span class="mkpi-num">' + num + '</span>' +
+                    '<span class="mkpi-label">' + label + '</span></div>';
+            }
+            html += '<div class="mkpi-row fkpi-row" style="grid-template-columns:repeat(4,1fr);">' +
+                fKpi('👥', attendees.length, 'inscrits') +
+                fKpi('💳', paidCount, 'payé' + (paidCount > 1 ? 's' : '')) +
+                fKpi('✅', presentCount, 'présent' + (presentCount > 1 ? 's' : ''), presentCount > 0 ? 'fkpi-green' : '') +
+                fKpi('💶', revenue > 0 ? revenue.toFixed(2).replace('.', ',') + ' €' : '—', 'recette' + (revenue > 1 ? 's' : '')) +
                 '</div>';
 
             // Détails structurés (organisateur/lieu/tarif remplis dès que les snippets répondront)
