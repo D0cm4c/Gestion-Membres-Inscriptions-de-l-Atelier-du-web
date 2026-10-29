@@ -143,6 +143,7 @@
                             : '<span class="badge ' + (expired ? 'badge-full' : 'badge-ok') + '">' + (expired ? 'Inscription expirée' : 'Inscription active') + '</span>') +
                         ((member.subscription === 'monthly' || member.subscription === 'yearly') ? '<span class="badge ' + s.badge + '">' + s.label + '</span>' : '') +
                     '</div></div>' +
+                    '<button type="button" class="btn btn-secondary btn-small" id="editMemberBtn" title="Modifier les informations du membre">✏️ Modifier</button>' +
                     '<button type="button" class="btn btn-secondary btn-small" id="renewSubBtn" title="Prolonger l\u2019inscription selon la formule du membre">♻️ Renouveler l\u2019abo</button>' +
                     '<button type="button" class="btn btn-primary btn-small" id="checkinBtn" title="Enregistrer la visite du jour pour ce membre">✅ Pointer une visite</button>' +
                     '<button type="button" class="btn btn-danger btn-small" id="deleteMemberBtn" style="margin-left:auto;align-self:flex-start;">🗑️ Supprimer</button>' +
@@ -267,6 +268,12 @@
             var carePayBtn = document.getElementById('carePayBtn');
             if (carePayBtn) carePayBtn.addEventListener('click', function () {
                 content.querySelector('[data-print="pay"]').click();
+            });
+
+            // Modifier : ouvre le formulaire d'édition sur membres.html (hash direct)
+            var editMemberBtn = document.getElementById('editMemberBtn');
+            if (editMemberBtn) editMemberBtn.addEventListener('click', function () {
+                location.href = 'membres.html#edit=' + encodeURIComponent(member.id);
             });
 
             // Pointer une visite du jour (garde déjà-pointé, même règle que membres.html)

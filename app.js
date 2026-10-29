@@ -850,6 +850,14 @@
             // Nettoie le hash pour ne pas rouvrir la fiche au rechargement
             history.replaceState(null, '', location.pathname + location.search);
         }
+        // Lien direct vers l'édition : membres.html#edit=<id> — ouvre le formulaire pré-rempli
+        var me = location.hash.match(/^#edit=(.+)$/);
+        if (me) {
+            var mid = decodeURIComponent(me[1]);
+            var rows = ADWDatabase.queryAll('SELECT * FROM members WHERE id = ?', [mid]);
+            if (rows.length) openModal(rows[0]);
+            history.replaceState(null, '', location.pathname + location.search);
+        }
     }).catch(function (err) {
         loading.hidden = true;
         emptyState.hidden = false;
