@@ -613,6 +613,12 @@ main {
 .member-row.expired .member-avatar { background: linear-gradient(135deg, #B4534B, var(--red)) !important; }
 .member-card.inactive .member-avatar,
 .member-row.inactive .member-avatar { background: linear-gradient(135deg, #3A4A56, #55677A) !important; }
+/* Fiche complète (membre.html) : même code couleur via .detail-head */
+.detail-head .member-avatar { background: linear-gradient(135deg, #18A55F, #2FC77A); }
+.detail-head.expired .member-avatar { background: linear-gradient(135deg, #B4534B, var(--red)) !important; }
+.detail-head.inactive .member-avatar { background: linear-gradient(135deg, #3A4A56, #55677A) !important; }
+:root[data-theme="dark"] .detail-head.expired .member-avatar { background: linear-gradient(135deg, #B4534B, #7A2E29); }
+:root[data-theme="dark"] .detail-head.inactive .member-avatar { background: linear-gradient(135deg, #2A3640, #3A4A56); }
 :root[data-theme="dark"] .member-card.expired .member-avatar,
 :root[data-theme="dark"] .member-row.expired .member-avatar { background: linear-gradient(135deg, #B4534B, #7A2E29); }
 :root[data-theme="dark"] .member-card.inactive .member-avatar,

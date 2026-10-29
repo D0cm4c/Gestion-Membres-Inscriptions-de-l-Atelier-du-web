@@ -130,7 +130,10 @@
             var s = SUB_LABELS[member.subscription] || SUB_LABELS.none;
             var expired = isExpired(member);
 
-            var html = '<div class="detail-head">' +
+            // Classe de statut pour la vignette (même code couleur EPN que membres.html)
+            var avatarStatus = (member.subscription || 'none') === 'none' ? ' inactive' : (expired ? ' expired' : '');
+
+            var html = '<div class="detail-head' + avatarStatus + '">' +
                     '<div class="member-avatar">' + esc(((member.first_name || '?')[0] || '') + ((member.last_name || '')[0] || '')) + '</div>' +
                     '<div><div class="member-name">' + esc(member.first_name) + ' ' + esc(member.last_name) + '</div>' +
                     '<div class="member-no-detail">N° de membre : <strong>' + (member.member_no || '—') + '</strong></div>' +
