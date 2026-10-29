@@ -626,7 +626,7 @@ main {
 .member-avatar.small { width: 34px; height: 34px; font-size: 0.8rem; border-radius: 10px; }
 
 /* KPI de formation (formation.html) — réutilise .mkpi du mini-dashboard membre */
-.fkpi-row { margin-top: 1.2rem; }
+.fkpi-row { margin-top: 1.2rem; margin-bottom: 1.2rem; }
 .fkpi-green { border-top: 3px solid var(--green); }
 .fkpi-green .mkpi-num { color: var(--green); }
 @media (max-width: 700px) { .fkpi-row { grid-template-columns: repeat(2, 1fr) !important; } }
@@ -643,6 +643,9 @@ main {
 }
 .fm-att.is-present { background: var(--green-light); color: var(--green); border-color: var(--green); font-weight: 700; }
 .fm-att.is-canceled { background: #E8ECEF; color: var(--text-soft); border-color: var(--border); }
+.fm-att.is-na { background: var(--info-bg, #E7F0FA); color: var(--info, #1F5FA8); border-color: var(--info, #1F5FA8); }
+/* l'autre bouton de paiement : grisé + inactif quand l'un est validé */
+.fm-pay.is-muted { opacity: 0.45; filter: saturate(0.3); }
 .fm-present {
     border-left: 3px solid var(--green);
     background: var(--success-bg);
@@ -651,6 +654,10 @@ main {
     border-left: 3px solid var(--border);
     opacity: 0.55;
     filter: saturate(0.5);
+}
+.fm-na {
+    border-left: 3px solid var(--info, #1F5FA8);
+    background: rgba(31, 95, 168, 0.07);
 }
 :root[data-theme="dark"] .fm-present { background: rgba(24, 165, 95, 0.12); }
 :root[data-theme="dark"] .fm-canceled { opacity: 0.5; }
