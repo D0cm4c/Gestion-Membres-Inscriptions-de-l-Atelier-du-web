@@ -645,6 +645,8 @@ main {
 .m-card-head .detail-head { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 .m-card .mkpi-row { margin-top: 0; }
 .m-card .care-notes { margin-top: 0.6rem; }
+/* la note « rien à signaler » (care-note seule, sans wrapper) a aussi sa marge au-dessus */
+.m-card > .care-note { margin-top: 0.6rem; }
 
 /* ---- Mini-dashboard membre (membre.html) : KPI + care-notes (oct. 2026) ---- */
 .mkpi-row {
