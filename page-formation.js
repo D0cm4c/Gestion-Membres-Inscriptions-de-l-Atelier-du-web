@@ -143,9 +143,9 @@
                     '<span class="mkpi-label">' + sub + '</span></div>';
             }
             html += '<div class="mkpi-row fkpi-row" style="grid-template-columns:repeat(4,1fr);">' +
-                fKpi('💳', bcCount, 'payés bancontact') +
-                fKpi('💵', cashCount, 'payés cash') +
-                fKpi('✅', presentCount, 'présent' + (presentCount > 1 ? 's' : ''), presentCount > 0 ? 'fkpi-green' : '') +
+                fKpi('💳', bcCount + ' / ' + attendees.length, 'payés bancontact') +
+                fKpi('💵', cashCount + ' / ' + attendees.length, 'payés cash') +
+                fKpi('✅', presentCount + ' / ' + attendees.length, 'présents', presentCount > 0 ? 'fkpi-green' : '') +
                 fKpiMoney('💶', collected.toFixed(2).replace('.', ',') + ' €',
                     'encaissé / ' + (projected > 0 ? projected.toFixed(2).replace('.', ',') + ' € projetés' : 'projeté inconnu')) +
                 '</div>';
