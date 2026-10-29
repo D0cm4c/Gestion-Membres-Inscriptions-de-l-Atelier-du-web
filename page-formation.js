@@ -140,8 +140,8 @@
                 '</div>' +
                 '</div>';
 
-            // Inscriptions (miroir)
-            html += '<div class="stat-card" id="inscrits"><h3>👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>';
+            // Inscriptions (miroir) — marge top : détaché de la grille d'infos au-dessus
+            html += '<div class="stat-card" id="inscrits" style="margin-top:1.2rem;"><h3>👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>';
             if (attendees.length) {
                 html += '<ul class="checkin-results" style="display:flex;flex-direction:column;">';
                 attendees.forEach(function (m) {
@@ -160,8 +160,8 @@
             html += '</div>';
 
 
-            // Catégories (bloc sous la grille)
-            html += '<div class="stats-container" style="margin-bottom:1.3rem;"><div class="stat-card"><h3>🗂 Catégories</h3>' +
+            // Catégories (bloc sous la carte Inscrits)
+            html += '<div class="stats-container" style="margin-top:1.2rem;margin-bottom:1.3rem;"><div class="stat-card"><h3>🗂 Catégories</h3>' +
                 (cats.length ? '<ul style="display:flex;gap:0.4rem;list-style:none;flex-wrap:wrap;">' + cats.map(function (c) {
                     var t = toneFor(c);
                     return '<li><span class="tag" style="background:' + TONE_SOLID[t] + ';color:#fff;"><span class="month-dot" style="display:inline-block;background:rgba(255,255,255,0.6);margin-right:0.35rem;"></span>' + esc(c) + '</span></li>';
