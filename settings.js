@@ -204,6 +204,49 @@
     if (document.readyState !== 'loading') initRoomsAdmin();
     else document.addEventListener('DOMContentLoaded', initRoomsAdmin);
 
+    // ============ Secret du plugin ADW MEC API (page Paramètres) ============
+    // Même pattern que la clé MEC : stockage navigateur en attendant le serveur Node,
+    // qui l'utilisera pour appeler l'endpoint inscriptions du plugin WordPress.
+
+    var ADW_SECRET_STORAGE = 'atelierduweb_adw_plugin_secret';
+
+    function initAdwSecret() {
+        var input = document.getElementById('adwPluginSecret');
+        var saveBtn = document.getElementById('adwSecretSaveBtn');
+        var clearBtn = document.getElementById('adwSecretClearBtn');
+        var statusEl = document.getElementById('adwSecretStatus');
+        if (!input || !saveBtn || !clearBtn) return;
+
+        function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
+
+        var stored = '';
+        try { stored = localStorage.getItem(ADW_SECRET_STORAGE) || ''; } catch (e) { /* stockage indisponible */ }
+        if (stored) {
+            input.value = stored;
+            setStatus('✓ Secret enregistré dans ce navigateur (' + stored.slice(0, 4) + '…' + stored.slice(-4) + ')');
+        }
+
+        saveBtn.addEventListener('click', function () {
+            var val = (input.value || '').trim();
+            if (!val) { input.focus(); setStatus('Colle d\u2019abord le secret dans le champ.'); return; }
+            try {
+                localStorage.setItem(ADW_SECRET_STORAGE, val);
+                setStatus('✓ Secret enregistré dans ce navigateur (' + val.slice(0, 4) + '…' + val.slice(-4) + ')');
+            } catch (e) {
+                setStatus('⚠️ Impossible d\u2019enregistrer (stockage indisponible).');
+            }
+        });
+
+        clearBtn.addEventListener('click', function () {
+            input.value = '';
+            try { localStorage.removeItem(ADW_SECRET_STORAGE); } catch (e) { /* ignore */ }
+            setStatus('Secret effacé de ce navigateur.');
+        });
+    }
+
+    if (document.readyState !== 'loading') initAdwSecret();
+    else document.addEventListener('DOMContentLoaded', initAdwSecret);
+
     if (document.readyState !== 'loading') initMecKey();
     else document.addEventListener('DOMContentLoaded', initMecKey);
 
