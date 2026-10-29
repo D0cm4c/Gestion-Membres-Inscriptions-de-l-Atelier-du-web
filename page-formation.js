@@ -136,9 +136,11 @@
                     '<span class="mkpi-num">' + num + '</span>' +
                     '<span class="mkpi-label">' + label + '</span></div>';
             }
+            var bcCount = attendees.filter(function (m) { return m.payment === 'bancontact'; }).length;
+            var cashCount = attendees.filter(function (m) { return m.payment === 'cash'; }).length;
             html += '<div class="mkpi-row fkpi-row" style="grid-template-columns:repeat(4,1fr);">' +
-                fKpi('👥', attendees.length, 'inscrits') +
-                fKpi('💳', paidCount, 'payé' + (paidCount > 1 ? 's' : '')) +
+                fKpi('💳', bcCount, 'payés bancontact') +
+                fKpi('💵', cashCount, 'payés cash') +
                 fKpi('✅', presentCount, 'présent' + (presentCount > 1 ? 's' : ''), presentCount > 0 ? 'fkpi-green' : '') +
                 fKpi('💶', revenue > 0 ? revenue.toFixed(2).replace('.', ',') + ' €' : '—', 'recette' + (revenue > 1 ? 's' : '')) +
                 '</div>';
@@ -170,7 +172,7 @@
                 attendees.forEach(function (m) {
                     var paid = m.payment; // 'bancontact' | 'cash' | null
                     var att = m.attendance; // 'present' | 'canceled' | null
-                    html += '<li class="checkin-item done fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
+                    html += '<li class="checkin-item fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
                         '<span class="member-avatar small" style="cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
                         '<div style="flex:1;min-width:0;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
                         '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +

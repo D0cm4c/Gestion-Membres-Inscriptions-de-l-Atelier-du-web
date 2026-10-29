@@ -632,7 +632,9 @@ main {
 @media (max-width: 700px) { .fkpi-row { grid-template-columns: repeat(2, 1fr) !important; } }
 
 /* Suivi des inscrits (formation.html) : boutons paiement + présence */
-.fm-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+.fm-actions { display: flex; gap: 0.4rem; flex-shrink: 0; align-items: center; margin-left: auto; padding-right: 0.2rem; }
+/* lignes d'inscrits : pas de grisage global (le .done ancien le faisait) */
+.checkin-item.fm-line { opacity: 1; }
 .fm-pay.is-paid {
     background: var(--green-light);
     color: var(--green);
