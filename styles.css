@@ -632,7 +632,12 @@ main {
 @media (max-width: 700px) { .fkpi-row { grid-template-columns: repeat(2, 1fr) !important; } }
 
 /* Suivi des inscrits (formation.html) : boutons paiement + présence */
-.fm-actions { display: flex; gap: 0.4rem; flex-shrink: 0; align-items: center; margin-left: auto; padding-right: 0.2rem; }
+.fm-actions { display: flex; gap: 0.4rem; flex-shrink: 0; align-items: center; margin-left: auto; }
+/* lignes d'inscrits : respiration homogène — vignette et boutons à distance égale des bords */
+.checkin-item.fm-line { padding: 0.6rem 0.9rem; }
+.fm-line .fm-actions { padding-left: 0.5rem; }
+/* les états colorés gardent leur liseré DANS le padding (pas collé au contenu) */
+.fm-present, .fm-canceled, .fm-na { background-clip: padding-box; }
 /* lignes d'inscrits : pas de grisage global (le .done ancien le faisait) */
 .checkin-item.fm-line { opacity: 1; }
 .fm-pay.is-paid {
