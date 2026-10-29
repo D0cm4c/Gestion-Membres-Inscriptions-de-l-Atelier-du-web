@@ -35,6 +35,89 @@
             return m.end_date < new Date().toISOString().slice(0, 10);
         }
 
+        // Mini-dashboard : KPI compacts pour cibler l'aide (visites, formations, solde)
+        function memberKpis(member, visits, formations) {
+            var today = new Date();
+            var todayStr = today.toISOString().slice(0, 10);
+            var monthStr = todayStr.slice(0, 7);
+            var visitsMonth = 0;
+            try {
+                visitsMonth = (window.ADWDatabase.queryAll(
+                    'SELECT COUNT(*) c FROM visits WHERE member_id = ? AND strftime(\'%Y-%m\', visit_date) = ?',
+                    [member.id, monthStr])[0] || {}).c || 0;
+            } catch (e) { visitsMonth = 0; }
+
+            // Dernière visite en délai humain
+            var lastVisit = null;
+            try {
+                lastVisit = (window.ADWDatabase.queryAll(
+                    'SELECT MAX(visit_date) d FROM visits WHERE member_id = ?', [member.id])[0] || {}).d || null;
+            } catch (e) { lastVisit = null; }
+            var lastVisitLabel;
+            if (!lastVisit) lastVisitLabel = 'jamais';
+            else {
+                var days = Math.round((today - new Date(lastVisit + 'T00:00:00')) / 86400000);
+                lastVisitLabel = days <= 0 ? 'aujourd\'hui' :
+                    days === 1 ? 'hier' :
+                    days < 31 ? 'il y a ' + days + ' j' :
+                    'il y a ' + Math.round(days / 30) + ' mois';
+            }
+
+            var todayStr2 = todayStr;
+            var past = formations.filter(function (f) { return f.start_date && f.start_date < todayStr2; }).length;
+            var upcoming = formations.filter(function (f) { return f.start_date && f.start_date >= todayStr2; }).length;
+            var balance = member.print_balance || 0;
+
+            function kpi(icon, num, label, cls) {
+                return '<div class="mkpi' + (cls ? ' ' + cls : '') + '">' +
+                    '<span class="mkpi-icon" aria-hidden="true">' + icon + '</span>' +
+                    '<span class="mkpi-num">' + num + '</span>' +
+                    '<span class="mkpi-label">' + label + '</span></div>';
+            }
+            return '<div class="mkpi-row">' +
+                kpi('📅', visitsMonth, 'visites ce mois') +
+                kpi('👋', lastVisitLabel, 'dernière visite') +
+                kpi('📚', past, 'formations suivies') +
+                kpi('🎓', upcoming, 'à venir') +
+                kpi('🖨️', balance > 0 ? balance.toFixed(2).replace('.', ',') + ' €' : '0', 'impressions dues', balance > 0 ? 'mkpi-warn' : '') +
+                '</div>';
+        }
+
+        // Signaux d'aide pour l'accueillant — pas de ton commercial (décision EPN :
+        // pas de « relance d'absence », on n'est pas une entreprise)
+        function memberCareNotes(member, visits, formations) {
+            var today = new Date();
+            var todayStr = today.toISOString().slice(0, 10);
+            var notes = [];
+
+            // Inscription expirée → proposer le renouvellement
+            var expired = member.end_date && member.end_date < todayStr && (member.subscription || 'none') !== 'none';
+            if (expired) {
+                notes.push('<div class="care-note care-red">🔴 Inscription expirée depuis le ' + esc(formatDate(member.end_date)) +
+                    ' <button type="button" class="btn btn-secondary btn-small" id="careRenewBtn">♻️ Renouveler</button></div>');
+            }
+            // Dette d'impressions → solder
+            var balance = member.print_balance || 0;
+            if (balance > 0) {
+                notes.push('<div class="care-note care-red">🖨️ ' + balance.toFixed(2).replace('.', ',') + ' € d\'impressions dues' +
+                    ' <button type="button" class="btn btn-secondary btn-small" id="carePayBtn">💰 Solder</button></div>');
+            }
+            // Formation dans les 7 prochains jours → rappeler la date
+            formations.forEach(function (f) {
+                if (!f.start_date) return;
+                var diff = Math.round((new Date(f.start_date + 'T00:00:00') - today) / 86400000);
+                if (diff >= 0 && diff <= 7) {
+                    notes.push('<div class="care-note care-amber">🎓 « ' + esc(f.title) + ' » le ' + esc(formatDate(f.start_date)) +
+                        (f.time_label ? ' à ' + esc(f.time_label) : '') + ' — pense à le/la rappeler</div>');
+                }
+            });
+
+            if (!notes.length) {
+                return '<div class="care-note care-ok">🟢 Rien à signaler — tout est en ordre.</div>';
+            }
+            return '<div class="care-notes">' + notes.join('') + '</div>';
+        }
+
         function render(member) {
             var visits = ADWDatabase.queryAll(
                 'SELECT * FROM visits WHERE member_id = ? ORDER BY visit_date DESC, created_at DESC LIMIT 30', [member.id]);
@@ -61,6 +144,9 @@
                     '<button type="button" class="btn btn-primary btn-small" id="checkinBtn" title="Enregistrer la visite du jour pour ce membre">✅ Pointer une visite</button>' +
                     '<button type="button" class="btn btn-danger btn-small" id="deleteMemberBtn" style="margin-left:auto;align-self:flex-start;">🗑️ Supprimer</button>' +
                 '</div>' +
+                // ---- Mini-dashboard : indicateurs pour l'accueillant (décision EPN oct. 2026) ----
+                memberKpis(member, visits, formations) +
+                memberCareNotes(member, visits, formations) +
                 '<dl class="detail-list">' +
                     '<div><dt>Âge</dt><dd>' + (member.age ? esc(member.age) + ' ans' : 'Non renseigné') + '</dd></div>' +
                     '<div><dt>Genre</dt><dd>' + (member.gender ? esc(GENDER_LABELS[member.gender] || member.gender) : 'Non renseigné') + '</dd></div>' +
@@ -148,6 +234,16 @@
             content.innerHTML = html;
             content.hidden = false;
             loading.hidden = true;
+
+            // Care-notes : actions directes (renouveler / solder)
+            var careRenewBtn = document.getElementById('careRenewBtn');
+            if (careRenewBtn) careRenewBtn.addEventListener('click', function () {
+                document.getElementById('renewSubBtn').click();
+            });
+            var carePayBtn = document.getElementById('carePayBtn');
+            if (carePayBtn) carePayBtn.addEventListener('click', function () {
+                content.querySelector('[data-print="pay"]').click();
+            });
 
             // Pointer une visite du jour (garde déjà-pointé, même règle que membres.html)
             var checkinBtn = document.getElementById('checkinBtn');
