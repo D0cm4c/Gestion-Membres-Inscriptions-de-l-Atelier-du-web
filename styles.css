@@ -625,6 +625,27 @@ main {
 :root[data-theme="dark"] .member-row.inactive .member-avatar { background: linear-gradient(135deg, #2A3640, #3A4A56); }
 .member-avatar.small { width: 34px; height: 34px; font-size: 0.8rem; border-radius: 10px; }
 
+/* ---- Fiche membre en cartes (membre.html) : grille + marges généreuses (oct. 2026) ---- */
+.m-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+    margin-top: 1.2rem;
+}
+.m-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.4rem;
+    box-shadow: 0 1px 2px rgba(23, 37, 47, 0.06), 0 8px 24px rgba(23, 37, 47, 0.08);
+}
+:root[data-theme="dark"] .m-card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35); }
+.m-card .detail-visits, .m-card .detail-prints { margin-top: 0; }
+.m-card-head { margin-bottom: 0; }
+.m-card-head .detail-head { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.m-card .mkpi-row { margin-top: 0; }
+.m-card .care-notes { margin-top: 0.6rem; }
+
 /* ---- Mini-dashboard membre (membre.html) : KPI + care-notes (oct. 2026) ---- */
 .mkpi-row {
     display: grid;
