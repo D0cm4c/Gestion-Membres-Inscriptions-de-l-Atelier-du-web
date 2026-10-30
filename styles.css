@@ -625,6 +625,44 @@ main {
 :root[data-theme="dark"] .member-row.inactive .member-avatar { background: linear-gradient(135deg, #2A3640, #3A4A56); }
 .member-avatar.small { width: 34px; height: 34px; font-size: 0.8rem; border-radius: 10px; }
 
+/* Labels MEC majeurs : annulé (orange), complet (rouge), nouveau (vert) — oct. 2026 */
+.fm-label {
+    display: inline-flex; align-items: center;
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.4px;
+    margin-left: auto;
+    align-self: flex-start;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.fm-label-canceled { background: var(--orange); color: #fff; }
+.fm-label-full { background: var(--danger); color: #fff; }
+.fm-label-new { background: var(--green); color: #fff; }
+
+/* Bouton résa désactivé par label */
+.btn.is-locked, .f-card-book.is-locked {
+    opacity: 0.55;
+    filter: saturate(0.4);
+    pointer-events: none;
+    cursor: not-allowed;
+    background: #E8ECEF !important;
+    color: var(--text-soft) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Carte formation annulée : légèrement grisée */
+.f-card-canceled { opacity: 0.75; filter: saturate(0.6); }
+/* Hero formation annulée : idem */
+.f-canceled-hero { opacity: 0.85; filter: saturate(0.75); }
+/* bouton de résa du hero verrouillé */
+.btn-disabled-locked {
+    opacity: 0.55; pointer-events: none; cursor: not-allowed;
+    background: #E8ECEF !important; color: var(--text-soft) !important;
+    border: 1px solid var(--border) !important;
+    filter: saturate(0.4);
+}
+
 /* KPI de formation (formation.html) — réutilise .mkpi du mini-dashboard membre */
 .fkpi-row { margin-top: 1.2rem; margin-bottom: 1.2rem; }
 .fkpi-green { border-top: 3px solid var(--green); }

@@ -82,6 +82,68 @@
 
         // Couleur déterministe par catégorie : hash du nom → ton 0-9
         var TONE_SOLID = ['#0F3D5C', '#6C5CE7', '#2F9BE4', '#18A55F', '#E8734A', '#B26A00', '#D8434B', '#7A5230', '#556B2F', '#4A4E69'];
+        // ============ Labels MEC majeurs (annulé/complet/nouveau) sur les cartes ============
+        // Fetch asynchrone de la page publique de chaque formation (non bloquant),
+        // extraction du bloc « Labels » — même logique que formation.html.
+        var MAJOR_LABELS = {
+            canceled: /annul/i,
+            full: /complet/i,
+            fresh: /nouveau|new/i
+        };
+        var labelCache = {}; // event_id -> labels[] (évite de re-fetcher à chaque filtre)
+
+        function extractMecLabels(html) {
+            var m = html.match(/Labels\s*(?:<[^>]*>\s*)*([^<]*(?:<[^lL][^>]*>[^<]*)*?)(?=Lieu|Catégorie|$)/);
+            if (!m) return [];
+            return m[1].split(',')
+                .map(function (s) { return s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(); })
+                .filter(function (s) { return s && s.length < 40; });
+        }
+
+        function applyMajorLabelToCard(card, labels) {
+            var joined = (labels || []).join(' ');
+            var isCanceled = MAJOR_LABELS.canceled.test(joined);
+            var isFull = !isCanceled && MAJOR_LABELS.full.test(joined);
+            var isFresh = MAJOR_LABELS.fresh.test(joined);
+            // badges dans le bandeau
+            var banner = card.querySelector('.f-card-banner');
+            if (banner) {
+                var badges = '';
+                if (isCanceled) badges += '<span class="fm-label fm-label-canceled">Annulé</span>';
+                if (isFull) badges += '<span class="fm-label fm-label-full">Complet</span>';
+                if (isFresh) badges += '<span class="fm-label fm-label-new">Nouveau</span>';
+                if (badges) banner.insertAdjacentHTML('beforeend', badges);
+            }
+            // réactions : résa désactivée (annulé/complet), carte grisée (annulé)
+            var book = card.querySelector('.f-card-book');
+            if (isCanceled || isFull) {
+                if (book) {
+                    book.classList.add('is-locked');
+                    book.setAttribute('aria-disabled', 'true');
+                    if (book.tagName === 'A') book.removeAttribute('href');
+                    book.title = isCanceled ? 'Formation annulée — réservation fermée' : 'Formation complète — réservation fermée';
+                    book.innerHTML = isCanceled ? '🚫 Annulée' : '⛔ Complète';
+                }
+                if (isCanceled) card.classList.add('f-card-canceled');
+            }
+        }
+
+        function loadCardLabels(ev, card) {
+            if (!ev.url) return;
+            if (labelCache[ev.id]) { applyMajorLabelToCard(card, labelCache[ev.id]); return; }
+            fetch(ev.url, { headers: { Accept: 'text/html' } })
+                .then(function (res) { return res.ok ? res.text() : ''; })
+                .then(function (html) {
+                    if (!html) return;
+                    var labels = extractMecLabels(html);
+                    labelCache[ev.id] = labels;
+                    // la carte peut avoir été re-rendue (filtre) : re-cibler par evid
+                    var fresh = document.querySelector('[data-goto-evid="' + CSS.escape(String(ev.id)) + '"]');
+                    if (fresh) applyMajorLabelToCard(fresh, labels);
+                })
+                .catch(function () { /* silencieux */ });
+        }
+
         // Re-résolution des catégories : le cache ou la base locale peuvent contenir des IDs
         // numériques non résolus (fenêtre d'erreur réseau/échec de résolution) — on repasse
         // par resolveCategories pour garantir les noms (et donc les couleurs par catégorie).
@@ -188,6 +250,7 @@
                         : '<a class="btn btn-primary f-card-book" href="' + esc(url) + '" target="_blank" rel="noopener">Réserver sur le site</a>') +
                         '</div>';
                     wrap.appendChild(li);
+                    loadCardLabels(ev, li);
                 });
                 grid.appendChild(group);
             });
