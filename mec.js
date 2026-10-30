@@ -199,6 +199,19 @@
                         var link = get('link');
                         if (link.indexOf('/formation/') === -1) return; // seulement les formations
                         var excerpt = stripHtml(get('description'));
+                        // Bloc données MEC parfois présent dans le contenu RSS (fallback B) :
+                        // « Labels : Annulé, Niveau… / Tarif : 40.00€ / Lieu : … / Organisateur : … »
+                        var fullText = excerpt;
+                        function rssAfter(word, stops) {
+                            var re = new RegExp(word + "[\\s:]*(.*?)(?=" + stops + "|$)", 'i');
+                            var m = fullText.match(re);
+                            return m ? m[1].replace(/\s+/g, ' ').trim() : '';
+                        }
+                        var rssLabels = rssAfter('Labels', 'Lieu|Catégorie|Organisateur');
+                        var rssPrice = rssAfter('Tarif', 'Labels|Lieu').replace(/[^0-9,.]/g, '').replace(',', '.');
+                        var rssLocation = rssAfter('Lieu', 'Catégorie|Organisateur');
+                        var rssOrganizer = rssAfter('Organisateur', 'Email|Site|Catégorie');
+                        var labelList = rssLabels ? rssLabels.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
                         events.push({
                             id: get('guid') || link,
                             title: get('title'),
@@ -207,6 +220,10 @@
                             startDate: '',
                             timeLabel: '',
                             categories: [],
+                            labels: labelList,
+                            price: rssPrice,
+                            location: rssLocation,
+                            organizer: rssOrganizer,
                             raw: null
                         });
                     });
@@ -214,16 +231,52 @@
                 });
         },
 
+        // Enrichissement labels/tarif/lieu/organisateur (décision oct. 2026) :
+        //   A. Endpoint public du plugin ADW MEC API : GET /wp-json/adw-mec/v1/labels
+        //      (CORS OK sur /wp-json/) — renvoie { "<event_id>": { labels, price, location, organizer } }
+        //      → source prioritaire dès que le plugin est actif.
+        //   B. Fallback : les événements venant du flux RSS portent déjà ces champs
+        //      (parsés du contenu RSS dans fetchViaRss).
+        enrichFromPlugin: function (events) {
+            var self = this;
+            var ENDPOINT = 'https://atelierduweb.be/wp-json/adw-mec/v1/labels';
+            if (self._labelsTried && self._labelsData) return Promise.resolve(self.applyLabels(events, self._labelsData));
+            return fetch(ENDPOINT, { headers: { Accept: 'application/json' } })
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (data) {
+                    if (!data || typeof data !== 'object') return events; // plugin absent : fallback RSS seul
+                    self._labelsTried = true;
+                    self._labelsData = data;
+                    return self.applyLabels(events, data);
+                })
+                .catch(function () { return events; }); // plugin injoignable : silencieux
+        },
+
+        applyLabels: function (events, data) {
+            (events || []).forEach(function (ev) {
+                var info = data[String(ev.id)];
+                if (!info) return;
+                if (info.labels && info.labels.length) ev.labels = info.labels;
+                if (info.price) ev.price = String(info.price);
+                if (info.location) ev.location = info.location;
+                if (info.organizer) ev.organizer = info.organizer;
+            });
+            return events;
+        },
+
         load: function () {
             var self = this;
             var cached = self.readCache();
             if (cached && cached.events && cached.events.length) {
-                return Promise.resolve(cached.events);
+                return self.enrichFromPlugin(cached.events);
             }
             return self.fetchViaWpRest()
                 .catch(function () { return self.fetchViaRss(); })
                 .then(function (events) {
                     if (!events.length) throw new Error('empty');
+                    return self.enrichFromPlugin(events);
+                })
+                .then(function (events) {
                     self.writeCache(events);
                     return events;
                 });

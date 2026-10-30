@@ -129,15 +129,22 @@
         }
 
         function loadCardLabels(ev, card) {
-            if (!ev.url) return;
-            if (labelCache[ev.id]) { applyMajorLabelToCard(card, labelCache[ev.id]); return; }
+            // Source prioritaire : les labels du flux (endpoint plugin A / RSS fallback B)
+            if (ev.labels && ev.labels.length) {
+                applyMajorLabelToCard(card, ev.labels);
+                return;
+            }
+            // Dernier recours : fetch de la page HTML (peut être bloqué par CORS — silencieux)
+            if (!ev.url || labelCache[ev.id]) {
+                if (labelCache[ev.id]) applyMajorLabelToCard(card, labelCache[ev.id]);
+                return;
+            }
             fetch(ev.url, { headers: { Accept: 'text/html' } })
                 .then(function (res) { return res.ok ? res.text() : ''; })
                 .then(function (html) {
                     if (!html) return;
                     var labels = extractMecLabels(html);
                     labelCache[ev.id] = labels;
-                    // la carte peut avoir été re-rendue (filtre) : re-cibler par evid
                     var fresh = document.querySelector('[data-goto-evid="' + CSS.escape(String(ev.id)) + '"]');
                     if (fresh) applyMajorLabelToCard(fresh, labels);
                 })
