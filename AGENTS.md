@@ -28,3 +28,43 @@
 - Commiter et pousser soi-même sur une branche de travail `vibe/<slug>` et ouvrir une PR (draft puis ready). Pas de demande de validation à chaque étape.
 - La fusion dans `main` est faite par le propriétaire depuis GitHub.
 - Ne jamais commiter de secrets (clés API, `.env`) — les clés utilisateur restent dans le navigateur.
+
+---
+
+## 📡 Protocole inter-sessions (écosystème multi-dépôts)
+
+Ce dépôt fait partie d'un écosystème travaillé par plusieurs sessions IA en parallèle :
+
+| Dépôt | Rôle | Sessions |
+|---|---|---|
+| `D0cm4c/Gestion-Membres-Inscriptions-de-l-Atelier-du-web` (**app**) | Cette app de gestion (GitHub Pages, statique) | sessions app |
+| `D0cm4c/atelierduweb-mec-api` (**plugin**) | Plugin WordPress ADW MEC API (atelierduweb.be) | sessions plugin |
+
+### Règles au démarrage de chaque session
+
+1. Lister les issues ouvertes sur **ce dépôt** : `gh issue list --repo D0cm4c/Gestion-Membres-Inscriptions-de-l-Atelier-du-web --state open`
+2. Lister aussi les issues ouvertes sur le **dépôt partenaire** : `gh issue list --repo D0cm4c/atelierduweb-mec-api --state open`
+3. **Traiter en priorité** les issues portant le label `pour-app` (adressées à ce dépôt).
+4. Pour chaque issue à traiter : **commenter d'abord son plan** (compréhension, fichiers visés, plan de livraison), puis livrer, puis **fermer l'issue** en citant le commit/PR.
+5. Pour nos demandes vers le partenaire : ouvrir une issue sur **ce dépôt** avec le label `pour-plugin` et un titre préfixé `[app]`.
+
+### Rédaction d'une demande inter-dépôts
+
+Une demande = une issue, contenant :
+- **Contexte** : dépôt émetteur, dépôt cible
+- **Spec précise** : routes, formats, noms de champs exacts, exemples de payloads
+- **Critère d'acceptation** : comment vérifier que la demande est satisfaite
+
+Règles :
+- Toute décision d'interface (nom de champ, route, format) est documentée **dans les deux dépôts** (issue + AGENTS.md/doc de chaque côté).
+- **Jamais de secret dans une issue** (token, mot de passe, clé, `.env`).
+- Pas de boucle : si deux issues se renvoient mutuellement la responsabilité → demander l'arbitrage humain.
+- La gouvernance (sécurité, production) reste **humaine**.
+
+### Interfaces documentées (vivant)
+
+| Interface | Spec | Documentée |
+|---|---|---|
+| Préfill modale MEC | URL `{formation.url}?method=mec-booking-modal&adw_name=…&adw_email=…&adw_phone=…&adw_member_no=…` (attention : `adw_name`, pas `adw_nom`) | app `booking.js` + plugin |
+| Endpoint labels (demandé, issue #89) | `GET /wp-json/adw-mec/v1/labels` → `{ "<event_id>": { labels[], price, location, organizer } }` — public, sans secret | app `mec.js` (enrichFromPlugin) + BACKEND.md §7 |
+| Endpoint inscriptions (retour résas) | Authentifié par secret, server-to-server uniquement — jamais appelé depuis le navigateur | BACKEND.md §7-8 |
