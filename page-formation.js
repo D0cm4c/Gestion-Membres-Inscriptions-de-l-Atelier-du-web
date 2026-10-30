@@ -218,47 +218,15 @@
         // La page de la formation expose « Labels : Annulé, Niveau intermédiaire » dans son HTML
         // (bloc données MEC). L'API wp/v2 ne les expose pas — la page est la seule source
         // publique. Fetch sans clé, lecture simple.
-        // Parsing du bloc données MEC de la page publique : labels + tarif + lieu + organisateur.
-        // (L'API wp/v2 n'expose pas ces champs ; l'API officielle MEC nécessite la clé — réservée au
-        // futur serveur Node. La page HTML est la source navigateur, cf. docs/BACKEND.md §7.)
-        function parseMecBlock(html) {
-            function clean(s) { return s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(); }
-            var out = {};
-            // Labels : jusqu'à Lieu/Catégorie
-            var mLab = html.match(/Labels\s*(?:<[^>]*>\s*)*([^]*?)(?=Lieu|Catégorie|$)/);
-            out.labels = mLab ? mLab[1].split(',').map(clean).filter(function (s) { return s && s.length < 40; }) : [];
-            // Tarif : « Tarif … 40.00€ » jusqu'à Labels
-            var mPrice = html.match(/Tarif\s*(?:<[^>]*>\s*)*([^]*?)(?=Labels|$)/);
-            out.price = mPrice ? (clean(mPrice[1]).replace(/[^€0-9,.]/g, '').replace('€', '').replace(',', '.').trim()) : '';
-            // Lieu : « Lieu … » jusqu'à Catégorie/Organisateur
-            var mLieu = html.match(/Lieu\s*(?:<[^>]*>\s*)*([^]*?)(?=Catégorie|Organisateur|$)/);
-            out.location = mLieu ? clean(mLieu[1]) : '';
-            // Organisateur : « Organisateur … » jusqu'à Email
-            var mOrg = html.match(/Organisateur\s*(?:<[^>]*>\s*)*([^]*?)(?=Email|Site|$)/);
-            out.organizer = mOrg ? clean(mOrg[1]) : '';
-            return out;
-        }
-
         function loadMecLabels(f) {
-            var box = document.getElementById('mecLabels');
-            if (!box) return;
-            // Source prioritaire : labels/tarif/lieu/organisateur du flux (plugin A / RSS B)
-            if (window.ADWMec && window.ADWMec._labelsData) {
-                var info = window.ADWMec._labelsData[String(f.event_id || f.id)];
-                if (info && info.labels && info.labels.length) {
-                    applyParsedData(f, { labels: info.labels, price: info.price, location: info.location, organizer: info.organizer });
-                    return;
-                }
+            // Source unique : l'endpoint public du plugin (GET /wp-json/adw-mec/v1/labels).
+            // Le fetch direct des pages HTML est bloqué par CORS depuis GitHub Pages (testé),
+            // et le flux RSS/wp-json ne contient pas le bloc MEC (excerpt tronqué — testé en live).
+            var info = window.ADWMec && window.ADWMec._labelsData
+                ? window.ADWMec._labelsData[String(f.event_id || f.id)] : null;
+            if (info && info.labels && info.labels.length) {
+                applyParsedData(f, { labels: info.labels, price: info.price, location: info.location, organizer: info.organizer });
             }
-            if (!f.url) return;
-            // Dernier recours : fetch de la page HTML (bloqué par CORS en naviguant depuis
-            // GitHub Pages — silencieux ; le plugin ou le RSS couvrent ce cas)
-            fetch(f.url, { headers: { Accept: 'text/html' } })
-                .then(function (res) { if (!res.ok) throw new Error('http_' + res.status); return res.text(); })
-                .then(function (html) {
-                    applyParsedData(f, parseMecBlock(html));
-                })
-                .catch(function () { /* silencieux */ });
         }
 
         // Applique les données MEC parsées : badges + réactions + persistance + affichage à chaud

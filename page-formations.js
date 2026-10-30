@@ -90,15 +90,6 @@
             full: /complet/i,
             fresh: /nouveau|new/i
         };
-        var labelCache = {}; // event_id -> labels[] (évite de re-fetcher à chaque filtre)
-
-        function extractMecLabels(html) {
-            var m = html.match(/Labels\s*(?:<[^>]*>\s*)*([^<]*(?:<[^lL][^>]*>[^<]*)*?)(?=Lieu|Catégorie|$)/);
-            if (!m) return [];
-            return m[1].split(',')
-                .map(function (s) { return s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(); })
-                .filter(function (s) { return s && s.length < 40; });
-        }
 
         function applyMajorLabelToCard(card, labels) {
             var joined = (labels || []).join(' ');
@@ -129,26 +120,12 @@
         }
 
         function loadCardLabels(ev, card) {
-            // Source prioritaire : les labels du flux (endpoint plugin A / RSS fallback B)
+            // Source unique : les labels du flux — venus de l'endpoint public du plugin
+            // (ADWMec.enrichFromPlugin). Le fetch direct des pages HTML est bloqué par
+            // CORS depuis GitHub Pages (testé) : pas de fallback navigateur possible.
             if (ev.labels && ev.labels.length) {
                 applyMajorLabelToCard(card, ev.labels);
-                return;
             }
-            // Dernier recours : fetch de la page HTML (peut être bloqué par CORS — silencieux)
-            if (!ev.url || labelCache[ev.id]) {
-                if (labelCache[ev.id]) applyMajorLabelToCard(card, labelCache[ev.id]);
-                return;
-            }
-            fetch(ev.url, { headers: { Accept: 'text/html' } })
-                .then(function (res) { return res.ok ? res.text() : ''; })
-                .then(function (html) {
-                    if (!html) return;
-                    var labels = extractMecLabels(html);
-                    labelCache[ev.id] = labels;
-                    var fresh = document.querySelector('[data-goto-evid="' + CSS.escape(String(ev.id)) + '"]');
-                    if (fresh) applyMajorLabelToCard(fresh, labels);
-                })
-                .catch(function () { /* silencieux */ });
         }
 
         // Re-résolution des catégories : le cache ou la base locale peuvent contenir des IDs
