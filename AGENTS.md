@@ -23,6 +23,28 @@
 
 **Règle simple** : si la session a appris ou changé quelque chose qui serait utile à la prochaine session, **ça doit être dans `CONTEXT.md` avant le push final**.
 
+## 📡 Protocole inter-sessions (généraliste)
+
+Ce projet fait partie d'un **écosystème multi-dépôts** où plusieurs sessions IA travaillent sur des dépôts liés (ex. le plugin WordPress `D0cm4c/atelierduweb-mec-api`) et doivent se coordonner **sans messager humain** pour la partie conception.
+
+### Au démarrage de CHAQUE session
+
+1. Lire `gh issue list --state open` **sur ce dépôt ET sur les dépôts partenaires** (ex. `gh issue list --repo D0cm4c/atelierduweb-mec-api`), commentaires récents inclus.
+2. Chercher les issues **adressées à ce dépôt** : label `pour-app`, ou mention de ce dépôt dans le titre/corps.
+3. Si une issue est adressée à ce dépôt : **la traiter en priorité** (après validation humaine si ambiguë), commenter avec le plan, livrer, **fermer avec un commentaire** référençant le commit.
+4. Si ce dépôt a besoin de quelque chose d'un autre dépôt (endpoint, spec, correction) : **ouvrir une issue sur ce dépôt avec le label `pour-<autre-dépôt>`** (ex. `pour-plugin`), titre préfixé `[app] …`. Ne jamais attendre que l'humain transmette.
+5. Vérifier les issues que ce dépôt a ouvertes ailleurs : une réponse y attend peut-être.
+
+### Règles de rédaction des issues inter-sessions
+
+- **Une demande = une issue** : contexte, spec précise (routes, formats, exemples), critère d'acceptation, `Closes #<n>` si applicable.
+- Toute **décision d'interface** (route, header, format, paramètres URL de préfill) doit être **répercutée dans la doc des deux dépôts** dans la même livraison (leçon apprise : `adw_name` vs `adw_nom` découvert après coup).
+- Les issues automatisent la **conception/coordination**, pas la gouvernance : arbitrage sécurité, accès production et décisions produit restent humains.
+
+### Adaptation à un autre projet
+
+Copier cette section dans le `AGENTS.md` de chaque dépôt d'un écosystème, créer les labels `pour-<dépôt>`, et chaque session sait quoi lire. Aucune infrastructure supplémentaire requise (issues GitHub natives).
+
 ## Livraison
 
 - Commiter et pousser soi-même sur une branche de travail `vibe/<slug>` et ouvrir une PR (draft puis ready). Pas de demande de validation à chaque étape.
