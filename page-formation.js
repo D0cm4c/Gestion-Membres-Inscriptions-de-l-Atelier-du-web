@@ -115,6 +115,7 @@
                 (f.duration ? ' · ' + esc(f.duration) : '') +
                 '</p>' +
                 (f.price ? '<p style="opacity:0.95;font-size:1.05rem;font-weight:700;margin-top:0.3rem;">💶 ' + esc(f.price) + ' €</p>' : '') +
+                '<div id="mecLabels" style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem;"></div>' +
                 '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button></div>' +
                 '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1.4rem;bottom:1rem;text-align:center;" href="#inscrits" title="Voir les inscrits">' +
                 '<span class="f-count-num" style="font-size:3.4rem;line-height:1;font-weight:800;">' + attendees.length + '</span>' +
@@ -177,7 +178,7 @@
                 attendees.forEach(function (m) {
                     var paid = m.payment; // 'bancontact' | 'cash' | null
                     var att = m.attendance; // 'present' | 'canceled' | null
-                    html += '<li class="checkin-item fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : att === 'na' ? ' fm-na' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
+                    html += '<li class="checkin-item fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : att === 'na' ? ' fm-na' : '') + (paid ? ' fm-paid' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
                         '<span class="member-avatar small" style="cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
                         '<div style="flex:1;min-width:0;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
                         '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
@@ -207,9 +208,116 @@
 
             content.innerHTML = html;
             attachRoomLogic(f);
+            loadMecLabels(f);
             attachAttendeeLogic(f);
             content.hidden = false;
             loading.hidden = true;
+        }
+
+        // ============ Labels MEC (Annulé, Niveau…) depuis la page publique ============
+        // La page de la formation expose « Labels : Annulé, Niveau intermédiaire » dans son HTML
+        // (bloc données MEC). L'API wp/v2 ne les expose pas — la page est la seule source
+        // publique. Fetch sans clé, lecture simple.
+        // Parsing du bloc données MEC de la page publique : labels + tarif + lieu + organisateur.
+        // (L'API wp/v2 n'expose pas ces champs ; l'API officielle MEC nécessite la clé — réservée au
+        // futur serveur Node. La page HTML est la source navigateur, cf. docs/BACKEND.md §7.)
+        function parseMecBlock(html) {
+            function clean(s) { return s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(); }
+            var out = {};
+            // Labels : jusqu'à Lieu/Catégorie
+            var mLab = html.match(/Labels\s*(?:<[^>]*>\s*)*([^]*?)(?=Lieu|Catégorie|$)/);
+            out.labels = mLab ? mLab[1].split(',').map(clean).filter(function (s) { return s && s.length < 40; }) : [];
+            // Tarif : « Tarif … 40.00€ » jusqu'à Labels
+            var mPrice = html.match(/Tarif\s*(?:<[^>]*>\s*)*([^]*?)(?=Labels|$)/);
+            out.price = mPrice ? (clean(mPrice[1]).replace(/[^€0-9,.]/g, '').replace('€', '').replace(',', '.').trim()) : '';
+            // Lieu : « Lieu … » jusqu'à Catégorie/Organisateur
+            var mLieu = html.match(/Lieu\s*(?:<[^>]*>\s*)*([^]*?)(?=Catégorie|Organisateur|$)/);
+            out.location = mLieu ? clean(mLieu[1]) : '';
+            // Organisateur : « Organisateur … » jusqu'à Email
+            var mOrg = html.match(/Organisateur\s*(?:<[^>]*>\s*)*([^]*?)(?=Email|Site|$)/);
+            out.organizer = mOrg ? clean(mOrg[1]) : '';
+            return out;
+        }
+
+        function loadMecLabels(f) {
+            var box = document.getElementById('mecLabels');
+            if (!box || !f.url) return;
+            fetch(f.url, { headers: { Accept: 'text/html' } })
+                .then(function (res) { if (!res.ok) throw new Error('http_' + res.status); return res.text(); })
+                .then(function (html) {
+                    var parsed = parseMecBlock(html);
+                    var labels = parsed.labels || [];
+                    // Persist in base : tarif/lieu/organisateur (colonnes existantes, souvent vides)
+                    try {
+                        if (parsed.price || parsed.location || parsed.organizer) {
+                            ADWDatabase.run('UPDATE formations SET price = COALESCE(NULLIF(?, \'\'), price), location = COALESCE(NULLIF(?, \'\'), location), organizer = COALESCE(NULLIF(?, \'\'), organizer) WHERE event_id = ?',
+                                [parsed.price || '', parsed.location || '', parsed.organizer || '', String(f.event_id || f.id)]);
+                        }
+                    } catch (e) { /* best effort */ }
+                    // Rafraîchir l'affichage avec les données fraîchement parsées (le rendu initial
+                    // lit la base, potentiellement vide pour un nouvel événement)
+                    if (parsed.price && !f.price) {
+                        var priceEl = document.querySelector('.hero p[style*="font-weight:700"]');
+                        if (priceEl && !priceEl.textContent.match(/€/)) {
+                            // pas de paragraphe prix dans le hero → le créer
+                        }
+                        f.price = parsed.price;
+                        var infoPrice = Array.prototype.find.call(document.querySelectorAll('.stat-card li'), function (li) {
+                            return li.textContent.indexOf('Tarif :') !== -1;
+                        });
+                        if (infoPrice) infoPrice.innerHTML = '<strong>💶 Tarif :</strong> ' + esc(parsed.price) + ' €';
+                    }
+                    if (parsed.location && !f.location) {
+                        f.location = parsed.location;
+                        var infoLieu = Array.prototype.find.call(document.querySelectorAll('.stat-card li'), function (li) {
+                            return li.textContent.indexOf('Lieu :') !== -1;
+                        });
+                        if (infoLieu) infoLieu.innerHTML = '<strong>📍 Lieu :</strong> ' + esc(parsed.location);
+                    }
+                    if (parsed.organizer && !f.organizer) {
+                        f.organizer = parsed.organizer;
+                        var infoOrg = Array.prototype.find.call(document.querySelectorAll('.stat-card li'), function (li) {
+                            return li.textContent.indexOf('Organisateur :') !== -1;
+                        });
+                        if (infoOrg) infoOrg.innerHTML = '<strong>👤 Organisateur :</strong> ' + esc(parsed.organizer);
+                    }
+                    if (!labels.length) return; // rien trouvé : on laisse le bloc vide
+                    // Labels MEC avec réactions (décision EPN oct. 2026) :
+                    //   « annulé »  → badge orange, résa désactivée, carte grisée
+                    //   « complet » → badge rouge, résa désactivée
+                    //   « nouveau » → badge vert
+                    var MAJORS = {
+                        canceled: /annul/i,
+                        full: /complet/i,
+                        fresh: /nouveau|new/i
+                    };
+                    var isCanceled = MAJORS.canceled.test(labels.join(' '));
+                    var isFull = !isCanceled && MAJORS.full.test(labels.join(' '));
+                    box.innerHTML = labels.map(function (lb) {
+                        var style;
+                        if (MAJORS.canceled.test(lb)) {
+                            style = 'background:var(--orange-light);color:#8F5600;border:1px solid var(--orange);font-weight:800;';
+                        } else if (MAJORS.full.test(lb)) {
+                            style = 'background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);font-weight:800;';
+                        } else if (MAJORS.fresh.test(lb)) {
+                            style = 'background:var(--green-light);color:var(--green);border:1px solid var(--green);font-weight:800;';
+                        } else {
+                            style = 'background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.4);';
+                        }
+                        return '<span class="badge" style="' + style + '">' + esc(lb) + '</span>';
+                    }).join('');
+                    // Réactions : annulé / complet → résa désactivée ; annulé → carte grisée
+                    var bookBtn = document.getElementById('bookBtn');
+                    var hero = document.querySelector('.hero');
+                    if ((isCanceled || isFull) && bookBtn) {
+                        bookBtn.disabled = true;
+                        bookBtn.classList.add('btn-disabled-locked');
+                        bookBtn.title = isCanceled ? 'Formation annulée — réservation fermée' : 'Formation complète — réservation fermée';
+                        bookBtn.textContent = isCanceled ? '🚫 Annulée' : '⛔ Complète';
+                    }
+                    if (isCanceled && hero) hero.classList.add('f-canceled-hero');
+                })
+                .catch(function () { /* page injoignable : pas de labels affichés, pas grave */ });
         }
 
         // ============ Suivi des inscrits : paiement + présence (oct. 2026) ============

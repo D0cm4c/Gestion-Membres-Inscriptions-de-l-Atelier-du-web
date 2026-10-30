@@ -158,7 +158,8 @@ Les scripts de pages (app.js, formations.html…) appellent déjà `ADWDatabase.
 
 1. **Aucune clé API dans le JS public** (décision utilisateur explicite) : la synchro des bookings MEC doit rester **server-to-server**, jamais appelée depuis le navigateur. Le plugin WordPress prévoit une route protégée par secret.
 2. L'API WP utilisée dans la maquette est **publique et sans clé** (`wp/v2/mec-events`) — c'est un choix assumé côté navigateur.
-3. **API officielle MEC (`wp-json/mec/v1.0`, header `mec-token`) — testée le 22 oct. 2026, fonctionne avec clé.** Réserves au serveur (clé en config serveur, JAMAIS dans le JS) :
+3. **API officielle MEC (`wp-json/mec/v1.0`, header `mec-token`)**
+   - Champs **tarif** (`/tickets`), **lieu** et **organisateur** (détail event) : à récupérer côté serveur (clé en config) plutôt que parsés depuis les pages HTML — le parsing navigateur (page-formation.js `parseMecBlock`, oct. 2026) est un palliatif en attendant : il extrait Tarif/Lieu/Organisateur/Labels du bloc HTML public et les persiste en base (`formations.price/location/organizer`). Le serveur remplira ces champs proprement via l'API MEC en cron. — testée le 22 oct. 2026, fonctionne avec clé.** Réserves au serveur (clé en config serveur, JAMAIS dans le JS) :
    - `GET /events/{id}` (Single Event) : **une seule requête renvoie TOUT** — testé en réel :
      - `data.locations` : **lieu** (nom, adresse complète) — remplace le module 2 du plugin prévu
      - `data.organizers` : **organisateur** (nom, email, page équipe, photo) — remplace le module 1
