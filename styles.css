@@ -698,20 +698,18 @@ main {
     opacity: 0.55;
     filter: saturate(0.5);
 }
-.checkin-item.fm-na {
-    border-left: 3px solid var(--info, #1F5FA8);
-    background: rgba(31, 95, 168, 0.07);
-}
+.checkin-item/* « non concerné » : ligne neutre par décision EPN — le badge bouton suffit */
+.fm-na { background: var(--surface); }
 /* Ligne payée (bancontact/cash) : jaune — SAUF si présent (vert prioritaire), annulé ou non concerné */
-.checkin-item.fm-line.fm-paid:not(.fm-present):not(.fm-canceled):not(.fm-na) {
+.checkin-item.fm-line.fm-paid:not(.fm-present):not(.fm-canceled) {
     background: var(--warning-bg);
     border-left: 3px solid var(--orange);
 }
-:root[data-theme="dark"] .checkin-item.fm-line.fm-paid:not(.fm-present):not(.fm-canceled):not(.fm-na) { background: rgba(178, 106, 0, 0.15); }
+:root[data-theme="dark"] .checkin-item.fm-line.fm-paid:not(.fm-present):not(.fm-canceled) { background: rgba(178, 106, 0, 0.15); }
 
 /* état normal explicite — uniquement pour les lignes SANS statut (n'écrase pas les états) */
-.checkin-item.fm-line:not(.fm-present):not(.fm-canceled):not(.fm-na):not(.fm-paid) { background: var(--surface); opacity: 1; filter: none; }
-.checkin-item.fm-present:hover, .checkin-item.fm-canceled:hover, .checkin-item.fm-na:hover { background: inherit; border-color: inherit; transform: none; }
+.checkin-item.fm-line:not(.fm-present):not(.fm-canceled):not(.fm-paid) { background: var(--surface); opacity: 1; filter: none; }
+.checkin-item.fm-present:hover, .checkin-item.fm-canceled:hover { background: inherit; border-color: inherit; transform: none; }
 :root[data-theme="dark"] .checkin-item.fm-present { background: rgba(24, 165, 95, 0.12); }
 :root[data-theme="dark"] .checkin-item.fm-canceled { opacity: 0.5; }
 
