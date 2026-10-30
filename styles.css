@@ -710,11 +710,11 @@ main {
 /* état normal explicite — uniquement pour les lignes SANS statut (n'écrase pas les états) */
 .checkin-item.fm-line:not(.fm-present):not(.fm-canceled):not(.fm-paid) { background: var(--surface); opacity: 1; filter: none; }
 /* Hover : une ligne à statut garde SA couleur — pas de blanc/flash accent au survol */
-.checkin-item.fm-present:hover { background: var(--success-bg); border-color: var(--green); transform: none; }
-.checkin-item.fm-canceled:hover { background: var(--surface); border-color: var(--border); transform: none; opacity: 0.55; }
-.checkin-item.fm-line.fm-paid:hover { background: var(--warning-bg); border-color: var(--orange); transform: none; }
-:root[data-theme="dark"] .checkin-item.fm-present:hover { background: rgba(24, 165, 95, 0.12); }
-:root[data-theme="dark"] .checkin-item.fm-line.fm-paid:hover { background: rgba(178, 106, 0, 0.15); }
+.checkin-item.fm-line.fm-present:hover, .checkin-item.fm-present:hover { background: var(--success-bg) !important; border-color: var(--green); transform: none; }
+.checkin-item.fm-line.fm-canceled:hover, .checkin-item.fm-canceled:hover { background: var(--surface) !important; border-color: var(--border); transform: none; opacity: 0.55; }
+.checkin-item.fm-line.fm-paid:not(.fm-present):not(.fm-canceled):hover { background: var(--warning-bg); border-color: var(--orange); transform: none; }
+:root[data-theme="dark"] .checkin-item.fm-line.fm-present:hover, :root[data-theme="dark"] .checkin-item.fm-present:hover { background: rgba(24, 165, 95, 0.12) !important; }
+:root[data-theme="dark"] .checkin-item.fm-line.fm-paid:not(.fm-present):not(.fm-canceled):hover { background: rgba(178, 106, 0, 0.15); }
 :root[data-theme="dark"] .checkin-item.fm-present { background: rgba(24, 165, 95, 0.12); }
 :root[data-theme="dark"] .checkin-item.fm-canceled { opacity: 0.5; }
 
