@@ -115,6 +115,7 @@
                 (f.duration ? ' · ' + esc(f.duration) : '') +
                 '</p>' +
                 (f.price ? '<p style="opacity:0.95;font-size:1.05rem;font-weight:700;margin-top:0.3rem;">💶 ' + esc(f.price) + ' €</p>' : '') +
+                '<div id="mecLabels" style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem;"></div>' +
                 '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button></div>' +
                 '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1.4rem;bottom:1rem;text-align:center;" href="#inscrits" title="Voir les inscrits">' +
                 '<span class="f-count-num" style="font-size:3.4rem;line-height:1;font-weight:800;">' + attendees.length + '</span>' +
@@ -207,9 +208,42 @@
 
             content.innerHTML = html;
             attachRoomLogic(f);
+            loadMecLabels(f);
             attachAttendeeLogic(f);
             content.hidden = false;
             loading.hidden = true;
+        }
+
+        // ============ Labels MEC (Annulé, Niveau…) depuis la page publique ============
+        // La page de la formation expose « Labels : Annulé, Niveau intermédiaire » dans son HTML
+        // (bloc données MEC). L'API wp/v2 ne les expose pas — la page est la seule source
+        // publique. Fetch sans clé, lecture simple.
+        function loadMecLabels(f) {
+            var box = document.getElementById('mecLabels');
+            if (!box || !f.url) return;
+            fetch(f.url, { headers: { Accept: 'text/html' } })
+                .then(function (res) { if (!res.ok) throw new Error('http_' + res.status); return res.text(); })
+                .then(function (html) {
+                    // Le bloc MEC : « Labels</strong>…Annulé, Niveau intermédiaire »
+                    // Le HTML réel : chercher le texte après le mot Labels jusqu'au bloc suivant (Lieu/Catégorie)
+                    var m = html.match(/Labels\s*(?:<[^>]*>\s*)*([^<]*(?:<[^lL][^>]*>[^<]*)*?)(?=Lieu|Catégorie|$)/);
+                    var labels = [];
+                    if (m) {
+                        labels = m[1].split(',')
+                            .map(function (s) { return s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(); })
+                            .filter(function (s) { return s && s.length < 40; });
+                    }
+                    if (!labels.length) return; // rien trouvé : on laisse le bloc vide
+                    box.innerHTML = labels.map(function (lb) {
+                        var isCanceled = /annul/i.test(lb);
+                        return '<span class="badge" style="' +
+                            (isCanceled
+                                ? 'background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);font-weight:700;'
+                                : 'background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.4);') +
+                            '">' + esc(lb) + '</span>';
+                    }).join('');
+                })
+                .catch(function () { /* page injoignable : pas de labels affichés, pas grave */ });
         }
 
         // ============ Suivi des inscrits : paiement + présence (oct. 2026) ============
