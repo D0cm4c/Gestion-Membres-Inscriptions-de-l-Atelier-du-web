@@ -702,6 +702,13 @@ main {
     border-left: 3px solid var(--info, #1F5FA8);
     background: rgba(31, 95, 168, 0.07);
 }
+/* Ligne payée (bancontact/cash) : jaune — SAUF si présent (vert prioritaire), annulé ou non concerné */
+.checkin-item.fm-paid:not(.fm-present):not(.fm-canceled):not(.fm-na) {
+    background: var(--warning-bg);
+    border-left: 3px solid var(--orange);
+}
+:root[data-theme="dark"] .checkin-item.fm-paid:not(.fm-present):not(.fm-canceled):not(.fm-na) { background: rgba(178, 106, 0, 0.15); }
+
 /* état normal explicite — uniquement pour les lignes SANS statut (n'écrase pas les états) */
 .checkin-item.fm-line:not(.fm-present):not(.fm-canceled):not(.fm-na) { background: var(--surface); opacity: 1; filter: none; }
 .checkin-item.fm-present:hover, .checkin-item.fm-canceled:hover, .checkin-item.fm-na:hover { background: inherit; border-color: inherit; transform: none; }

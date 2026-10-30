@@ -178,7 +178,7 @@
                 attendees.forEach(function (m) {
                     var paid = m.payment; // 'bancontact' | 'cash' | null
                     var att = m.attendance; // 'present' | 'canceled' | null
-                    html += '<li class="checkin-item fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : att === 'na' ? ' fm-na' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
+                    html += '<li class="checkin-item fm-line' + (att === 'present' ? ' fm-present' : att === 'canceled' ? ' fm-canceled' : att === 'na' ? ' fm-na' : '') + (paid ? ' fm-paid' : '') + '" style="list-style:none;" data-fm-mid="' + esc(m.id) + '">' +
                         '<span class="member-avatar small" style="cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' + esc((m.first_name || '?')[0] + (m.last_name || '')[0]) + '</span>' +
                         '<div style="flex:1;min-width:0;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
                         '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
