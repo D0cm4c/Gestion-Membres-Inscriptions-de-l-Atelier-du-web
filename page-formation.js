@@ -241,12 +241,31 @@
 
         function loadMecLabels(f) {
             var box = document.getElementById('mecLabels');
-            if (!box || !f.url) return;
+            if (!box) return;
+            // Source prioritaire : labels/tarif/lieu/organisateur du flux (plugin A / RSS B)
+            if (window.ADWMec && window.ADWMec._labelsData) {
+                var info = window.ADWMec._labelsData[String(f.event_id || f.id)];
+                if (info && info.labels && info.labels.length) {
+                    applyParsedData(f, { labels: info.labels, price: info.price, location: info.location, organizer: info.organizer });
+                    return;
+                }
+            }
+            if (!f.url) return;
+            // Dernier recours : fetch de la page HTML (bloqué par CORS en naviguant depuis
+            // GitHub Pages — silencieux ; le plugin ou le RSS couvrent ce cas)
             fetch(f.url, { headers: { Accept: 'text/html' } })
                 .then(function (res) { if (!res.ok) throw new Error('http_' + res.status); return res.text(); })
                 .then(function (html) {
-                    var parsed = parseMecBlock(html);
-                    var labels = parsed.labels || [];
+                    applyParsedData(f, parseMecBlock(html));
+                })
+                .catch(function () { /* silencieux */ });
+        }
+
+        // Applique les données MEC parsées : badges + réactions + persistance + affichage à chaud
+        function applyParsedData(f, parsed) {
+            parsed = parsed || {};
+            var box = document.getElementById('mecLabels');
+            var labels = parsed.labels || [];
                     // Persist in base : tarif/lieu/organisateur (colonnes existantes, souvent vides)
                     try {
                         if (parsed.price || parsed.location || parsed.organizer) {
@@ -316,8 +335,6 @@
                         bookBtn.textContent = isCanceled ? '🚫 Annulée' : '⛔ Complète';
                     }
                     if (isCanceled && hero) hero.classList.add('f-canceled-hero');
-                })
-                .catch(function () { /* page injoignable : pas de labels affichés, pas grave */ });
         }
 
         // ============ Suivi des inscrits : paiement + présence (oct. 2026) ============
