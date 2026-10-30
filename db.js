@@ -184,6 +184,9 @@
         if (!fcols.organizer) {
             db.run('ALTER TABLE formations ADD COLUMN organizer TEXT');
         }
+        if (!fcols.labels) {
+            db.run('ALTER TABLE formations ADD COLUMN labels TEXT');
+        }
         if (!fcols.location) {
             db.run('ALTER TABLE formations ADD COLUMN location TEXT');
         }
@@ -401,14 +404,17 @@
             if (existing.length) {
                 formationId = existing[0].id;
                 db.run(
-                    'UPDATE formations SET title = ?, start_date = ?, date_text = ?, time_label = ?, duration = ?, excerpt = ?, url = ?, categories = ?, synced_at = ? WHERE event_id = ?',
-                    [ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null, now, String(ev.id)]
+                    'UPDATE formations SET title = ?, start_date = ?, date_text = ?, time_label = ?, duration = ?, excerpt = ?, url = ?, categories = ?, ' +
+                    'price = COALESCE(?, price), location = COALESCE(?, location), organizer = COALESCE(?, organizer), labels = COALESCE(?, labels), synced_at = ? WHERE event_id = ?',
+                    [ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null,
+                     ev.price || null, ev.location || null, ev.organizer || null, (ev.labels || []).join(', ') || null, now, String(ev.id)]
                 );
             } else {
                 formationId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
                 db.run(
-                    'INSERT INTO formations (id, event_id, title, start_date, date_text, time_label, duration, excerpt, url, categories, synced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [formationId, String(ev.id), ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null, now]
+                    'INSERT INTO formations (id, event_id, title, start_date, date_text, time_label, duration, excerpt, url, categories, price, location, organizer, labels, synced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [formationId, String(ev.id), ev.title, ev.startDate || null, ev.dateText || null, ev.timeLabel || null, ev.duration || null, ev.excerpt || null, ev.url || null, categories || null,
+                     ev.price || null, ev.location || null, ev.organizer || null, (ev.labels || []).join(', ') || null, now]
                 );
             }
             keptIds.push(formationId);

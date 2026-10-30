@@ -457,6 +457,25 @@
                 return;
             }
             render(f);
+            // Enrichissement à chaud : si la base manque de données (tarif/lieu/organisateur/labels),
+            // tenter le flux (plugin A / RSS B) et re-rendre si de nouvelles données arrivent.
+            if (window.ADWMec && (!f.price || !f.location || !f.organizer || !f.labels)) {
+                window.ADWMec.load().then(function (events) {
+                    // persister la synchro enrichie puis relire
+                    try { ADWDatabase.syncFormations(events); } catch (e) { /* best effort */ }
+                    var f2 = ADWDatabase.getFormationByEventId(id);
+                    if (f2 && (f2.price !== f.price || f2.location !== f.location || f2.organizer !== f.organizer || f2.labels !== f.labels)) {
+                        render(f2);
+                    }
+                    // labels via l'endpoint du plugin uniquement (même hors synchro)
+                    if (window.ADWMec._labelsData) {
+                        var info = window.ADWMec._labelsData[String(id)];
+                        if (info && info.labels && info.labels.length) {
+                            applyParsedData(f2 || f, { labels: info.labels, price: info.price, location: info.location, organizer: info.organizer });
+                        }
+                    }
+                }).catch(function () { /* flux indisponible : fiche sur données locales */ });
+            }
         }).catch(function (err) {
             loading.hidden = true;
             notFound.hidden = false;
