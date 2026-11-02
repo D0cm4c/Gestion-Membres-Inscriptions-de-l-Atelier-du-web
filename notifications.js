@@ -104,5 +104,50 @@
         refreshBadge();
         // Rafraîchit le badge quand la page redevient visible (synchro possible dans un autre onglet)
         document.addEventListener('visibilitychange', refreshBadge);
+
+        // ===== Rappel auto : formations sans salle (anti-spam quotidien) =====
+        // Au démarrage de n'importe quelle page, si des formations datées n'ont pas de salle,
+        // une notification par formation est émise — une seule fois par jour (localStorage).
+        function roomReminderCheck() {
+            var db = window.ADWDatabase;
+            if (!db || !db.formationsWithoutRoom) return;
+            var without;
+            try { without = db.formationsWithoutRoom() || []; } catch (e) { return; }
+            var attributable = without.filter(function (f) { return f.date_count > 0; });
+            if (!attributable.length) return;
+            // anti-spam : 1 vérification productive par jour
+            var today = new Date().toISOString().slice(0, 10);
+            var lastKey = 'adw_room_reminder';
+            var last = null;
+            try { last = localStorage.getItem(lastKey); } catch (e) {}
+            if (last === today) return;
+            try { localStorage.setItem(lastKey, today); } catch (e) {}
+            // anti-doublon : ne pas re-signaler une formation déjà notifiée (tant que non résolue)
+            var already = {};
+            try {
+                db.listNotifications(200).forEach(function (n) {
+                    if (n.type === 'room_needed') {
+                        try {
+                            var d = n.details ? JSON.parse(n.details) : null;
+                            if (d && d.event_id) already[d.event_id] = true;
+                        } catch (e) {}
+                    }
+                });
+            } catch (e) {}
+            attributable.forEach(function (f) {
+                if (already[f.event_id]) return; // déjà signalée, pas résolue : pas de spam
+                window.ADWNotifications.push('room_needed',
+                    '🏷 « ' + (f.title || 'Formation') + ' » n\u2019a pas de salle attribuée — planifie-la depuis la page Salles.',
+                    'warning', { event_id: f.event_id });
+            });
+        }
+        // attendre que la DB soit initialisée
+        var tryDb = setInterval(function () {
+            if (window.ADWDatabase && window.ADWDatabase.db) {
+                clearInterval(tryDb);
+                try { roomReminderCheck(); } catch (e) {}
+            }
+        }, 600);
+        setTimeout(function () { clearInterval(tryDb); }, 15000); // bail global
     });
 })();
