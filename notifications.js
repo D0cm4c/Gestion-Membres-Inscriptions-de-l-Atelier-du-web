@@ -141,11 +141,45 @@
                     'warning', { event_id: f.event_id });
             });
         }
+        // ===== Rappel auto : tickets urgents non assignés (tickets étape 3) =====
+        // Au démarrage, chaque ticket urgent (open/in_progress) SANS assigné génère une
+        // notification — dédupliquée par ticket (details.ticket_id) tant que non résolu.
+        function urgentTicketsCheck() {
+            var db = window.ADWDatabase;
+            if (!db || !db.queryAll) return;
+            var rows;
+            try {
+                rows = db.queryAll("SELECT id, title, equipment FROM tickets " +
+                    "WHERE status IN ('open','in_progress') AND priority = 'urgent' " +
+                    "AND (assignee IS NULL OR assignee = '')");
+            } catch (e) { return; }
+            if (!rows.length) return;
+            var already = {};
+            try {
+                db.listNotifications(200).forEach(function (n) {
+                    if (n.type === 'ticket_urgent') {
+                        try {
+                            var d = n.details ? JSON.parse(n.details) : null;
+                            if (d && d.ticket_id) already[d.ticket_id] = true;
+                        } catch (e) {}
+                    }
+                });
+            } catch (e) {}
+            rows.forEach(function (t) {
+                if (already[t.id]) return;
+                window.ADWNotifications.push('ticket_urgent',
+                    '🛠️ Incident URGENT non assigné : « ' + (t.title || 'ticket') + ' »' +
+                    (t.equipment ? ' (' + t.equipment + ')' : '') + ' — assigne-le ou traite-le depuis la page Incidents.',
+                    'danger', { ticket_id: t.id });
+            });
+        }
+
         // attendre que la DB soit initialisée
         var tryDb = setInterval(function () {
             if (window.ADWDatabase && window.ADWDatabase.db) {
                 clearInterval(tryDb);
                 try { roomReminderCheck(); } catch (e) {}
+                try { urgentTicketsCheck(); } catch (e) {}
             }
         }, 600);
         setTimeout(function () { clearInterval(tryDb); }, 15000); // bail global

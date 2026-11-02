@@ -179,9 +179,14 @@
 
         var ticketsEl = document.getElementById('statTicketsOpen');
         if (ticketsEl) {
-            var openT = 0;
+            var openT = 0, urgentT = 0, unassignedT = 0;
             try { openT = one('SELECT COUNT(*) v FROM tickets WHERE status IN (\'open\', \'in_progress\')'); } catch (e) { /* table absente : 0 */ }
+            try { urgentT = one('SELECT COUNT(*) v FROM tickets WHERE status IN (\'open\', \'in_progress\') AND priority = \'urgent\''); } catch (e) {}
+            try { unassignedT = one('SELECT COUNT(*) v FROM tickets WHERE status IN (\'open\', \'in_progress\') AND priority = \'urgent\' AND (assignee IS NULL OR assignee = \'\')'); } catch (e) {}
             ticketsEl.textContent = openT;
+            ticketsEl.title = openT + ' incident(s) ouvert(s)' +
+                (urgentT ? ' — dont ' + urgentT + ' urgent(s)' : '') +
+                (unassignedT ? ' (' + unassignedT + ' non assigné(s))' : '');
         }
 
         var activePct = total ? Math.round((active / total) * 100) : 0;
