@@ -88,6 +88,22 @@
                 });
             } catch (e) { /* table absente */ }
 
+            // Tickets (incidents) — titre, mat\u00e9riel, description
+            try {
+                var tickets = window.ADWDatabase.queryAll(
+                    'SELECT id, title, equipment, status FROM tickets ' +
+                    'WHERE (title LIKE ? OR equipment LIKE ? OR description LIKE ?) ' +
+                    'AND status NOT IN (\'closed\') ORDER BY created_at DESC LIMIT 3', [like, like, like]);
+                tickets.forEach(function (t) {
+                    results.push({
+                        icon: '\ud83d\udee0\ufe0f',
+                        label: t.title,
+                        hint: (t.equipment ? t.equipment + ' \u00b7 ' : '') + 'incident' + (t.status === 'resolved' ? ' r\u00e9solu' : ''),
+                        url: 'ticket.html?id=' + encodeURIComponent(t.id)
+                    });
+                });
+            } catch (e) { /* table absente */ }
+
             if (!results.length) {
                 drop.innerHTML = '<div class="gs-empty">Aucun résultat dans l\u2019app.</div>';
                 drop.hidden = false;
