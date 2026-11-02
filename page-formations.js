@@ -273,7 +273,7 @@
                     if (attributable.length && window.ADWNotifications) {
                         window.ADWNotifications.push('awaiting_validation',
                             '🏷 ' + attributable.length + ' formation(s) attendent une salle — attribue-les depuis le planning (page Salles) pour bloquer leurs créneaux.',
-                            'warning');
+                            'warning', { count: attributable.length });
                     }
                 } else {
                     dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
