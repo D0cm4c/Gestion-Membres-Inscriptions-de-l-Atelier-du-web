@@ -1,0 +1,15 @@
+{
+  "name": "Gestion Membres — Atelier du Web",
+  "short_name": "Atelier du Web",
+  "description": "Gestion des membres, formations, inscriptions et incidents de l'EPN L'Atelier du web (Saint-Gilles).",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F2F5F8",
+  "theme_color": "#0F3D5C",
+  "lang": "fr",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

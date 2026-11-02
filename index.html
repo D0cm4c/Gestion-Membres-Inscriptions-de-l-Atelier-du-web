@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0F3D5C">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 </head>
 <body>
     <a class="skip-link" href="#main">Aller au contenu principal</a>
@@ -244,5 +247,13 @@
     <script src="suggestions.js?v=2"></script>
     <script src="globalsearch.js?v=3"></script>
     <script src="dashboard.js?v=28"></script>
+<script>
+        // PWA : enregistrement du service worker (silencieux si non supporté)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function () {});
+            });
+        }
+    </script>
 </body>
 </html>
