@@ -2016,3 +2016,31 @@ main {
 .gs-label { flex: 1; min-width: 0; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gs-hint { flex-shrink: 0; font-size: 0.74rem; color: var(--text-soft); max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gs-empty { padding: 0.9rem; font-size: 0.88rem; color: var(--text-soft); }
+
+/* ============ Feuille de séance imprimable (formation.html, B6) ============ */
+.print-sheet { display: none; }
+
+@media print {
+    /* masquer toute l'app… */
+    body > *:not(#printSheetHolder) { display: none !important; }
+    body { background: #fff !important; }
+    /* …sauf la feuille */
+    #printSheetHolder { display: block !important; }
+    .print-sheet { display: block; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; color: #000; }
+
+    .ps-head h1 { font-size: 1.3rem; margin: 0 0 0.2rem; }
+    .ps-meta { font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .ps-printed { font-size: 0.75rem; color: #555; margin-bottom: 1rem; }
+
+    .ps-table { width: 100%; border-collapse: collapse; }
+    .ps-table th, .ps-table td { border: 1px solid #999; padding: 0.45rem 0.5rem; text-align: left; font-size: 0.85rem; }
+    .ps-table th { background: #eee; font-size: 0.75rem; }
+    .ps-check { width: 2.2rem; }
+    .ps-notes { width: 35%; }
+    .ps-no { color: #555; font-size: 0.75rem; }
+    .ps-empty { text-align: center; color: #777; font-style: italic; }
+
+    .ps-foot { margin-top: 0.8rem; font-size: 0.7rem; color: #555; }
+
+    @page { margin: 1.2cm; }
+}

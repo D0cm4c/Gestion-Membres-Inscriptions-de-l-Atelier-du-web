@@ -116,7 +116,8 @@
                 '</p>' +
                 (f.price ? '<p style="opacity:0.95;font-size:1.05rem;font-weight:700;margin-top:0.3rem;">💶 ' + esc(f.price) + ' €</p>' : '') +
                 '<div id="mecLabels" style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem;"></div>' +
-                '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button></div>' +
+                '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button>' +
+                '<button class="btn btn-secondary" id="printSheetBtn" title="Feuille de séance imprimable : liste des inscrits avec cases paiement et présence à cocher au stylo">🖨️ Feuille de séance</button></div>' +
                 '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1.4rem;bottom:1rem;text-align:center;" href="#inscrits" title="Voir les inscrits">' +
                 '<span class="f-count-num" style="font-size:3.4rem;line-height:1;font-weight:800;">' + attendees.length + '</span>' +
                 '<span class="f-count-lbl" style="font-size:0.95rem;">inscrit' + (attendees.length > 1 ? 's' : '') + '</span></a>' +
@@ -390,6 +391,54 @@
             previewModal.hidden = false;
             document.getElementById('memberPreviewCloseBtn').focus();
         }
+
+        // ===== Feuille de séance imprimable (B6) =====
+        // Génère une version papier de la séance : en-tête formation + tableau des inscrits
+        // avec cases vides (paiement bancontact/cash, présence) à cocher au stylo en séance.
+        document.getElementById('formationContent').addEventListener('click', function (e) {
+            if (!e.target.closest('#printSheetBtn')) return;
+            var f = currentFormation;
+            if (!f) return;
+            var attendees = [];
+            try { attendees = ADWDatabase.getFormationAttendees(f.id) || []; } catch (err) { attendees = []; }
+            var today = new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' });
+            var rows = attendees.map(function (m) {
+                return '<tr>' +
+                    '<td class="ps-name">' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) +
+                    (m.member_no ? ' <span class="ps-no">#' + esc(m.member_no) + '</span>' : '') + '</td>' +
+                    '<td class="ps-check"></td>' +   // payé bancontact
+                    '<td class="ps-check"></td>' +   // payé cash
+                    '<td class="ps-check"></td>' +   // présent
+                    '<td class="ps-notes"></td>' +   // notes
+                    '</tr>';
+            }).join('');
+            var sheet =
+                '<div class="print-sheet">' +
+                '<div class="ps-head">' +
+                '<h1>' + esc(f.title) + '</h1>' +
+                '<div class="ps-meta">' +
+                (f.date_text || (f.start_date ? formatDate(f.start_date) : '')) +
+                (f.time_label ? ' \u00b7 ' + esc(f.time_label) : '') +
+                (f.location ? ' \u00b7 ' + esc(f.location) : '') +
+                (f.price ? ' \u00b7 ' + esc(f.price) + ' \u20ac' : '') +
+                '</div>' +
+                '<div class="ps-printed">Feuille de s\u00e9ance \u2014 imprim\u00e9e le ' + today + ' \u00b7 ' + attendees.length + ' inscrit' + (attendees.length > 1 ? 's' : '') + '</div>' +
+                '</div>' +
+                '<table class="ps-table">' +
+                '<thead><tr><th>Membre</th><th>\ud83d\udcb3</th><th>\ud83d\udcb5</th><th>\u2705</th><th>Notes</th></tr></thead>' +
+                '<tbody>' + (rows || '<tr><td colspan="5" class="ps-empty">Aucun inscrit pour le moment</td></tr>') + '</tbody>' +
+                '</table>' +
+                '<div class="ps-foot">L\u00e9gende : \ud83d\udcb3 pay\u00e9 bancontact \u00b7 \ud83d\udcb5 pay\u00e9 cash \u00b7 \u2705 pr\u00e9sent \u2014 \u00e0 re-pointer dans l\u2019app apr\u00e8s la s\u00e9ance.</div>' +
+                '</div>';
+            var holder = document.getElementById('printSheetHolder');
+            if (!holder) {
+                holder = document.createElement('div');
+                holder.id = 'printSheetHolder';
+                document.body.appendChild(holder);
+            }
+            holder.innerHTML = sheet;
+            window.print();
+        });
 
         document.getElementById('formationContent').addEventListener('click', function (e) {
             var li = e.target.closest('[data-preview-mid]');
