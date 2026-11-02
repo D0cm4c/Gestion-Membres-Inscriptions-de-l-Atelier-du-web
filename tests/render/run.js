@@ -24,7 +24,8 @@ var PAGES = [
     { file: 'salles.html', title: 'Planning des salles', activeNav: 'Salles', searchId: null },
     { file: 'suggestions.html', title: 'À faire / Suggestions', activeNav: 'À faire', searchId: null },
     { file: 'parametres.html', title: 'Paramètres', activeNav: 'Paramètres', searchId: null },
-    { file: 'tickets.html', title: 'Incidents', activeNav: 'Incidents', searchId: 'searchInput' }
+    { file: 'tickets.html', title: 'Incidents', activeNav: 'Incidents', searchId: 'searchInput' },
+    { file: 'ticket.html?id=demo', title: 'Incidents', activeNav: 'Incidents', searchId: 'searchInput' }
 ];
 
 var MIME = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.wasm': 'application/wasm' };
