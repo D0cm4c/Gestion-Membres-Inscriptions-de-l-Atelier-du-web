@@ -131,6 +131,96 @@ function main() {
                     });
                 });
             });
+            // ===== C8 : scenario comportemental formation.html =====
+            // Semer une formation + 2 inscrits, cliquer paiement/presence, verifier etats + KPI.
+            chain = chain.then(function () {
+                return browser.newPage().then(function (page) {
+                    var errs = [];
+                    page.on("pageerror", function (e) { errs.push(String(e)); });
+                    return page.goto(base + "formation.html?id=c8demo", { waitUntil: "load" })
+                        .then(function () { return page.waitForTimeout(900); })
+                        .then(function () {
+                            return page.evaluate(function () {
+                                var db = window.ADWDatabase;
+                                if (!db) return { seeded: false };
+                                try { db.run("DELETE FROM formations_members WHERE formation_id = (SELECT id FROM formations WHERE event_id = 'c8demo')"); } catch (e) {}
+                                try { db.run("DELETE FROM formations WHERE event_id = 'c8demo'"); } catch (e) {}
+                                try { db.run("DELETE FROM members WHERE id IN ('c8m1','c8m2')"); } catch (e) {}
+                                db.run("INSERT INTO formations (id, event_id, title, start_date, date_text, time_label, price, location, organizer) VALUES ('c8f', 'c8demo', 'Test C8 Canva', date('now'), 'aujourdhui', 'De 9h30 a 12h30', '40.00', 'Atelier du web', 'Testeur')");
+                                db.run("INSERT INTO members (id, first_name, last_name, member_no, email) VALUES ('c8m1', 'Marie', 'Dubois', 101, 'm@x.be')");
+                                db.run("INSERT INTO members (id, first_name, last_name, member_no, email) VALUES ('c8m2', 'Luc', 'Vandamme', 102, 'l@x.be')");
+                                db.registerMemberToFormation("c8f", "c8m1");
+                                db.registerMemberToFormation("c8f", "c8m2");
+                                return { seeded: true };
+                            });
+                        })
+                        .then(function (seed) {
+                            if (!seed || !seed.seeded) { errs.push("ADWDatabase indisponible"); return []; }
+                            return page.reload({ waitUntil: "load" })
+                                .then(function () { return page.waitForTimeout(900); })
+                                .then(function () {
+                                    return page.evaluate(function () {
+                                        var lines = document.querySelectorAll(".fm-line");
+                                        var bc = lines[0] && lines[0].querySelector('[data-pay="bancontact"]');
+                                        if (bc) bc.click();
+                                        return { count: lines.length };
+                                    });
+                                })
+                                .then(function (s1) {
+                                    return page.waitForTimeout(400).then(function () {
+                                        return page.evaluate(function () {
+                                            var lines = document.querySelectorAll(".fm-line");
+                                            return {
+                                                line1Paid: lines[0] ? lines[0].className.indexOf("fm-paid") !== -1 : false,
+                                                line1BtnPaid: lines[0] && lines[0].querySelector('[data-pay="bancontact"]') ? lines[0].querySelector('[data-pay="bancontact"]').className.indexOf("is-paid") !== -1 : false,
+                                                cashDisabled: lines[0] && lines[0].querySelector('[data-pay="cash"]') ? !!lines[0].querySelector('[data-pay="cash"]').disabled : false,
+                                                kpi: (document.querySelector(".fkpi-row") || {}).textContent || ""
+                                            };
+                                        }).then(function (s2) {
+                                            var checks = [
+                                                ["2 lignes inscrits", s1.count === 2],
+                                                ["ligne 1 fm-paid apres clic bancontact", s2.line1Paid],
+                                                ["bouton bancontact is-paid", s2.line1BtnPaid],
+                                                ["bouton cash desactive", s2.cashDisabled],
+                                                ["KPI ratio present", s2.kpi.indexOf("/ 2") !== -1]
+                                            ];
+                                            return page.evaluate(function () {
+                                                var lines = document.querySelectorAll(".fm-line");
+                                                var att = lines[1] && lines[1].querySelector(".fm-att");
+                                                if (att) att.click();
+                                            }).then(function () { return page.waitForTimeout(400); }).then(function () {
+                                                return page.evaluate(function () {
+                                                    var lines = document.querySelectorAll(".fm-line");
+                                                    return lines[1] ? lines[1].className.indexOf("fm-present") !== -1 : false;
+                                                });
+                                            }).then(function (line2Present) {
+                                                checks.push(["ligne 2 fm-present apres clic presence", line2Present]);
+                                                return checks;
+                                            });
+                                        });
+                                    });
+                                });
+                        })
+                        .then(function (checks) {
+                            var fails = (checks || []).filter(function (c) { return !c[1]; });
+                            if (errs.length) fails.push(["erreurs JS", false, errs.join(" | ")]);
+                            if (fails.length) {
+                                failures++;
+                                console.error("ECHEC formation.html (comportemental)");
+                                fails.forEach(function (f) { console.error("    - " + f[0]); });
+                            } else {
+                                console.log("OK formation.html (comportemental : boutons paiement/presence, KPI, re-rendu)");
+                            }
+                            return page.evaluate(function () {
+                                try { window.ADWDatabase.run("DELETE FROM formations_members WHERE formation_id = 'c8f'"); } catch (e) {}
+                                try { window.ADWDatabase.run("DELETE FROM formations WHERE event_id = 'c8demo'"); } catch (e) {}
+                                try { window.ADWDatabase.run("DELETE FROM members WHERE id IN ('c8m1','c8m2')"); } catch (e) {}
+                            }).catch(function () {});
+                        })
+                        .then(function () { return page.close(); });
+                });
+            });
+
             return chain.then(function () {
                 return browser.close().then(function () {
                     httpd.server.close();
