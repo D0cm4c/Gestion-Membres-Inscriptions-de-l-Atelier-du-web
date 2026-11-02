@@ -1988,6 +1988,14 @@ main {
 .agenda-slot.pm { background: #E4F2FC; color: #1F6FA0; }
 .agenda-bar { flex-shrink: 0; width: 5px; height: 28px; border-radius: 3px; }
 .agenda-title { flex: 1; min-width: 0; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agenda-time { font-size: 0.75rem; color: var(--text-soft); white-space: nowrap; }
+.agenda-count {
+    font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+    padding: 0.12rem 0.5rem; border-radius: 999px;
+    background: #EEF1F4; color: var(--text-soft);
+}
+.agenda-count.has-attendees { background: var(--green-light); color: var(--green); }
+:root[data-theme="dark"] .agenda-count { background: rgba(255,255,255,0.08); }
 .agenda-room { flex-shrink: 0; font-size: 0.78rem; font-weight: 600; color: var(--text-soft); background: var(--bg); padding: 0.2rem 0.6rem; border-radius: 999px; }
 
 /* ============ Recherche globale (dropdown) ============ */

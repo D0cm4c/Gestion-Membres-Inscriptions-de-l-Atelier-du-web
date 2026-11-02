@@ -118,12 +118,17 @@
         try {
             rows = ADWDatabase.queryAll(
                 'SELECT f.title, f.event_id, f.time_label, f.categories, f.room_id, fd.slot, ' +
-                '(SELECT name FROM rooms r WHERE r.id = f.room_id) AS room_name ' +
+                '(SELECT name FROM rooms r WHERE r.id = f.room_id) AS room_name, ' +
+                '(SELECT COUNT(*) FROM formations_members fm WHERE fm.formation_id = f.id) AS attendee_count ' +
                 'FROM formation_dates fd JOIN formations f ON f.id = fd.formation_id ' +
                 'WHERE fd.date = ? ORDER BY fd.slot ASC, f.title ASC', [today]);
         } catch (e) { rows = []; }
         if (!rows.length) {
-            el.hidden = true;
+            // Journée calme : carte discrète plutôt qu'un trou
+            el.innerHTML = '<div class="stat-card today-agenda" style="margin-bottom:1.3rem;opacity:0.75;">' +
+                '<h3>\ud83d\udcc6 Aujourd\u2019hui \u00e0 l\u2019Atelier</h3>' +
+                '<p class="form-hint" style="margin:0;">Aucune formation programm\u00e9e aujourd\u2019hui \u2014 journ\u00e9e calme \ud83c\udf3f</p></div>';
+            el.hidden = false;
             return;
         }
         var html = '<div class="stat-card today-agenda" style="margin-bottom:1.3rem;">' +
@@ -137,6 +142,8 @@
                 '<span class="agenda-slot ' + (f.slot === 'AM' ? 'am' : 'pm') + '">' + (f.slot === 'AM' ? 'Matin' : 'A-midi') + '</span>' +
                 '<span class="agenda-bar" style="background:' + bg + ';"></span>' +
                 '<span class="agenda-title">' + escapeHtml(f.title) + '</span>' +
+                (f.time_label ? '<span class="agenda-time">' + escapeHtml(f.time_label) + '</span>' : '') +
+                '<span class="agenda-count' + (f.attendee_count ? ' has-attendees' : '') + '">' + f.attendee_count + ' inscrit' + (f.attendee_count > 1 ? 's' : '') + '</span>' +
                 (f.room_name ? '<span class="agenda-room">' + escapeHtml(f.room_name) + '</span>' : '<span class="badge badge-full">sans salle</span>') +
                 '</a>';
         });
