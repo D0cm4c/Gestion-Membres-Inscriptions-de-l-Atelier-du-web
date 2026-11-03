@@ -670,6 +670,14 @@ main {
     filter: saturate(0.4);
 }
 
+/* Badge de synchro (fiche formation) */
+.sync-badge {
+    font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+    padding: 0.18rem 0.6rem; border-radius: 999px;
+    background: var(--green-light); color: var(--green);
+}
+.sync-badge.stale { background: var(--accent-light); color: var(--orange); }
+
 /* KPI de formation (formation.html) — réutilise .mkpi du mini-dashboard membre */
 .fkpi-row { margin-top: 1.2rem; margin-bottom: 1.2rem; }
 .fkpi-green { border-top: 3px solid var(--green); }

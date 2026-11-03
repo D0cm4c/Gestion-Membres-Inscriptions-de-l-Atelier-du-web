@@ -11,6 +11,21 @@
         });
 
         function esc(s) { return window.ADWEscape.html(s); }
+
+        function timeAgo(iso) {
+            if (!iso) return '';
+            try {
+                var d = new Date(String(iso).replace(' ', 'T') + (String(iso).indexOf('Z') === -1 ? 'Z' : ''));
+                var mins = Math.round((Date.now() - d.getTime()) / 60000);
+                if (isNaN(mins)) return '';
+                if (mins < 1) return "à l'instant";
+                if (mins < 60) return 'il y a ' + mins + ' min';
+                var hours = Math.round(mins / 60);
+                if (hours < 24) return 'il y a ' + hours + ' h';
+                var days = Math.round(hours / 24);
+                return 'il y a ' + days + ' j';
+            } catch (e) { return ''; }
+        }
         function formatDate(v) {
             if (!v) return '—';
             var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -173,7 +188,14 @@
                 '</div>';
 
             // Inscriptions (miroir) — marge top : détaché de la grille d'infos au-dessus
-            html += '<div class="stat-card" id="inscrits" style="margin-top:1.2rem;"><h3>👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>';
+            var syncAgo = f.synced_at ? timeAgo(f.synced_at) : '';
+            html += '<div class="stat-card" id="inscrits" style="margin-top:1.2rem;">' +
+                '<div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;">' +
+                '<h3 style="margin:0;">👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>' +
+                '<span class="sync-badge' + (syncAgo ? '' : ' stale') + '" id="syncBadge" title="Date de la dernière synchronisation avec atelierduweb.be">' +
+                (syncAgo ? '🔄 synchronisé ' + esc(syncAgo) : '⚠️ jamais synchronisé') + '</span>' +
+                '<button class="btn btn-secondary btn-small" id="resyncBtn" style="margin-left:auto;" title="Resynchroniser les formations et les inscriptions depuis atelierduweb.be">🔄 Resynchroniser</button>' +
+                '</div>';
             if (attendees.length) {
                 html += '<ul class="checkin-results" style="display:flex;flex-direction:column;">';
                 attendees.forEach(function (m) {
@@ -438,6 +460,43 @@
             }
             holder.innerHTML = sheet;
             window.print();
+        });
+
+        // ===== Resynchroniser (fiche) : flux → synchro → miroir inscriptions → re-rendu =====
+        document.getElementById('formationContent').addEventListener('click', function (e) {
+            var btn = e.target.closest('#resyncBtn');
+            if (!btn) return;
+            btn.disabled = true;
+            btn.textContent = '⏳ Synchronisation…';
+            var eventId = currentFormation ? (currentFormation.event_id || currentFormation.id) : null;
+            var doSync = function (events) {
+                try {
+                    var count = ADWDatabase.syncFormations(events || []);
+                    var removals = ADWDatabase.applyMirror();
+                    removals.forEach(function (r) {
+                        window.ADWNotifications.push('auto_unlink',
+                            '🗑 Inscription retirée : ' + r.memberName + ' — « ' + r.formationTitle + ' » (réservation annulée sur le site)',
+                            'warning');
+                    });
+                    window.ADWNotifications.push('sync_formations',
+                        '🔄 Resynchronisation : ' + (events || []).length + ' formation(s) à jour' + (removals.length ? ' · ' + removals.length + ' inscription(s) retirée(s)' : ''),
+                        'info');
+                } catch (err) { /* best effort */ }
+                if (eventId) {
+                    var f2 = ADWDatabase.getFormationByEventId(eventId);
+                    if (f2) render(f2);
+                }
+                btn.disabled = false;
+                btn.textContent = '🔄 Resynchroniser';
+            };
+            if (window.ADWMec && window.ADWMec.load) {
+                window.ADWMec.load().then(doSync).catch(function () {
+                    doSync([]);
+                    if (window.ADWNotifications) {
+                        window.ADWNotifications.push('error', '⚠️ Synchronisation impossible : site atelierduweb.be injoignable — données locales conservées.', 'danger');
+                    }
+                });
+            } else { doSync([]); }
         });
 
         document.getElementById('formationContent').addEventListener('click', function (e) {
