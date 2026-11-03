@@ -58,11 +58,13 @@
             html += '</select><div id="roomConflict" class="form-error" style="margin-top:0.6rem;" hidden></div></div>';
             // Seances (dates + creneaux)
             if (dates.length) {
-                html += '<p class="form-hint" style="margin-bottom:0.4rem;"><strong>Séances (' + dates.length + ')</strong> — chaque séance bloque un créneau dans le planning de la salle :</p><ul style="list-style:none;">';
-                dates.forEach(function (d) {
+                html += '<p class="form-hint" style="margin-bottom:0.4rem;"><strong>' + dates.length + ' module' + (dates.length > 1 ? 's' : '') + ' (' + dates.length + ' séance' + (dates.length > 1 ? 's' : '') + ')</strong> — chaque séance bloque un créneau dans le planning de la salle :</p><ul style="list-style:none;">';
+                dates.forEach(function (d, idx) {
                     var label = new Date(d.date + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric', month: 'short' });
-                    html += '<li style="padding:0.25rem 0;border-bottom:1px solid var(--bg);font-size:0.88rem;">' +
-                        '📅 ' + esc(label) + ' · <span class="badge ' + (d.slot === 'AM' ? 'badge-sub-monthly' : 'badge-sub-yearly') + '">' + (d.slot === 'AM' ? 'Matin 9h30–12h30' : 'Après-midi 13h30–16h30') + '</span></li>';
+                    html += '<li style="padding:0.25rem 0;border-bottom:1px solid var(--bg);font-size:0.88rem;display:flex;align-items:center;gap:0.4rem;">' +
+                        '<span class="mod-num" aria-hidden="true">M' + (idx + 1) + '</span>' +
+                        '📅 ' + esc(label) + ' · <span class="badge ' + (d.slot === 'AM' ? 'badge-sub-monthly' : 'badge-sub-yearly') + '">' + (d.slot === 'AM' ? 'Matin 9h30–12h30' : 'Après-midi 13h30–16h30') + '</span></span>' +
+                        '<span style="margin-left:auto;color:var(--text-soft);font-size:0.75rem;">Module ' + (idx + 1) + '/' + dates.length + '</span></li>';
                 });
                 html += '</ul>';
             } else {
@@ -117,6 +119,9 @@
 
             var attendees = [];
             try { attendees = ADWDatabase.getFormationAttendees(f.id) || []; } catch (e) { attendees = []; }
+            var moduleDates = [];
+            try { moduleDates = ADWDatabase.getFormationDates(f.id) || []; } catch (e) { moduleDates = []; }
+            var moduleCount = moduleDates.length;
 
 
             var html = '';
@@ -128,6 +133,7 @@
                 (f.date_text || (f.start_date ? formatDate(f.start_date) : 'date à confirmer')) +
                 (f.time_label ? ' · ' + esc(f.time_label) : '') +
                 (f.duration ? ' · ' + esc(f.duration) : '') +
+                (moduleCount ? ' · ' + moduleCount + ' module' + (moduleCount > 1 ? 's' : '') : '') +
                 '</p>' +
                 (f.price ? '<p style="opacity:0.95;font-size:1.05rem;font-weight:700;margin-top:0.3rem;">💶 ' + esc(f.price) + ' €</p>' : '') +
                 '<div id="mecLabels" style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem;"></div>' +
@@ -172,6 +178,9 @@
                 '<div class="stat-card"><h3>📌 Informations</h3><ul>' +
                 '<li><strong>📅 Date :</strong> ' + esc(f.date_text || (f.start_date ? formatDate(f.start_date) : 'à confirmer')) + '</li>' +
                 '<li><strong>⏰ Horaires :</strong> ' + esc(f.time_label || 'à confirmer') + '</li>' +
+                (moduleCount
+                    ? '<li><strong>Modules :</strong> ' + moduleCount + ' module' + (moduleCount > 1 ? 's' : '') + ' <span class="form-hint" style="display:inline;">(séances individuelles)</span></li>'
+                    : '') +
                 '<li><strong>⏳ Durée :</strong> ' + esc(f.duration || 'à confirmer') + '</li>' +
                 '<li><strong>💶 Tarif :</strong> ' + (f.price ? esc(f.price) + ' €' : 'voir sur le site') + '</li>' +
                 '<li><strong>📍 Lieu :</strong> ' + esc(f.location || 'à confirmer') + '</li>' +
