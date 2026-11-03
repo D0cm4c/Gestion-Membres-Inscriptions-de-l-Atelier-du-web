@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://atelierduweb.be; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
     <title>Membres — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=53">
+    <link rel="stylesheet" href="styles.css?v=54">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -23,54 +23,60 @@
 
     <main id="main">
         <section class="filters-bar" aria-label="Filtres et tri">
-            <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
-            <button class="btn btn-secondary btn-small filters-toggle" id="filtersToggle" aria-expanded="false" aria-controls="filtersMore" hidden>🔽 Filtres &amp; tri</button>
+            <div class="filters-row filters-head">
+                <button class="btn btn-primary" id="addMemberBtn">+ Ajouter un membre</button>
+                <button class="btn btn-secondary btn-small filters-toggle" id="filtersToggle" aria-expanded="false" aria-controls="filtersMore" hidden>🎚 Filtres &amp; tri</button>
+                <span class="members-count" id="membersCount" aria-live="polite"></span>
+                <span class="filters-actions">
+                    <button class="btn btn-secondary btn-small" id="exportBtn">📤 Exporter CSV</button>
+                    <button class="btn btn-secondary btn-small" id="importBtn">📥 Importer XML</button>
+                </span>
+            </div>
             <div class="filters-more" id="filtersMore">
-            <div class="filter-group">
-                <div class="segmented" role="group" aria-label="Filtrer par statut">
-                    <button class="seg-btn active" data-filter="all">Tous</button>
-                    <button class="seg-btn" data-filter="active">Actifs</button>
-                    <button class="seg-btn" data-filter="expired">Expirés</button>
-                    <button class="seg-btn" data-filter="inactive">Inactifs</button>
-                    <button class="seg-btn" data-filter="subscribed">Abonnés</button>
-                    <button class="seg-btn" data-filter="prints-due">🖨️ Dettes</button>
+                <div class="filter-group">
+                    <label>Statut</label>
+                    <div class="segmented" role="group" aria-label="Filtrer par statut">
+                        <button class="seg-btn active" data-filter="all">Tous</button>
+                        <button class="seg-btn" data-filter="active">Actifs</button>
+                        <button class="seg-btn" data-filter="expired">Expirés</button>
+                        <button class="seg-btn" data-filter="inactive">Inactifs</button>
+                        <button class="seg-btn" data-filter="subscribed">Abonnés</button>
+                        <button class="seg-btn" data-filter="prints-due">🖨️ Dettes</button>
+                    </div>
                 </div>
-            </div>
-            <div class="filter-group">
-                <label for="sortSelect">Trier par</label>
-                <select id="sortSelect">
-                    <optgroup label="Nom">
-                        <option value="name-asc">Nom (A → Z)</option>
-                        <option value="name-desc">Nom (Z → A)</option>
-                        <option value="first-name-asc">Prénom (A → Z)</option>
-                        <option value="first-name-desc">Prénom (Z → A)</option>
-                    </optgroup>
-                    <optgroup label="Inscription">
-                        <option value="start-desc">Début (plus récent)</option>
-                        <option value="start-asc">Début (plus ancien)</option>
-                        <option value="end-asc">Expiration (prochaine)</option>
-                        <option value="end-desc">Expiration (la plus lointaine)</option>
-                    </optgroup>
-                    <optgroup label="Autre">
-                        <option value="age-asc">Âge (croissant)</option>
-                        <option value="age-desc">Âge (décroissant)</option>
-                        <option value="visits-desc">Visites (nombre)</option>
-                        <option value="created-desc">Ajout (plus récent)</option>
-                    </optgroup>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label id="viewLabel">Affichage</label>
-                <div class="segmented" role="group" aria-label="Mode d'affichage">
-                    <button class="seg-btn active" id="viewGridBtn" title="Vue cartes">▦ Cartes</button>
-                    <button class="seg-btn" id="viewListBtn" title="Vue liste compacte">☰ Liste</button>
+                <span class="filters-sep" aria-hidden="true"></span>
+                <div class="filter-group">
+                    <label for="sortSelect">Trier</label>
+                    <select id="sortSelect">
+                        <optgroup label="Nom">
+                            <option value="name-asc">Nom (A → Z)</option>
+                            <option value="name-desc">Nom (Z → A)</option>
+                            <option value="first-name-asc">Prénom (A → Z)</option>
+                            <option value="first-name-desc">Prénom (Z → A)</option>
+                        </optgroup>
+                        <optgroup label="Inscription">
+                            <option value="start-desc">Début (plus récent)</option>
+                            <option value="start-asc">Début (plus ancien)</option>
+                            <option value="end-asc">Expiration (prochaine)</option>
+                            <option value="end-desc">Expiration (la plus lointaine)</option>
+                        </optgroup>
+                        <optgroup label="Autre">
+                            <option value="age-asc">Âge (croissant)</option>
+                            <option value="age-desc">Âge (décroissant)</option>
+                            <option value="visits-desc">Visites (nombre)</option>
+                            <option value="created-desc">Ajout (plus récent)</option>
+                        </optgroup>
+                    </select>
                 </div>
-            </div>
-            <span class="members-count" id="membersCount" aria-live="polite"></span>
-            <button class="btn btn-secondary btn-small" id="exportBtn">📤 Exporter CSV</button>
-            <button class="btn btn-secondary btn-small" id="importBtn">📥 Importer XML</button>
-            </div>
-        </section>
+                <span class="filters-sep" aria-hidden="true"></span>
+                <div class="filter-group">
+                    <label id="viewLabel">Affichage</label>
+                    <div class="segmented" role="group" aria-label="Mode d'affichage">
+                        <button class="seg-btn active" id="viewGridBtn" title="Vue cartes">▦ Cartes</button>
+                        <button class="seg-btn" id="viewListBtn" title="Vue liste compacte">☰ Liste</button>
+                    </div>
+                </div>
+            </div>        </section>
 
         <div class="empty-state" id="loadingState">
             <p>⏳ Chargement de la base de données…</p>
