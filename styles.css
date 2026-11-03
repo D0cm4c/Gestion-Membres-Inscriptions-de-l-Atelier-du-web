@@ -568,9 +568,16 @@ main {
     background: var(--accent-light); padding: 0.32rem 0.9rem; border-radius: 999px;
 }
 
-.filters-more { display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap; flex: 1; }
-.filters-more .members-count { margin-left: auto; }
+.filters-more { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; flex: 1; padding-top: 0.7rem; border-top: 1px solid var(--border); margin-top: 0.1rem; }
 .filters-more[hidden] { display: none; }
+/* En-tête membres : ligne 1 = action principale + compteur + import/export */
+.filters-row { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; width: 100%; }
+.filters-head { justify-content: flex-start; }
+.filters-head .members-count { margin-left: auto; }
+.filters-actions { display: flex; align-items: center; gap: 0.5rem; }
+/* Séparateurs verticaux entre groupes de filtres */
+.filters-sep { width: 1px; height: 1.6rem; background: var(--border); flex-shrink: 0; }
+@media (max-width: 900px) { .filters-sep { display: none; } }
 
 /* ============ Cartes membres ============ */
 .members-grid {
