@@ -277,10 +277,14 @@
             db.run('ALTER TABLE formations_members ADD COLUMN attendance TEXT');
         } catch (e) { /* colonne déjà là */ }
         try {
+            db.run('ALTER TABLE formations_members ADD COLUMN payment_at TEXT');
+        } catch (e) { /* colonne déjà là */ }
+        try {
             var fmCols = {};
             db.each('PRAGMA table_info(formations_members)', function (r) { fmCols[r.name] = true; });
             if (!fmCols.payment) db.run('ALTER TABLE formations_members ADD COLUMN payment TEXT');
             if (!fmCols.attendance) db.run('ALTER TABLE formations_members ADD COLUMN attendance TEXT');
+            if (!fmCols.payment_at) db.run('ALTER TABLE formations_members ADD COLUMN payment_at TEXT');
         } catch (e) { /* best effort */ }
 
         if (!cols.first_start_date) {
@@ -466,7 +470,7 @@
 
     Database.getFormationAttendees = function (formationId) {
         return this.queryAll(
-            'SELECT m.id, m.first_name, m.last_name, m.member_no, m.email, m.phone, fm.registered_at, fm.payment, fm.attendance ' +
+            'SELECT m.id, m.first_name, m.last_name, m.member_no, m.email, m.phone, fm.registered_at, fm.payment, fm.payment_at, fm.attendance ' +
             'FROM formations_members fm JOIN members m ON m.id = fm.member_id ' +
             'WHERE fm.formation_id = ? ORDER BY m.last_name ASC', [formationId]
         );
@@ -474,9 +478,9 @@
 
     // Suivi formation-membre : paiement et présence (page formation, liste des inscrits)
     Database.setFmPayment = function (formationId, memberId, payment) {
-        // payment : 'bancontact' | 'cash' | null (annule)
-        this.run('UPDATE formations_members SET payment = ? WHERE formation_id = ? AND member_id = ?',
-            [payment, String(formationId), String(memberId)]);
+        // payment : 'bancontact' | 'cash' | null (annule) — payment_at = date du clic (historique)
+        this.run('UPDATE formations_members SET payment = ?, payment_at = ? WHERE formation_id = ? AND member_id = ?',
+            [payment, payment ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null, String(formationId), String(memberId)]);
         try { this.flush(); } catch (e) { /* best effort */ }
     };
     Database.setFmAttendance = function (formationId, memberId, attendance) {
