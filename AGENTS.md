@@ -29,6 +29,35 @@
 - La fusion dans `main` est faite par le propriétaire depuis GitHub.
 - Ne jamais commiter de secrets (clés API, `.env`) — les clés utilisateur restent dans le navigateur.
 
+### 🔀 Procédure de fusion d'une branche (pour les sessions qui galèrent)
+
+**Qui fusionne ?** Le propriétaire valide (« go » dans la conversation) et la **session app** exécute le merge localement puis pousse — pas de bouton GitHub. Avantages : historique `--no-ff` lisible, CI rejouée sur `main` avant Pages, contrôle total.
+
+**La commande unique** (à adapter : branche, numéro de PR, titre) :
+
+```bash
+git checkout main
+git pull --ff-only origin main          # 1. rattraper le dépôt distant (toujours, même si « up to date » affiché)
+git merge --no-ff <branche> -m "Merge pull request #<n> : <titre>"   # 2. merge avec commit de fusion
+git push origin main                    # 3. pousser
+gh pr view <n> --json state -q '.state' # 4. vérifier : doit répondre MERGED... non — voir note
+sleep 40                                # 5. laisser le temps au workflow de démarrer
+RUN_ID=$(gh run list --branch main --workflow CI --limit 1 --json databaseId -q '.[0].databaseId')
+gh run watch $RUN_ID --exit-status      # 6. attendre la CI sur main (doit finir success)
+```
+
+**Les pièges qui font galérer (leçons réelles)** :
+
+1. **« Already up to date » au pull** : normal si personne n'a poussé depuis — continuer quand même le merge.
+2. **Le message du merge** doit citer la PR (`Merge pull request #NN : titre`) — c'est ce qui relie le commit de fusion à la PR dans l'historique.
+3. **`--no-ff` toujours** : sans lui, un fast-forward rend l'historique linéaire et on perd la trace du groupe de commits de la PR.
+4. **Après le push, la PR se ferme toute seule** (GitHub détecte le commit de fusion) — vérifier avec `gh pr view <n> --json state` qui doit afficher `MERGED`.
+5. **Attendre la CI sur `main`** avant de dire « c'est déployé » : Pages déploie après CI. Si la CI échoue sur main (rare — elle était verte sur la branche), ne jamais forcer : investiguer le log (`gh run view --log-failed`).
+6. **Jamais de `--force` sur `main`**, jamais de rebase de branches déjà poussées partagées.
+7. **Conflits au merge** : si `git merge` signale des conflits, ne pas improviser — annuler (`git merge --abort`), rebase de la branche sur main (`git checkout <branche> && git rebase main`), résoudre sur la branche, re-pousser avec `--force-with-lease`, CI, puis re-merger.
+
+**Nettoyage** : après le merge confirmé, la branche peut être supprimée localement (`git branch -d <branche>`) — la garder sur le distant ne coûte rien et sert d'archive.
+
 ---
 
 ## 📡 Protocole inter-sessions (écosystème multi-dépôts)
