@@ -671,6 +671,7 @@ main {
 }
 
 .fm-paid-at { color: var(--green); font-weight: 700; }
+.fm-paid-log { color: var(--text-soft); font-weight: 600; text-decoration: underline dotted; cursor: help; }
 
 /* Badge de synchro (fiche formation) */
 .sync-badge {

@@ -227,6 +227,19 @@
         db.run('CREATE INDEX IF NOT EXISTS idx_sugg_status ON suggestions(status, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_notif_unread ON notifications(is_read, created_at)');
         db.run('CREATE INDEX IF NOT EXISTS idx_booking_unprocessed ON bookings_remote(processed, booked_at)');
+        // Journal d'audit des paiements (fiche formation) : chaque clic bancontact/cash
+        // est tracé (paiement, annulation) — historique en cas de fausse manœuvre.
+        db.run(
+            'CREATE TABLE IF NOT EXISTS fm_payment_log (' +
+            'id INTEGER PRIMARY KEY AUTOINCREMENT,' +
+            'formation_id TEXT NOT NULL,' +
+            'member_id TEXT NOT NULL,' +
+            'action TEXT NOT NULL,' +      // paid | cleared
+            'method TEXT,' +               // bancontact | cash (null si cleared)
+            'created_at TEXT DEFAULT (datetime(' + "'" + 'now' + "'" + '))' +
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_fmpaylog ON fm_payment_log(formation_id, member_id, created_at)');
         db.run(
             'CREATE TABLE IF NOT EXISTS tickets (' +
             'id TEXT PRIMARY KEY,' +
@@ -468,6 +481,15 @@
         this.run('DELETE FROM formations_members WHERE formation_id = ? AND member_id = ?', [formationId, memberId]);
     };
 
+    // Historique des clics de paiement pour un inscrit (fiche formation)
+    Database.getPaymentLog = function (formationId, memberId) {
+        return this.queryAll(
+            'SELECT action, method, created_at FROM fm_payment_log ' +
+            'WHERE formation_id = ? AND member_id = ? ORDER BY created_at ASC, id ASC',
+            [String(formationId), String(memberId)]
+        );
+    };
+
     Database.getFormationAttendees = function (formationId) {
         return this.queryAll(
             'SELECT m.id, m.first_name, m.last_name, m.member_no, m.email, m.phone, fm.registered_at, fm.payment, fm.payment_at, fm.attendance ' +
@@ -481,6 +503,11 @@
         // payment : 'bancontact' | 'cash' | null (annule) — payment_at = date du clic (historique)
         this.run('UPDATE formations_members SET payment = ?, payment_at = ? WHERE formation_id = ? AND member_id = ?',
             [payment, payment ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null, String(formationId), String(memberId)]);
+        // Journal d'audit : chaque clic (paiement ou annulation) est tracé
+        try {
+            this.run('INSERT INTO fm_payment_log (formation_id, member_id, action, method) VALUES (?, ?, ?, ?)',
+                [String(formationId), String(memberId), payment ? 'paid' : 'cleared', payment ? String(payment) : null]);
+        } catch (e) { /* journal best effort */ }
         try { this.flush(); } catch (e) { /* best effort */ }
     };
     Database.setFmAttendance = function (formationId, memberId, attendance) {
@@ -655,6 +682,8 @@
     Database.deleteMemberCompletely = function (memberId) {
         var self = this;
         return Promise.resolve().then(function () {
+            // Journal d'audit des paiements : purge RGPD (table sans FK)
+            try { self.run('DELETE FROM fm_payment_log WHERE member_id = ?', [String(memberId)]); } catch (e) {}
             self.run('DELETE FROM visits WHERE member_id = ?', [memberId]);
             self.run('DELETE FROM prints WHERE member_id = ?', [memberId]);
             self.run('DELETE FROM formations_members WHERE member_id = ?', [memberId]);
