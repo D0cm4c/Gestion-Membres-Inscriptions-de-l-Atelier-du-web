@@ -217,7 +217,9 @@
                         '<div style="flex:1;min-width:0;cursor:pointer;" data-preview-mid="' + esc(m.id) + '">' +
                         '<strong>' + esc(m.last_name.toUpperCase() + ' ' + m.first_name) + '</strong>' +
                         (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') +
-                        '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') + ' · <span style="color:var(--blue);font-weight:600;">détails</span></div></div>' +
+                        '<div class="form-hint">' + (m.email ? esc(m.email) : 'pas d\u2019email') +
+                        (m.payment ? ' · <span class="fm-paid-at">payé ' + (m.payment === 'bancontact' ? 'bancontact' : 'cash') + ' le ' + esc(formatDate(m.payment_at)) + '</span>' : '') +
+                        ' · <span style="color:var(--blue);font-weight:600;">détails</span></div></div>' +
                         '<span class="fm-actions">' +
                         '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'bancontact' ? ' is-paid' : paid === 'cash' ? ' is-muted' : '') + '" data-pay="bancontact"' + (paid === 'cash' ? ' disabled' : '') + '>💳 Bancontact</button>' +
                         '<button type="button" class="btn btn-secondary btn-small fm-pay' + (paid === 'cash' ? ' is-paid' : paid === 'bancontact' ? ' is-muted' : '') + '" data-pay="cash"' + (paid === 'bancontact' ? ' disabled' : '') + '>💵 Cash</button>' +

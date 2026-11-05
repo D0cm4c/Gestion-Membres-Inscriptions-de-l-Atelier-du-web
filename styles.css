@@ -670,6 +670,8 @@ main {
     filter: saturate(0.4);
 }
 
+.fm-paid-at { color: var(--green); font-weight: 700; }
+
 /* Badge de synchro (fiche formation) */
 .sync-badge {
     font-size: 0.72rem; font-weight: 700; white-space: nowrap;
