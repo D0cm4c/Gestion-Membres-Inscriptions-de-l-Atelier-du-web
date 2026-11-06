@@ -86,6 +86,8 @@ function main() {
                                         var clone = active.cloneNode(true);
                                         var ico = clone.querySelector('.nav-ico');
                                         if (ico) ico.remove();
+                                        var nb = clone.querySelector('.nav-badge'); // badge non-lus (Notifications)
+                                        if (nb) nb.remove();
                                         activeLabel = clone.textContent.trim();
                                     }
                                     return {
