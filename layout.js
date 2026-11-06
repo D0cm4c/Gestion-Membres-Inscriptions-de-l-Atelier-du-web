@@ -31,7 +31,7 @@
         '<a href="formations.html"><span class="nav-ico" aria-hidden="true">\uD83C\uDF93</span> Formations</a>' +
         '<a href="salles.html"><span class="nav-ico" aria-hidden="true">\uD83D\uDCC5</span> Salles</a>' +
         '<a href="tickets.html"><span class="nav-ico" aria-hidden="true">\uD83D\uDEE0\uFE0F</span> Incidents</a>' +
-        '<a href="suggestions.html"><span class="nav-ico" aria-hidden="true">\uD83D\uDCA1</span> À faire</a>' +
+        '<a href="suggestions.html"><span class="nav-ico" aria-hidden="true">\uD83D\uDCA1</span> Suggestions</a>' +
         '<a href="notifications.html"><span class="nav-ico" aria-hidden="true">\uD83D\uDD14</span> Notifications<span class="nav-badge" id="navNotifBadge" hidden></span></a>' +
         '<a href="parametres.html"><span class="nav-ico" aria-hidden="true">\u2699\uFE0F</span> Paramètres</a>' +
         '</nav>' +

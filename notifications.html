@@ -15,7 +15,7 @@
     <div class="app-layout">
         <div data-layout-sidebar></div>
         <div class="app-main">
-        <div data-layout-topbar data-title="Notifications"></div>
+        <div data-layout-topbar data-title="Notifications" data-search-id="searchInput" data-search-label="Rechercher dans l'app" data-search-placeholder="Membre, formation, incident…"></div>
 
     <main id="main">
         <section class="filters-bar" aria-label="Filtres notifications">
@@ -33,10 +33,16 @@
                     <div class="segmented" role="group" aria-label="Filtrer les notifications">
                         <button class="seg-btn active" data-nfilter="all">Tous</button>
                         <button class="seg-btn" data-nfilter="unread">Non lus</button>
-                        <button class="seg-btn" data-nfilter="alerts">⚠️ Alertes</button>
-                        <button class="seg-btn" data-nfilter="reminders">⏳ Rappels</button>
+                        <button class="seg-btn" data-nfilter="alerts">🚨 Alertes</button>
+                        <button class="seg-btn" data-nfilter="waitlist">🎯 Attente</button>
+                        <button class="seg-btn" data-nfilter="sync">🔄 Synchros</button>
                         <button class="seg-btn" data-nfilter="activity">ℹ️ Activité</button>
                     </div>
+                </div>
+                <span class="filters-sep" aria-hidden="true"></span>
+                <div class="filter-group" style="flex:1;min-width:220px;">
+                    <label for="notifSearch">Recherche</label>
+                    <input type="text" id="notifSearch" placeholder="Rechercher dans les messages…" autocomplete="off" style="flex:1;">
                 </div>
             </div>
         </section>
@@ -52,13 +58,20 @@
     </div>
     </div>
 
-    <script src="layout.js?v=4"></script>
+    <script src="layout.js?v=3"></script>
     <script src="escape.js?v=1"></script>
+    <script src="backup.js?v=2"></script>
     <script src="vendor/sql-wasm.js"></script>
-    <script src="db.js?v=17"></script>
+    <script src="db.js?v=14"></script>
     <script src="auth.js?v=2"></script>
-    <script src="notifications.js?v=5"></script>
+    <script src="theme.js?v=15"></script>
+    <script src="nav.js?v=2"></script>
+    <script src="openstatus.js?v=2"></script>
+    <script src="notifications.js?v=3"></script>
+    <script src="suggestions.js?v=2"></script>
+    <script src="globalsearch.js?v=2"></script>
     <script src="page-notifications.js?v=4"></script>
+    <script src="shortcuts.js?v=1"></script>
 <script>
         // PWA : enregistrement du service worker (silencieux si non supporté)
         if ('serviceWorker' in navigator) {

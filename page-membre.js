@@ -328,7 +328,7 @@
                 var visitId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
                 window.ADWDatabase.run('INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, ?, ?)',
                     [visitId, member.id, today, amount]).then(function () {
-                    if (window.ADWNotifications) window.ADWNotifications.push('checkin', '✅ Visite de ' + member.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)'), 'success');
+                    if (window.ADWNotifications) window.ADWNotifications.push('checkin', '✅ Visite de ' + member.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)'), 'success', { member_id: member.id });
                     render();
                 });
             });
@@ -375,7 +375,7 @@
                     var printId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
                     window.ADWDatabase.run('INSERT INTO prints (id, member_id, print_date, type, amount, paid) VALUES (?, ?, ?, ?, ?, 0)',
                         [printId, member.id, today, action, amount]).then(function () {
-                        if (window.ADWNotifications) window.ADWNotifications.push('print', '🖨️ Impression ' + (action === 'bw' ? 'N&B' : 'couleur') + ' ajoutée (' + amount.toFixed(2).replace('.', ',') + ' €)', 'success');
+                        if (window.ADWNotifications) window.ADWNotifications.push('print', '🖨️ Impression ' + (action === 'bw' ? 'N&B' : 'couleur') + ' ajoutée (' + amount.toFixed(2).replace('.', ',') + ' €)', 'success', { member_id: member.id });
                         render();
                     });
                 } else if (action === 'pay') {
@@ -401,7 +401,7 @@ var renewBtn = content.querySelector('#renewSubBtn');
             if (renewBtn) renewBtn.addEventListener('click', function () {
                 var newEnd = window.ADWDatabase.renewSubscription(member.id);
                 if (!newEnd) return;
-                if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd, 'success');
+                if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd, 'success', { member_id: member.id });
                 alert('Abonnement renouvelé jusqu\u2019au ' + newEnd + '.');
                 render();
             });

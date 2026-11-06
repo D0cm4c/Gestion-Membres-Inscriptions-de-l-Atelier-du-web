@@ -21,12 +21,12 @@
     var TYPE_CATEGORY = {
         ticket_urgent: 'alerts',
         error: 'alerts',
-        room_needed: 'reminders',
-        waitlist_match: 'reminders',
-        awaiting_validation: 'reminders',
-        sync_formations: 'activity',
-        auto_link: 'activity',
-        auto_unlink: 'activity',
+        room_needed: 'alerts',
+        waitlist_match: 'waitlist',
+        awaiting_validation: 'alerts',
+        sync_formations: 'sync',
+        auto_link: 'sync',
+        auto_unlink: 'sync',
         member_created: 'activity',
         checkin: 'activity',
         renew: 'activity',
@@ -35,7 +35,7 @@
     };
     var SEVERITY_CATEGORY = {
         danger: 'alerts',
-        warning: 'reminders',
+        warning: 'alerts',     // fusionne dans Alertes (decision EPN : danger et warning = agir)
         success: 'activity',   // un succès générique = journal, pas un rappel
         info: 'activity'
     };
@@ -65,9 +65,14 @@
             var d = n.details ? JSON.parse(n.details) : null;
             if (d && d.event_id) return { label: 'Ouvrir la formation', href: 'formation.html?id=' + encodeURIComponent(d.event_id) };
             if (d && d.ticket_id) return { label: 'Ouvrir le ticket', href: 'ticket.html?id=' + encodeURIComponent(d.ticket_id) };
+            if (d && d.member_id) return { label: 'Ouvrir le membre', href: 'membre.html?id=' + encodeURIComponent(d.member_id) };
             if (n.type === 'room_needed') return { label: 'Planning des salles', href: 'salles.html' };
             if (n.type === 'awaiting_validation') return { label: 'Planning des salles', href: 'salles.html' };
             if (n.type === 'ticket_urgent') return { label: 'Incidents', href: 'tickets.html' };
+            if (n.type === 'waitlist_match') return { label: 'Voir les formations', href: 'formations.html' };
+            if (n.type === 'sync_formations') return { label: 'Voir les formations', href: 'formations.html' };
+            if (n.type === 'auto_link' || n.type === 'auto_unlink') return { label: 'Voir les inscrits', href: 'formations.html' };
+            if (n.type === 'checkin' || n.type === 'renew' || n.type === 'print' || n.type === 'member_created') return { label: 'Ouvrir Membres', href: 'membres.html' };
         } catch (e) {}
         return null;
     }
@@ -82,6 +87,7 @@
     }
 
     var currentFilter = 'all';
+    var searchInput = document.getElementById('notifSearch');
     var PAGE_SIZE = 30;
     var shownCount = PAGE_SIZE; // pagination : charger plus
 
@@ -100,12 +106,30 @@
         var unread = items.filter(function (n) { return !n.is_read; }).length;
         if (totalEl) totalEl.textContent = items.length + ' notification' + (items.length > 1 ? 's' : '') + (unread ? ' · ' + unread + ' non lue' + (unread > 1 ? 's' : '') : '');
 
-        // filtre
+        // compteurs par catégorie sur les boutons de filtre (répartition visible)
+        var counts = { all: items.length, unread: 0, alerts: 0, waitlist: 0, sync: 0, activity: 0 };
+        items.forEach(function (n) {
+            if (n.is_read) counts.read++; else counts.unread++;
+            counts[categoryOf(n)]++;
+        });
+        document.querySelectorAll('[data-nfilter]').forEach(function (b) {
+            var k = b.getAttribute('data-nfilter');
+            var base = b.textContent.replace(/\s*\d+$/, ''); // retire un éventuel ancien compte
+            b.textContent = counts[k] ? base + ' ' + counts[k] : base;
+        });
+
+        // filtre (segmented + recherche texte se combinent)
+        var q = (searchInput && searchInput.value || '').trim().toLowerCase();
         var filtered = items.filter(function (n) {
             if (currentFilter === 'all') return true;
             if (currentFilter === 'unread') return !n.is_read;
             return categoryOf(n) === currentFilter;
         });
+        if (q) {
+            filtered = filtered.filter(function (n) {
+                return (n.message || '').toLowerCase().indexOf(q) !== -1;
+            });
+        }
 
         loading.hidden = true;
         if (!filtered.length) {
@@ -120,14 +144,19 @@
         var remaining = filtered.length - shownCount;
         filtered = filtered.slice(0, shownCount);
 
-        var CAT_LABEL = { alerts: '⚠️ Alerte', reminders: '⏳ Rappel', activity: 'ℹ️ Activité' };
+        var CAT_LABEL = { alerts: '🚨 Alerte', waitlist: '🎯 Attente', sync: '🔄 Synchro', activity: 'ℹ️ Activité' };
         listEl.innerHTML = filtered.map(function (n) {
             var cat = categoryOf(n);
             var act = actionOf(n);
+            // Icône par CATÉGORIE (cohérente avec le filtre) : la sévérité affine
+            // (danger = ❌ dans les alertes, success = ✅ dans l'activité).
+            var ico = cat === 'alerts'
+                ? (n.severity === 'danger' ? '❌' : '⚠️')
+                : cat === 'waitlist' ? '🎯'
+                : cat === 'sync' ? '🔄'
+                : (n.severity === 'success' ? '✅' : 'ℹ️');
             return '<div class="notif-page-item' + (n.is_read ? ' is-read' : '') + ' cat-' + cat + '">' +
-                '<span class="notif-ico sev-' + esc(n.severity) + '">' +
-                (n.severity === 'success' ? '✅' : n.severity === 'warning' ? '⚠️' : n.severity === 'danger' ? '❌' : 'ℹ️') +
-                '</span>' +
+                '<span class="notif-ico sev-' + esc(n.severity) + '">' + ico + '</span>' +
                 '<div class="notif-body">' +
                 '<div class="notif-msg">' + esc(n.message) + '</div>' +
                 '<div class="notif-meta">' +
@@ -148,6 +177,9 @@
     }
 
     // ===== Événements (délégation) =====
+    if (searchInput) {
+        searchInput.addEventListener('input', function () { render(); });
+    }
     document.addEventListener('click', function (e) {
         var readBtn = e.target.closest('.n-read');
         if (readBtn) {
