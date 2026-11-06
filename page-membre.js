@@ -401,7 +401,7 @@ var renewBtn = content.querySelector('#renewSubBtn');
             if (renewBtn) renewBtn.addEventListener('click', function () {
                 var newEnd = window.ADWDatabase.renewSubscription(member.id);
                 if (!newEnd) return;
-                if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd, 'success');
+                if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé jusqu\u2019au ' + newEnd, 'success', { member_id: member.id });
                 alert('Abonnement renouvelé jusqu\u2019au ' + newEnd + '.');
                 render();
             });
