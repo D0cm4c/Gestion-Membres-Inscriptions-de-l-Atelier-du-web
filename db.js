@@ -486,6 +486,14 @@
     };
 
     Database.registerMemberToFormation = function (formationId, memberId) {
+        // Le membre s'inscrit \u2192 il sort de la liste d'attente (plus besoin de l'attendre)
+        // NB : formationId est l'id INTERNE ; la waitlist stocke l'event_id MEC -> r\u00e9soudre
+        try {
+            var ev = this.queryAll('SELECT event_id FROM formations WHERE id = ?', [String(formationId)])[0];
+            if (ev && ev.event_id) {
+                this.run('DELETE FROM waitlist WHERE member_id = ? AND formation_event_id = ?', [String(memberId), String(ev.event_id)]);
+            }
+        } catch (e) {}
         var existing = this.queryAll('SELECT id FROM formations_members WHERE formation_id = ? AND member_id = ?', [formationId, memberId]);
         if (existing.length) return false; // déjà inscrit
         var rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -500,6 +508,11 @@
     // ============ Listes d'attente ============
 
     Database.addToWaitlist = function (memberId, formationEventId, formationTitle) {
+        // anti-doublon : le m\u00eame membre pour la m\u00eame formation (event_id ou intitul\u00e9) = une seule entr\u00e9e
+        var dup = this.queryAll('SELECT id FROM waitlist WHERE member_id = ? AND ' +
+            '(formation_event_id = ? OR (formation_event_id IS NULL AND LOWER(formation_title) = LOWER(?)))',
+            [String(memberId), String(formationEventId || ''), String(formationTitle || '')]);
+        if (dup.length) return dup[0].id; // d\u00e9j\u00e0 inscrit : pas de doublon
         var rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
         this.run('INSERT INTO waitlist (id, member_id, formation_event_id, formation_title) VALUES (?, ?, ?, ?)',
             [rid, String(memberId), formationEventId ? String(formationEventId) : null, String(formationTitle)]);
@@ -538,12 +551,21 @@
     };
 
     Database.matchWaitlistForFormation = function (eventId, title) {
+        // garde critique : un titre normalis\u00e9 vide ne doit JAMAIS matcher tout
+        // (LIKE '%%' = toutes les listes d'attente -> faux positifs massifs)
         var norm = this.normalizeTitle(title);
+        if (!norm || norm.length < 4) {
+            // titre inexploitable : matching par event_id uniquement
+            return this.queryAll('SELECT w.*, m.first_name, m.last_name, m.member_no, m.email, m.phone ' +
+                'FROM waitlist w JOIN members m ON m.id = w.member_id ' +
+                'WHERE formation_event_id = ? ORDER BY w.created_at ASC',
+                [String(eventId || '')]);
+        }
         return this.queryAll('SELECT w.*, m.first_name, m.last_name, m.member_no, m.email, m.phone ' +
             'FROM waitlist w JOIN members m ON m.id = w.member_id ' +
             'WHERE formation_event_id = ? OR (formation_event_id IS NULL AND LOWER(formation_title) LIKE ?) ' +
             'ORDER BY w.created_at ASC',
-            [String(eventId || ''), '%' + (norm || String(title || '').toLowerCase()) + '%']);
+            [String(eventId || ''), '%' + norm + '%']);
     };
 
     Database.markWaitlistContacted = function (entryIds) {
