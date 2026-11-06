@@ -199,7 +199,7 @@
             // Inscriptions (miroir) — marge top : détaché de la grille d'infos au-dessus
             var syncAgo = f.synced_at ? timeAgo(f.synced_at) : '';
             html += '<div class="stat-card" id="inscrits" style="margin-top:1.2rem;">' +
-                '<div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;">' +
+                '<div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:0.8rem;">' +
                 '<h3 style="margin:0;">👥 Inscrits (miroir du site) <span class="members-count">' + attendees.length + '</span></h3>' +
                 '<span class="sync-badge' + (syncAgo ? '' : ' stale') + '" id="syncBadge" title="Date de la dernière synchronisation avec atelierduweb.be">' +
                 (syncAgo ? '🔄 synchronisé ' + esc(syncAgo) : '⚠️ jamais synchronisé') + '</span>' +

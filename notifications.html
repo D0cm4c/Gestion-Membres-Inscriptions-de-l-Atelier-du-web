@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0F3D5C">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+        <div data-layout-sidebar></div>
+        <div class="app-main">
+        <div data-layout-topbar data-title="Notifications"></div>
+
+    <main id="main">
+        <section class="filters-bar" aria-label="Filtres notifications">
+            <div class="filters-row filters-head">
+                <h2 style="margin:0;font-size:1.1rem;">🔔 Notifications</h2>
+                <span class="members-count" id="notifTotal" aria-live="polite"></span>
+                <span class="filters-actions">
+                    <button class="btn btn-secondary btn-small" id="markAllReadBtn" title="Marquer toutes les notifications comme lues">✓ Tout marquer lu</button>
+                    <button class="btn btn-secondary btn-small" id="clearReadBtn" title="Effacer les notifications lues (les non-lues restent)">🗑 Effacer les lues</button>
+                </span>
+            </div>
+            <div class="filters-more" id="filtersMore">
+                <div class="filter-group">
+                    <label>Afficher</label>
+                    <div class="segmented" role="group" aria-label="Filtrer les notifications">
+                        <button class="seg-btn active" data-nfilter="all">Tous</button>
+                        <button class="seg-btn" data-nfilter="unread">Non lus</button>
+                        <button class="seg-btn" data-nfilter="alerts">⚠️ Alertes</button>
+                        <button class="seg-btn" data-nfilter="reminders">⏳ Rappels</button>
+                        <button class="seg-btn" data-nfilter="activity">ℹ️ Activité</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="empty-state" id="loadingState">
+            <p>⏳ Chargement des notifications…</p>
+        </div>
+        <div id="notifPageList" hidden></div>
+        <div class="empty-state" id="emptyState" hidden>
+            <p>Aucune notification dans ce filtre.</p>
+        </div>
+    </main>
+    </div>
+    </div>
+
+    <script src="layout.js?v=4"></script>
+    <script src="escape.js?v=1"></script>
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="db.js?v=17"></script>
+    <script src="auth.js?v=2"></script>
+    <script src="notifications.js?v=5"></script>
+    <script src="page-notifications.js?v=4"></script>
+<script>
+        // PWA : enregistrement du service worker (silencieux si non supporté)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>
