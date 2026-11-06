@@ -22,7 +22,7 @@ var PAGES = [
     { file: 'membres.html', title: 'Membres', activeNav: 'Membres', searchId: 'searchInput' },
     { file: 'formations.html', title: 'Formations', activeNav: 'Formations', searchId: 'searchInput' },
     { file: 'salles.html', title: 'Planning des salles', activeNav: 'Salles', searchId: null },
-    { file: 'suggestions.html', title: 'À faire / Suggestions', activeNav: 'À faire', searchId: null },
+    { file: 'suggestions.html', title: 'À faire / Suggestions', activeNav: 'Suggestions', searchId: null },
     { file: 'parametres.html', title: 'Paramètres', activeNav: 'Paramètres', searchId: null },
     { file: 'tickets.html', title: 'Incidents', activeNav: 'Incidents', searchId: 'searchInput' },
     { file: 'ticket.html?id=demo', title: 'Incidents', activeNav: null, searchId: null },
