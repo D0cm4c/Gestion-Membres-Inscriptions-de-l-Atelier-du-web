@@ -2078,7 +2078,6 @@ main {
     border-left: 3px solid var(--text-soft); border-radius: var(--radius);
 }
 .notif-page-item.cat-alerts { border-left-color: var(--danger); }
-.notif-page-item.cat-reminders { border-left-color: var(--orange); }
 .notif-page-item.cat-activity { border-left-color: var(--blue); }
 .notif-page-item.cat-waitlist { border-left-color: var(--violet); }
 .notif-page-item.cat-sync { border-left-color: var(--text-soft); }

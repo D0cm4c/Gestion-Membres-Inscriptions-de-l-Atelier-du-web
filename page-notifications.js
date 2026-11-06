@@ -21,9 +21,9 @@
     var TYPE_CATEGORY = {
         ticket_urgent: 'alerts',
         error: 'alerts',
-        room_needed: 'reminders',
+        room_needed: 'alerts',
         waitlist_match: 'waitlist',
-        awaiting_validation: 'reminders',
+        awaiting_validation: 'alerts',
         sync_formations: 'sync',
         auto_link: 'sync',
         auto_unlink: 'sync',
@@ -35,7 +35,7 @@
     };
     var SEVERITY_CATEGORY = {
         danger: 'alerts',
-        warning: 'alerts',     // ⚠️ = alerte (intuition : ce qui affiche warning se trouve dans Alertes)
+        warning: 'alerts',     // fusionne dans Alertes (decision EPN : danger et warning = agir)
         success: 'activity',   // un succès générique = journal, pas un rappel
         info: 'activity'
     };
@@ -107,7 +107,7 @@
         if (totalEl) totalEl.textContent = items.length + ' notification' + (items.length > 1 ? 's' : '') + (unread ? ' · ' + unread + ' non lue' + (unread > 1 ? 's' : '') : '');
 
         // compteurs par catégorie sur les boutons de filtre (répartition visible)
-        var counts = { all: items.length, unread: 0, alerts: 0, reminders: 0, waitlist: 0, sync: 0, activity: 0 };
+        var counts = { all: items.length, unread: 0, alerts: 0, waitlist: 0, sync: 0, activity: 0 };
         items.forEach(function (n) {
             if (n.is_read) counts.read++; else counts.unread++;
             counts[categoryOf(n)]++;
@@ -144,7 +144,7 @@
         var remaining = filtered.length - shownCount;
         filtered = filtered.slice(0, shownCount);
 
-        var CAT_LABEL = { alerts: '⚠️ Alerte', reminders: '⏳ Rappel', waitlist: '🎯 Attente', sync: '🔄 Synchro', activity: 'ℹ️ Activité' };
+        var CAT_LABEL = { alerts: '🚨 Alerte', waitlist: '🎯 Attente', sync: '🔄 Synchro', activity: 'ℹ️ Activité' };
         listEl.innerHTML = filtered.map(function (n) {
             var cat = categoryOf(n);
             var act = actionOf(n);
@@ -152,7 +152,8 @@
             // (danger = ❌ dans les alertes, success = ✅ dans l'activité).
             var ico = cat === 'alerts'
                 ? (n.severity === 'danger' ? '❌' : '⚠️')
-                : cat === 'reminders' ? '⏳'
+                : cat === 'waitlist' ? '🎯'
+                : cat === 'sync' ? '🔄'
                 : (n.severity === 'success' ? '✅' : 'ℹ️');
             return '<div class="notif-page-item' + (n.is_read ? ' is-read' : '') + ' cat-' + cat + '">' +
                 '<span class="notif-ico sev-' + esc(n.severity) + '">' + ico + '</span>' +
