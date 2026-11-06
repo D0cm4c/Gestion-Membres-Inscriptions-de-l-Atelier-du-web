@@ -673,6 +673,12 @@ main {
 .fm-paid-at { color: var(--green); font-weight: 700; }
 .fm-paid-log { color: var(--text-soft); font-weight: 600; text-decoration: underline dotted; cursor: help; }
 
+.mw-rank {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.6rem; height: 1.6rem;
+    border-radius: 50%; background: var(--violet); color: #fff;
+    font-size: 0.78rem; font-weight: 800; flex-shrink: 0;
+}
 .waitlist-line {
     display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
     padding: 0.5rem 0.7rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
