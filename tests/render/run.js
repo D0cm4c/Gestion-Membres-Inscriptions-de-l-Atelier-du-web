@@ -297,7 +297,7 @@ function main() {
                                                              hasOpen: !!document.querySelector('a[href*="ticket.html"]') };
                                                 });
                                             }).then(function (alerts) {
-                                                checks.push(["filtre Alertes = 1 item", alerts.count === 1]);
+                                                checks.push(["filtre Alertes = 2 items (fusion : incident + salle)", alerts.count === 2]);
                                                 checks.push(["bouton Ouvrir le ticket present", alerts.hasOpen]);
                                                 return checks;
                                             });
