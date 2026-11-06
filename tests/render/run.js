@@ -249,8 +249,9 @@ function main() {
                         })
                         .then(function (seed) {
                             if (!seed || !seed.seeded) { errs.push("seed impossible"); return []; }
-                            return page.reload({ waitUntil: "load" })
-                                .then(function () { return page.waitForTimeout(900); })
+                            // Pas de reload : le seed vit en memoire dans la page ;
+                            // un clic sur un filtre re-render avec les donnees fraiches.
+                            return page.waitForTimeout(200)
                                 .then(function () {
                                     // filtre Non lus : 3 items
                                     return page.evaluate(function () {

@@ -242,7 +242,7 @@
                 html += '<p class="form-hint">Aucun int\u00e9r\u00eat enregistr\u00e9.</p>';
             }
             var allFormations = [];
-            try { allFormations = ADWDatabase.listFormations() || []; } catch (e) { allFormations = []; }
+            try { allFormations = ADWDatabase.listFormationTitlesDistinct() || []; } catch (e) { allFormations = []; }
             html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.7rem;align-items:center;">' +
                 '<select id="interestPick" style="flex:1;min-width:200px;">' +
                 '<option value="">\u2014 Choisir une formation existante \u2014</option>' +

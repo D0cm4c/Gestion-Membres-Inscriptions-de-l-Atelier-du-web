@@ -471,6 +471,24 @@
         return keptIds.length;
     };
 
+    // M\u00e9moire des formations : un intitul\u00e9 unique par formation r\u00e9elle (d\u00e9doublonn\u00e9).
+    // Les sessions r\u00e9p\u00e9t\u00e9es (m\u00eame titre, dates diff\u00e9rentes) = une seule entr\u00e9e,
+    // pointant vers la session la plus r\u00e9cente (event_id) pour le lien fiche.
+    // Sert au dropdown des int\u00e9r\u00eats (fiche membre) : toute l'histoire des formations synchro.
+    Database.listFormationTitlesDistinct = function () {
+        var rows = this.queryAll('SELECT event_id, title, start_date FROM formations ORDER BY start_date DESC');
+        var seen = {};
+        var out = [];
+        rows.forEach(function (f) {
+            var key = (f.title || '').toLowerCase().replace(/\s+/g, ' ').trim();
+            if (!key || seen[key]) return;
+            seen[key] = true;
+            out.push({ event_id: f.event_id, title: f.title });
+        });
+        out.sort(function (a, b) { return a.title.localeCompare(b.title, 'fr'); });
+        return out;
+    };
+
     Database.listFormations = function () {
         return this.queryAll('SELECT f.*, (SELECT COUNT(*) FROM formations_members fm WHERE fm.formation_id = f.id) AS attendee_count FROM formations f ORDER BY f.start_date ASC');
     };
