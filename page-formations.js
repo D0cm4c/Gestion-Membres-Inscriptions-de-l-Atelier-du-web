@@ -306,7 +306,7 @@
                                 matches.length + ' membre(s) en attente pour \u00ab ' + f.title + ' \u00bb \u2014 nouvelles dates dispo : ' +
                                 (f.date_text || 'voir la fiche') + '. Contacts : ' + contacts.join(' \u00b7 ') +
                                 ' \u2014 ouvre la fiche formation pour les inscrire (bouton Inscrire = formulaire pr\u00e9-rempli).',
-                                'success', { event_id: f.event_id, count: matches.length });
+                                'success', { event_id: f.event_id, count: matches.length, contacts: contacts });
                             // les membres propos\u00e9s passent en statut \u00ab contact\u00e9 \u00bb (le badge change sur la fiche)
                             try { window.ADWDatabase.markWaitlistContacted(matches.map(function (w) { return w.id; })); } catch (e2) {}
                         });

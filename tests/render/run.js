@@ -25,7 +25,8 @@ var PAGES = [
     { file: 'suggestions.html', title: 'À faire / Suggestions', activeNav: 'À faire', searchId: null },
     { file: 'parametres.html', title: 'Paramètres', activeNav: 'Paramètres', searchId: null },
     { file: 'tickets.html', title: 'Incidents', activeNav: 'Incidents', searchId: 'searchInput' },
-    { file: 'ticket.html?id=demo', title: 'Incidents', activeNav: null, searchId: null }
+    { file: 'ticket.html?id=demo', title: 'Incidents', activeNav: null, searchId: null },
+    { file: 'notifications.html', title: 'Notifications', activeNav: 'Notifications', searchId: null }
 ];
 
 var MIME = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.wasm': 'application/wasm' };
@@ -215,6 +216,97 @@ function main() {
                                 try { window.ADWDatabase.run("DELETE FROM formations_members WHERE formation_id = 'c8f'"); } catch (e) {}
                                 try { window.ADWDatabase.run("DELETE FROM formations WHERE event_id = 'c8demo'"); } catch (e) {}
                                 try { window.ADWDatabase.run("DELETE FROM members WHERE id IN ('c8m1','c8m2')"); } catch (e) {}
+                            }).catch(function () {});
+                        })
+                        .then(function () { return page.close(); });
+                });
+            });
+
+            // ===== Page Notifications : scenario comportemental =====
+            // Seeder des notifs, tester filtres + marquage individuel + pagination.
+            chain = chain.then(function () {
+                return browser.newPage().then(function (page) {
+                    var errs = [];
+                    page.on("pageerror", function (e) { errs.push(String(e)); });
+                    return page.goto(base + "notifications.html", { waitUntil: "load" })
+                        .then(function () { return page.waitForTimeout(900); })
+                        .then(function () {
+                            return page.evaluate(function () {
+                                var db = window.ADWDatabase;
+                                if (!db) return { seeded: false };
+                                try { db.run("DELETE FROM notifications"); } catch (e) {}
+                                // 3 non lues + 2 lues, categories variees
+                                db.notify("ticket_urgent", "Incident urgent test A", "danger", JSON.stringify({ ticket_id: "t1" }));
+                                db.notify("room_needed", "Formation sans salle B", "warning", JSON.stringify({ event_id: "e1" }));
+                                db.notify("sync_formations", "Synchro OK C", "info", null);
+                                db.notify("checkin", "Visite pointee D", "success", null);
+                                db.notify("print", "Impression E", "info", null);
+                                db.run("UPDATE notifications SET is_read = 1 WHERE message LIKE '%D%' OR message LIKE '%E%'");
+                                return { seeded: true };
+                            });
+                        })
+                        .then(function (seed) {
+                            if (!seed || !seed.seeded) { errs.push("seed impossible"); return []; }
+                            return page.reload({ waitUntil: "load" })
+                                .then(function () { return page.waitForTimeout(900); })
+                                .then(function () {
+                                    // filtre Non lus : 3 items
+                                    return page.evaluate(function () {
+                                        var btns = document.querySelectorAll("[data-nfilter]");
+                                        for (var i = 0; i < btns.length; i++) {
+                                            if (btns[i].getAttribute("data-nfilter") === "unread") btns[i].click();
+                                        }
+                                        return null;
+                                    }).then(function () { return page.waitForTimeout(300); }).then(function () {
+                                        return page.evaluate(function () {
+                                            return document.querySelectorAll(".notif-page-item").length;
+                                        });
+                                    }).then(function (unreadCount) {
+                                        var checks = [["filtre Non lus = 3 items", unreadCount === 3]];
+                                        // marquage individuel : cliquer Lu sur la 1re
+                                        return page.evaluate(function () {
+                                            var b = document.querySelector(".n-read");
+                                            if (b) b.click();
+                                            return null;
+                                        }).then(function () { return page.waitForTimeout(300); }).then(function () {
+                                            return page.evaluate(function () {
+                                                return document.querySelectorAll(".notif-page-item").length;
+                                            });
+                                        }).then(function (afterRead) {
+                                            checks.push(["apres marquage lu : 2 non lues", afterRead === 2]);
+                                            // filtre Alertes : 1 item (ticket_urgent)
+                                            return page.evaluate(function () {
+                                                var btns = document.querySelectorAll("[data-nfilter]");
+                                                for (var i = 0; i < btns.length; i++) {
+                                                    if (btns[i].getAttribute("data-nfilter") === "alerts") btns[i].click();
+                                                }
+                                                return null;
+                                            }).then(function () { return page.waitForTimeout(300); }).then(function () {
+                                                return page.evaluate(function () {
+                                                    return { count: document.querySelectorAll(".notif-page-item").length,
+                                                             hasOpen: !!document.querySelector('a[href*="ticket.html"]') };
+                                                });
+                                            }).then(function (alerts) {
+                                                checks.push(["filtre Alertes = 1 item", alerts.count === 1]);
+                                                checks.push(["bouton Ouvrir le ticket present", alerts.hasOpen]);
+                                                return checks;
+                                            });
+                                        });
+                                    });
+                                });
+                        })
+                        .then(function (checks) {
+                            var fails = (checks || []).filter(function (c) { return !c[1]; });
+                            if (errs.length) fails.push(["erreurs JS", false, errs.join(" | ")]);
+                            if (fails.length) {
+                                failures++;
+                                console.error("ECHEC notifications.html (comportemental)");
+                                fails.forEach(function (f) { console.error("    - " + f[0]); });
+                            } else {
+                                console.log("OK notifications.html (comportemental : filtres, marquage, actions)");
+                            }
+                            return page.evaluate(function () {
+                                try { window.ADWDatabase.run("DELETE FROM notifications"); } catch (e) {}
                             }).catch(function () {});
                         })
                         .then(function () { return page.close(); });

@@ -23,12 +23,12 @@
         modal.hidden = true;
         modal.innerHTML =
             '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="notifTitle">' +
-            '<h3 id="notifTitle">🔔 Notifications</h3>' +
-            '<div id="notifList" class="checkin-results" style="max-height:50vh;"></div>' +
+            '<h3 id="notifTitle">🔔 Notifications <span class="members-count" id="notifPreviewCount"></span></h3>' +
+            '<div id="notifList" class="checkin-results" style="max-height:40vh;"></div>' +
             '<div class="modal-actions">' +
-            '<button type="button" class="btn btn-secondary btn-small" id="notifClearBtn">🗑 Tout effacer</button>' +
+            '<a href="notifications.html" class="btn btn-primary btn-small" id="notifSeeAllBtn">Tout voir →</a>' +
             '<span style="flex:1"></span>' +
-            '<button type="button" class="btn btn-primary" id="notifCloseBtn">Fermer</button>' +
+            '<button type="button" class="btn btn-secondary" id="notifCloseBtn">Fermer</button>' +
             '</div></div>';
         document.body.appendChild(modal);
 
@@ -43,6 +43,12 @@
             badge.textContent = count > 99 ? '99+' : count;
             badge.hidden = count === 0;
             btn.title = count ? count + ' notification(s) non lue(s)' : 'Notifications';
+            // badge de la sidebar (lien Notifications) — même compte
+            var nav = document.getElementById('navNotifBadge');
+            if (nav) {
+                nav.textContent = count > 99 ? '99+' : count;
+                nav.hidden = count === 0;
+            }
         }
 
         function sevClass(s) {
@@ -53,42 +59,42 @@
         }
 
         function renderList() {
+            // Aperçu cloche : léger — 8 dernières non lues, sinon 8 dernières toutes catégories.
+            // Le centre complet vit sur notifications.html (bouton « Tout voir »).
             var items = [];
-            try { items = window.ADWDatabase.listNotifications(50); } catch (e) { items = []; }
-            list.innerHTML = items.length ? '' : '<p class="form-hint" style="padding:1rem;">Aucune notification. Les actions automatiques (synchro, rattachements) apparaîtront ici.</p>';
+            try {
+                items = window.ADWDatabase.listNotificationsPreview(8) || [];
+            } catch (e) { items = []; }
+            var pc = modal.querySelector('#notifPreviewCount');
+            if (pc) pc.textContent = items.length;
+            list.innerHTML = items.length ? '' : '<p class="form-hint" style="padding:1rem;">Aucune notification récente. Le centre complet vit sur la page Notifications.</p>';
             items.forEach(function (n) {
                 var li = document.createElement('div');
                 li.className = 'checkin-item' + (n.is_read ? ' done' : '');
-                var date = (n.created_at || '').slice(0, 16).replace('T', ' ');
                 li.innerHTML =
                     '<span class="notif-ico sev-' + esc(n.severity) + '">' +
                     (n.severity === 'success' ? '✅' : n.severity === 'warning' ? '⚠️' : n.severity === 'danger' ? '❌' : 'ℹ️') +
                     '</span>' +
                     '<div style="flex:1;min-width:0;"><div>' + esc(n.message) + '</div>' +
-                    '<div class="form-hint">' + esc(date) + '</div></div>' +
+                    '<div class="form-hint">' + esc((n.created_at || '').slice(0, 16).replace('T', ' ')) + '</div></div>' +
                     (n.is_read ? '' : '<span class="badge ' + sevClass(n.severity) + '">nouveau</span>');
                 list.appendChild(li);
             });
         }
 
         function open() {
+            // La cloche est un APERÇU : elle ne marque plus tout lu automatiquement.
+            // Le marquage est explicite (page Notifications : bouton « Lu » par notif ou « tout marquer lu »).
             renderList();
             modal.hidden = false;
-            try { window.ADWDatabase.markAllNotificationsRead(); } catch (e) { /* ignore */ }
             refreshBadge();
-            renderList(); // re-render avec état lu
         }
 
         btn.addEventListener('click', open);
         modal.querySelector('#notifCloseBtn').addEventListener('click', function () { modal.hidden = true; });
         modal.addEventListener('click', function (e) { if (e.target === modal) modal.hidden = true; });
-        modal.querySelector('#notifClearBtn').addEventListener('click', function () {
-            if (window.confirm("Effacer tout l'historique des notifications ?")) {
-                window.ADWDatabase.clearNotifications();
-                renderList();
-                refreshBadge();
-            }
-        });
+        // NB : plus de bouton « Tout effacer » dans l'aperçu — le nettoyage vit sur la page
+        // notifications.html (effacer les lues uniquement, plus prudent que tout effacer).
 
         // API pour les autres scripts
         window.ADWNotifications = {

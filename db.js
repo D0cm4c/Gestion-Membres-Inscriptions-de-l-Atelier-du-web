@@ -645,6 +645,31 @@
         this.run('UPDATE notifications SET is_read = 1 WHERE is_read = 0');
     };
 
+    // Aper\u00e9u cloche : les non-lues d'abord, en SQL (pas de filtrage JS sur 50 lignes)
+    Database.listNotificationsPreview = function (limit) {
+        limit = parseInt(limit, 10) || 8;
+        var unread = this.queryAll('SELECT * FROM notifications WHERE is_read = 0 ORDER BY created_at DESC, id DESC LIMIT ' + limit);
+        if (unread.length < limit) {
+            var recent = this.queryAll('SELECT * FROM notifications ORDER BY created_at DESC, id DESC LIMIT ' + limit);
+            var seen = {};
+            unread.forEach(function (n) { seen[n.id] = true; });
+            recent.forEach(function (n) {
+                if (!seen[n.id] && unread.length < limit) { unread.push(n); seen[n.id] = true; }
+            });
+        }
+        return unread;
+    };
+
+    // Marquage individuel (page Notifications : lecture notif par notif)
+    Database.markNotificationRead = function (id) {
+        this.run('UPDATE notifications SET is_read = 1 WHERE id = ?', [String(id)]);
+    };
+
+    // Effacer uniquement les lues (page Notifications : garder les non-lues)
+    Database.clearReadNotifications = function () {
+        this.run('DELETE FROM notifications WHERE is_read = 1');
+    };
+
     Database.clearNotifications = function () {
         this.run('DELETE FROM notifications');
     };
