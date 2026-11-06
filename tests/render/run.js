@@ -235,15 +235,20 @@ function main() {
                         .then(function () {
                             return page.evaluate(function () {
                                 var db = window.ADWDatabase;
-                                if (!db) return { seeded: false };
+                                if (!db || !db.db) return { seeded: false };
                                 try { db.run("DELETE FROM notifications"); } catch (e) {}
-                                // 3 non lues + 2 lues, categories variees
-                                db.notify("ticket_urgent", "Incident urgent test A", "danger", JSON.stringify({ ticket_id: "t1" }));
-                                db.notify("room_needed", "Formation sans salle B", "warning", JSON.stringify({ event_id: "e1" }));
-                                db.notify("sync_formations", "Synchro OK C", "info", null);
-                                db.notify("checkin", "Visite pointee D", "success", null);
-                                db.notify("print", "Impression E", "info", null);
-                                db.run("UPDATE notifications SET is_read = 1 WHERE message LIKE '%D%' OR message LIKE '%E%'");
+                                // 3 non lues + 2 lues, categories variees.
+                                // NB : marquage par ID exact (retourne par notify) — jamais par LIKE
+                                // sur le message (SQLite LIKE est case-insensitive : "InciDent"
+                                // matcherait '%D%' et fausserait tout).
+                                var ids = [];
+                                ids.push(db.notify("ticket_urgent", "Alerte incident X1", "danger", JSON.stringify({ ticket_id: "t1" })));
+                                ids.push(db.notify("room_needed", "Rappel salle X2", "warning", JSON.stringify({ event_id: "e1" })));
+                                ids.push(db.notify("sync_formations", "Activite synchro X3", "info", null));
+                                ids.push(db.notify("checkin", "Activite visite X4", "success", null));
+                                ids.push(db.notify("print", "Activite impression X5", "info", null));
+                                db.run("UPDATE notifications SET is_read = 1 WHERE id = ?", [ids[3]]);
+                                db.run("UPDATE notifications SET is_read = 1 WHERE id = ?", [ids[4]]);
                                 return { seeded: true };
                             });
                         })
