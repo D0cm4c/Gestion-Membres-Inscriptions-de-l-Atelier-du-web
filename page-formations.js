@@ -275,6 +275,26 @@
                             '🏷 ' + attributable.length + ' formation(s) attendent une salle — attribue-les depuis le planning (page Salles) pour bloquer leurs créneaux.',
                             'warning', { count: attributable.length });
                     }
+
+                    // ===== Listes d'attente : nouvelles sessions -> proposer les membres interesses =====
+                    try {
+                        var rowsF = window.ADWDatabase.listFormations() || [];
+                        rowsF.forEach(function (f) {
+                            var matches = [];
+                            try { matches = window.ADWDatabase.matchWaitlistForFormation(f.event_id, f.title) || []; } catch (e2) { matches = []; }
+                            if (!matches.length) return;
+                            var contacts = matches.map(function (w) {
+                                return w.first_name + ' ' + w.last_name +
+                                    (w.email ? ' (' + w.email + ')' : '') +
+                                    (w.phone ? (w.email ? ' ' : ' (') + w.phone + (w.email ? '' : ')') : '');
+                            });
+                            window.ADWNotifications.push('waitlist_match',
+                                matches.length + ' membre(s) en attente pour \u00ab ' + f.title + ' \u00bb \u2014 nouvelles dates dispo : ' +
+                                (f.date_text || 'voir la fiche') + '. Contacts : ' + contacts.join(' \u00b7 ') +
+                                ' \u2014 ouvre la fiche formation pour les inscrire (bouton Inscrire = formulaire pr\u00e9-rempli).',
+                                'success', { event_id: f.event_id, count: matches.length });
+                        });
+                    } catch (e) { /* waitlist best effort */ }
                 } else {
                     dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
                 }

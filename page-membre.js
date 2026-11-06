@@ -219,6 +219,43 @@
             html += '</div>';
             html += '</div>'; // fin carte
 
+            // ===== Int\u00e9r\u00eats / listes d'attente (oct. 2026) =====
+            var interests = [];
+            try { interests = ADWDatabase.getMemberWaitlist(member.id) || []; } catch (e) { interests = []; }
+            html += '<div class="m-card">' +
+                '<div class="detail-visits">' +
+                '<h4>\u23f1\ufe0f Int\u00e9r\u00eats / liste d\u2019attente <span class="members-count">' + interests.length + '</span></h4>' +
+                '<p class="form-hint" style="margin:0 0 0.6rem;">Formations qui int\u00e9ressent ce membre \u2014 propos\u00e9 \u00e0 la nouvelle session (plusieurs formations possibles).</p>';
+            if (interests.length) {
+                html += '<ul class="visits-list">';
+                interests.forEach(function (w) {
+                    html += '<li><span class="f-line-title">\ud83d\udccc ' + esc(w.formation_title) +
+                        ' \u00b7 <span class="badge ' + (w.status === 'contacted' ? 'badge-sub-monthly' : 'badge-sub-yearly') + '">' +
+                        (w.status === 'contacted' ? 'contact\u00e9' : 'en attente') + '</span></span>' +
+                        '<span class="f-line-actions">' +
+                        (w.formation_event_id ? '<a href="formation.html?id=' + encodeURIComponent(w.formation_event_id) + '" class="btn btn-secondary btn-small f-link">\ud83d\udcc4 Fiche</a>' : '') +
+                        '<button type="button" class="btn btn-secondary btn-small wl-remove" data-wid="' + esc(w.id) + '" title="Retirer cet int\u00e9r\u00eat">\u2716</button>' +
+                        '</span></li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="form-hint">Aucun int\u00e9r\u00eat enregistr\u00e9.</p>';
+            }
+            var allFormations = [];
+            try { allFormations = ADWDatabase.listFormations() || []; } catch (e) { allFormations = []; }
+            html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.7rem;align-items:center;">' +
+                '<select id="interestPick" style="flex:1;min-width:200px;">' +
+                '<option value="">\u2014 Choisir une formation existante \u2014</option>' +
+                allFormations.map(function (f) {
+                    return '<option value="' + esc(f.event_id) + '" data-title="' + esc(f.title) + '">' + esc(f.title) + '</option>';
+                }).join('') +
+                '</select>' +
+                '<button type="button" class="btn btn-primary btn-small" id="interestAddBtn">\u2795 Int\u00e9resser</button>' +
+                '</div>' +
+                '<div class="form-group" style="margin-top:0.5rem;"><input type="text" id="interestFree" placeholder="\u2026 ou un intitul\u00e9 libre (ex. \u00ab Photoshop \u00bb pour une future session)"></div>';
+            html += '</div>';
+            html += '</div>'; // fin carte
+
             // Impressions (même logique que la modale fiche de membres.html)
             var balance = member.print_balance || 0;
             html += '<div class="m-card">' +
@@ -294,6 +331,37 @@
                     if (window.ADWNotifications) window.ADWNotifications.push('checkin', '✅ Visite de ' + member.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)'), 'success');
                     render();
                 });
+            });
+
+            // ===== Int\u00e9r\u00eats / listes d'attente : ajout (dropdown ou libre) et retrait =====
+            content.addEventListener('click', function (e) {
+                var rm = e.target.closest('.wl-remove');
+                if (rm) {
+                    ADWDatabase.removeFromWaitlist(rm.getAttribute('data-wid'));
+                    render(member);
+                    return;
+                }
+                if (e.target.closest('#interestAddBtn')) {
+                    var sel = content.querySelector('#interestPick');
+                    var free = content.querySelector('#interestFree');
+                    var freeVal = free ? free.value.trim() : '';
+                    if (sel && sel.value) {
+                        var opt = sel.options[sel.selectedIndex];
+                        ADWDatabase.addToWaitlist(member.id, sel.value, opt.getAttribute('data-title') || opt.textContent);
+                        if (window.ADWNotifications) {
+                            window.ADWNotifications.push('info', 'Int\u00e9r\u00eat enregistr\u00e9 : \u00ab ' + (opt.getAttribute('data-title') || opt.textContent) + ' \u00bb \u2014 le membre sera propos\u00e9 \u00e0 la nouvelle session.', 'success');
+                        }
+                        render(member);
+                    } else if (freeVal) {
+                        ADWDatabase.addToWaitlist(member.id, null, freeVal);
+                        if (window.ADWNotifications) {
+                            window.ADWNotifications.push('info', 'Int\u00e9r\u00eat enregistr\u00e9 : \u00ab ' + freeVal + ' \u00bb (intitul\u00e9 libre) \u2014 le membre sera propos\u00e9 \u00e0 la nouvelle session.', 'success');
+                        }
+                        render(member);
+                    } else {
+                        alert('Choisis une formation dans la liste, ou \u00e9cris un intitul\u00e9 libre (ex. \u00ab Photoshop \u00bb).');
+                    }
+                }
             });
 
             // Impressions : +N&B, +couleur, solder, erreur (même logique que membres.html)

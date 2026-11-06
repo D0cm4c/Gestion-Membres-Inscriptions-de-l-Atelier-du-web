@@ -253,6 +253,40 @@
             }
             html += '</div>';
 
+            // ===== Liste d'attente : membres intéressés non inscrits =====
+            var waiting = [];
+            try { waiting = ADWDatabase.getWaitlist(f.event_id, f.title) || []; } catch (e) { waiting = []; }
+            html += '<div class="stat-card" id="waitlistCard" style="margin-top:1.1rem;">' +
+                '<div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;">' +
+                '<h3 style="margin:0;">\u23f1\ufe0f Liste d\u2019attente <span class="members-count">' + waiting.length + '</span></h3>' +
+                '<span class="form-hint" style="font-size:0.78rem;">Membres int\u00e9ress\u00e9s non inscrits \u2014 pr\u00e9venus quand une nouvelle session ouvre</span>' +
+                '<button class="btn btn-secondary btn-small" id="waitlistAddBtn" style="margin-left:auto;">\u2795 Ajouter \u00e0 la liste</button>' +
+                '</div>' +
+                '<div id="waitlistList" style="margin-top:0.8rem;">' +
+                (waiting.length ? waiting.map(function (w) {
+                    return '<div class="waitlist-line" data-wid="' + esc(w.id) + '">' +
+                        '<span class="member-avatar small">' + esc((w.first_name || '?')[0] + (w.last_name || '')[0]) + '</span>' +
+                        '<div style="flex:1;min-width:0;">' +
+                        '<strong>' + esc(w.last_name.toUpperCase() + ' ' + w.first_name) + '</strong>' +
+                        (w.member_no ? ' <span class="member-no">#' + esc(w.member_no) + '</span>' : '') +
+                        '<div class="form-hint">' +
+                        (w.email ? '\ud83d\udce7 ' + esc(w.email) : '') +
+                        (w.phone ? (w.email ? ' \u00b7 ' : '') + '\ud83d\udcf1 ' + esc(w.phone) : '') +
+                        (!w.email && !w.phone ? 'pas de contact enregistr\u00e9' : '') +
+                        '</div></div>' +
+                        '<span class="badge ' + (w.status === 'contacted' ? 'badge-sub-monthly' : 'badge-sub-yearly') + '">' +
+                        (w.status === 'contacted' ? 'contact\u00e9' : 'en attente') + '</span>' +
+                        '<button class="btn btn-primary btn-small wl-book" data-mid="' + esc(w.member_id) + '" title="Ouvrir le formulaire d\u2019inscription du site pr\u00e9-rempli pour ce membre">\ud83d\udce4 Inscrire</button>' +
+                        '<button class="btn btn-secondary btn-small wl-remove" data-wid="' + esc(w.id) + '" title="Retirer de la liste d\u2019attente">\u2716</button>' +
+                        '</div>';
+                }).join('') : '<p class="form-hint">Personne en attente pour cette formation.</p>') +
+                '</div>' +
+                '<div id="waitlistAdd" hidden style="margin-top:0.8rem;">' +
+                '<div class="form-group"><input type="text" id="waitlistSearch" placeholder="Rechercher un membre par nom, pr\u00e9nom ou n\u00b0\u2026" autocomplete="off"></div>' +
+                '<div id="waitlistResults" style="display:flex;flex-direction:column;gap:0.4rem;"></div>' +
+                '</div>' +
+                '</div>';
+
 
             // Catégories (bloc sous la carte Inscrits)
             html += '<div class="stats-container" style="margin-top:1.2rem;margin-bottom:1.3rem;"><div class="stat-card"><h3>🗂 Catégories</h3>' +
@@ -266,6 +300,7 @@
             attachRoomLogic(f);
             loadMecLabels(f);
             attachAttendeeLogic(f);
+            attachWaitlistLogic(f);
             content.hidden = false;
             loading.hidden = true;
         }
@@ -362,6 +397,80 @@
         }
 
         // ============ Suivi des inscrits : paiement + présence (oct. 2026) ============
+        // ===== Logique liste d'attente (d\u00e9l\u00e9gation, comme le suivi inscrits) =====
+        var waitlistLogicAttached = false;
+        function attachWaitlistLogic(f) {
+            if (waitlistLogicAttached) return;
+            waitlistLogicAttached = true;
+            var wlFormation = f;
+            attachWaitlistLogic = function (nf) { wlFormation = nf; };
+            content.addEventListener('click', function (e) {
+                var book = e.target.closest('.wl-book');
+                if (book) {
+                    var mid = book.getAttribute('data-mid');
+                    var m = null;
+                    try { m = ADWDatabase.queryAll('SELECT * FROM members WHERE id = ?', [mid])[0] || null; } catch (err) {}
+                    if (m && wlFormation.url) {
+                        var url = wlFormation.url + (wlFormation.url.indexOf('?') === -1 ? '?' : '&') + 'method=mec-booking-modal';
+                        var params = [
+                            ['adw_name', (m.first_name || '') + ' ' + (m.last_name || '')],
+                            ['adw_email', m.email || ''],
+                            ['adw_phone', m.phone || ''],
+                            ['adw_member_no', m.member_no || '']
+                        ];
+                        params.forEach(function (kv) { if (kv[1]) url += '&' + kv[0] + '=' + encodeURIComponent(kv[1]); });
+                        window.open(url, '_blank', 'noopener');
+                        if (window.ADWNotifications) {
+                            window.ADWNotifications.push('info', '\u2709\ufe0f Formulaire d\u2019inscription ouvert sur le site pour ' + m.first_name + ' ' + m.last_name + ' \u2014 ' + wlFormation.title + '.', 'success');
+                        }
+                    }
+                    return;
+                }
+                var rm = e.target.closest('.wl-remove');
+                if (rm) {
+                    ADWDatabase.removeFromWaitlist(rm.getAttribute('data-wid'));
+                    render(wlFormation);
+                    return;
+                }
+                if (e.target.closest('#waitlistAddBtn')) {
+                    var panel = content.querySelector('#waitlistAdd');
+                    if (panel) {
+                        panel.hidden = !panel.hidden;
+                        if (!panel.hidden) {
+                            var inp = content.querySelector('#waitlistSearch');
+                            if (inp) inp.focus();
+                        }
+                    }
+                }
+            });
+            content.addEventListener('input', function (e) {
+                if (e.target.id !== 'waitlistSearch') return;
+                var q = e.target.value.trim().toLowerCase();
+                var box = content.querySelector('#waitlistResults');
+                if (!box) return;
+                if (q.length < 2) { box.innerHTML = ''; return; }
+                var like = '%' + q + '%';
+                var members = [];
+                try {
+                    members = ADWDatabase.queryAll('SELECT id, first_name, last_name, member_no FROM members ' +
+                        'WHERE first_name LIKE ? OR last_name LIKE ? OR CAST(member_no AS TEXT) LIKE ? LIMIT 8', [like, like, like]);
+                } catch (err) { members = []; }
+                box.innerHTML = members.map(function (m) {
+                    return '<button type="button" class="btn btn-secondary btn-small wl-pick" data-mid="' + esc(m.id) + '" style="text-align:left;">' +
+                        esc(m.last_name.toUpperCase() + ' ' + m.first_name) + (m.member_no ? ' <span class="member-no">#' + esc(m.member_no) + '</span>' : '') + '</button>';
+                }).join('');
+            });
+            content.addEventListener('click', function (e) {
+                var pick = e.target.closest('.wl-pick');
+                if (!pick) return;
+                ADWDatabase.addToWaitlist(pick.getAttribute('data-mid'), wlFormation.event_id, wlFormation.title);
+                if (window.ADWNotifications) {
+                    window.ADWNotifications.push('info', 'Membre ajout\u00e9 \u00e0 la liste d\u2019attente de \u00ab ' + wlFormation.title + ' \u00bb.', 'success');
+                }
+                render(wlFormation);
+            });
+        }
+
         var attendeeLogicAttached = false;
         function attachAttendeeLogic(f) {
             // Délégation sur toute la liste : un listener UNIQUE (flag anti-accumulation au re-render)

@@ -240,6 +240,22 @@
             ')'
         );
         db.run('CREATE INDEX IF NOT EXISTS idx_fmpaylog ON fm_payment_log(formation_id, member_id, created_at)');
+        // Listes d'attente : membres intéressés par une formation (complète ou future).
+        // formation_event_id : la formation existante (fiche formation complète)
+        // formation_title    : intitulé générique (intérêt pour une future session)
+        // Le matching à la synchro se fait sur l'un OU l'autre (titre normalisé).
+        db.run(
+            'CREATE TABLE IF NOT EXISTS waitlist (' +
+            'id TEXT PRIMARY KEY,' +
+            'member_id TEXT NOT NULL,' +
+            'formation_event_id TEXT,' +    // event_id MEC si la formation existe
+            'formation_title TEXT NOT NULL,' + // intitulé (titre de la formation ou texte libre)
+            'status TEXT DEFAULT ' + "'" + 'waiting' + "'" + ',' + // waiting | contacted | enrolled
+            'contacted_at TEXT,' +          // dernière fois qu'on a proposé les nouvelles dates
+            'created_at TEXT DEFAULT (datetime(' + "'" + 'now' + "'" + '))' +
+            ')'
+        );
+        db.run('CREATE INDEX IF NOT EXISTS idx_waitlist ON waitlist(member_id, formation_event_id)');
         db.run(
             'CREATE TABLE IF NOT EXISTS tickets (' +
             'id TEXT PRIMARY KEY,' +
@@ -481,6 +497,63 @@
         this.run('DELETE FROM formations_members WHERE formation_id = ? AND member_id = ?', [formationId, memberId]);
     };
 
+    // ============ Listes d'attente ============
+
+    Database.addToWaitlist = function (memberId, formationEventId, formationTitle) {
+        var rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        this.run('INSERT INTO waitlist (id, member_id, formation_event_id, formation_title) VALUES (?, ?, ?, ?)',
+            [rid, String(memberId), formationEventId ? String(formationEventId) : null, String(formationTitle)]);
+        try { this.flush(); } catch (e) {}
+        return rid;
+    };
+
+    Database.removeFromWaitlist = function (entryId) {
+        this.run('DELETE FROM waitlist WHERE id = ?', [String(entryId)]);
+        try { this.flush(); } catch (e) {}
+    };
+
+    // Liste d'attente pour une formation (event_id) OU un intitulé
+    Database.getWaitlist = function (formationEventId, formationTitle) {
+        var rows = this.queryAll('SELECT w.*, m.first_name, m.last_name, m.member_no, m.email, m.phone ' +
+            'FROM waitlist w JOIN members m ON m.id = w.member_id ' +
+            'WHERE (formation_event_id = ? OR (formation_event_id IS NULL AND LOWER(formation_title) = LOWER(?))) ' +
+            'ORDER BY w.created_at ASC', [String(formationEventId || ''), String(formationTitle || '')]);
+        return rows;
+    };
+
+    // Intérêts d'un membre (fiche membre)
+    Database.getMemberWaitlist = function (memberId) {
+        return this.queryAll('SELECT * FROM waitlist WHERE member_id = ? ORDER BY created_at ASC', [String(memberId)]);
+    };
+
+    // Matching synchro : membres en attente pour une formation (par event_id ou titre normalisé)
+    // Titre normalisé : minuscules, sans la partie dates (« LES 05, 06... »), sans ponctuation
+    Database.normalizeTitle = function (title) {
+        return String(title || '')
+            .toLowerCase()
+            .replace(/\s*\b(les?|du)\s+\d{1,2}(\s*[,–-]\s*\d{1,2})*\s*(\w+)?\b.*$/g, '') // « LES 05, 06 ET 13 NOVEMBRE » à la fin
+            .replace(/[^a-z0-9àâäéèêëîïôöùûüç ]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    };
+
+    Database.matchWaitlistForFormation = function (eventId, title) {
+        var norm = this.normalizeTitle(title);
+        return this.queryAll('SELECT w.*, m.first_name, m.last_name, m.member_no, m.email, m.phone ' +
+            'FROM waitlist w JOIN members m ON m.id = w.member_id ' +
+            'WHERE formation_event_id = ? OR (formation_event_id IS NULL AND LOWER(formation_title) LIKE ?) ' +
+            'ORDER BY w.created_at ASC',
+            [String(eventId || ''), '%' + (norm || String(title || '').toLowerCase()) + '%']);
+    };
+
+    Database.markWaitlistContacted = function (entryIds) {
+        (entryIds || []).forEach(function (id) {
+            this.run('UPDATE waitlist SET status = ?, contacted_at = datetime(' + "'" + 'now' + "'" + ') WHERE id = ?',
+                ['contacted', String(id)]);
+        }, this);
+        try { this.flush(); } catch (e) {}
+    };
+
     // Historique des clics de paiement pour un inscrit (fiche formation)
     Database.getPaymentLog = function (formationId, memberId) {
         return this.queryAll(
@@ -684,6 +757,7 @@
         return Promise.resolve().then(function () {
             // Journal d'audit des paiements : purge RGPD (table sans FK)
             try { self.run('DELETE FROM fm_payment_log WHERE member_id = ?', [String(memberId)]); } catch (e) {}
+            try { self.run('DELETE FROM waitlist WHERE member_id = ?', [String(memberId)]); } catch (e) {}
             self.run('DELETE FROM visits WHERE member_id = ?', [memberId]);
             self.run('DELETE FROM prints WHERE member_id = ?', [memberId]);
             self.run('DELETE FROM formations_members WHERE member_id = ?', [memberId]);
