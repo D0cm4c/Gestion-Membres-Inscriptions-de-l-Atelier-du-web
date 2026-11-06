@@ -673,6 +673,13 @@ main {
 .fm-paid-at { color: var(--green); font-weight: 700; }
 .fm-paid-log { color: var(--text-soft); font-weight: 600; text-decoration: underline dotted; cursor: help; }
 
+.waitlist-line {
+    display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+    padding: 0.5rem 0.7rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); margin-bottom: 0.4rem;
+}
+.waitlist-line:hover { border-color: var(--accent); }
+
 /* Badge de synchro (fiche formation) */
 .sync-badge {
     font-size: 0.72rem; font-weight: 700; white-space: nowrap;

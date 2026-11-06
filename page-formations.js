@@ -275,6 +275,42 @@
                             '🏷 ' + attributable.length + ' formation(s) attendent une salle — attribue-les depuis le planning (page Salles) pour bloquer leurs créneaux.',
                             'warning', { count: attributable.length });
                     }
+
+                    // ===== Listes d'attente : nouvelles sessions -> proposer les membres interesses =====
+                    // Anti-spam : une notif waitlist_match par formation et par jour (comme le rappel sans-salle)
+                    var todayWl = new Date().toISOString().slice(0, 10);
+                    var alreadyNotified = {};
+                    try {
+                        window.ADWDatabase.listNotifications(300).forEach(function (n) {
+                            if (n.type === 'waitlist_match') {
+                                try {
+                                    var d = n.details ? JSON.parse(n.details) : null;
+                                    if (d && d.event_id && (n.created_at || '').slice(0, 10) === todayWl) alreadyNotified[d.event_id] = true;
+                                } catch (e2) {}
+                            }
+                        });
+                    } catch (e2) {}
+                    try {
+                        var rowsF = window.ADWDatabase.listFormations() || [];
+                        rowsF.forEach(function (f) {
+                            var matches = [];
+                            try { matches = window.ADWDatabase.matchWaitlistForFormation(f.event_id, f.title) || []; } catch (e2) { matches = []; }
+                            if (!matches.length) return;
+                            var contacts = matches.map(function (w) {
+                                return w.first_name + ' ' + w.last_name +
+                                    (w.email ? ' (' + w.email + ')' : '') +
+                                    (w.phone ? (w.email ? ' ' : ' (') + w.phone + (w.email ? '' : ')') : '');
+                            });
+                            if (alreadyNotified[f.event_id]) return; // d\u00e9j\u00e0 notifi\u00e9 aujourd'hui pour cette formation
+                            window.ADWNotifications.push('waitlist_match',
+                                matches.length + ' membre(s) en attente pour \u00ab ' + f.title + ' \u00bb \u2014 nouvelles dates dispo : ' +
+                                (f.date_text || 'voir la fiche') + '. Contacts : ' + contacts.join(' \u00b7 ') +
+                                ' \u2014 ouvre la fiche formation pour les inscrire (bouton Inscrire = formulaire pr\u00e9-rempli).',
+                                'success', { event_id: f.event_id, count: matches.length });
+                            // les membres propos\u00e9s passent en statut \u00ab contact\u00e9 \u00bb (le badge change sur la fiche)
+                            try { window.ADWDatabase.markWaitlistContacted(matches.map(function (w) { return w.id; })); } catch (e2) {}
+                        });
+                    } catch (e) { /* waitlist best effort */ }
                 } else {
                     dataSource.textContent = events.length + ' formations récupérées depuis atelierduweb.be.';
                 }

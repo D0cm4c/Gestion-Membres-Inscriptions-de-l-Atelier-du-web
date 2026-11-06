@@ -29,7 +29,9 @@ jobs:
           exit $status
 
       - name: Smoke test des pages (structure, layout, versions ?v=)
-        run: node tests/smoke-pages.js
+        run: |
+          node tests/smoke-pages.js
+          node tests/waitlist.js
 
       - name: Cache navigateurs Playwright
         uses: actions/cache@v4
