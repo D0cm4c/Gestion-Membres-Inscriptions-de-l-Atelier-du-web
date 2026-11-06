@@ -241,9 +241,11 @@ function main() {
                                 // NB : marquage par ID exact (retourne par notify) — jamais par LIKE
                                 // sur le message (SQLite LIKE est case-insensitive : "InciDent"
                                 // matcherait '%D%' et fausserait tout).
+                                // NB : passer l'OBJET a notify (elle fait le JSON.stringify elle-meme).
+                                // Double-stringifier => JSON.parse retourne une string => plus d'action bouton.
                                 var ids = [];
-                                ids.push(db.notify("ticket_urgent", "Alerte incident X1", "danger", JSON.stringify({ ticket_id: "t1" })));
-                                ids.push(db.notify("room_needed", "Rappel salle X2", "warning", JSON.stringify({ event_id: "e1" })));
+                                ids.push(db.notify("ticket_urgent", "Alerte incident X1", "danger", { ticket_id: "t1" }));
+                                ids.push(db.notify("room_needed", "Rappel salle X2", "warning", { event_id: "e1" }));
                                 ids.push(db.notify("sync_formations", "Activite synchro X3", "info", null));
                                 ids.push(db.notify("checkin", "Activite visite X4", "success", null));
                                 ids.push(db.notify("print", "Activite impression X5", "info", null));
