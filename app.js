@@ -423,7 +423,7 @@
                 detailRenewBtn.classList.remove('btn-danger');
                 var res = ADWDatabase.renewSubscription(detailMember.id, r.newStart, r.newEnd);
                 if (!res) return;
-                if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé : du ' + res.newStart + ' au ' + res.newEnd + ' (membre ' + detailMember.member_no + ')', 'success');
+                if (window.ADWNotifications) window.ADWNotifications.push('renew', '♻️ Abonnement renouvelé : du ' + res.newStart + ' au ' + res.newEnd + ' (membre ' + detailMember.member_no + ')', 'success', { member_id: detailMember.id });
                 showToast('♻️ Renouvelé — inscription du ' + res.newStart + ' au ' + res.newEnd);
                 render();
                 openDetail(detailMember.id);

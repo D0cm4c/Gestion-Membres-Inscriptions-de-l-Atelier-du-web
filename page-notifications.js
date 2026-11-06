@@ -22,11 +22,11 @@
         ticket_urgent: 'alerts',
         error: 'alerts',
         room_needed: 'reminders',
-        waitlist_match: 'reminders',
+        waitlist_match: 'waitlist',
         awaiting_validation: 'reminders',
-        sync_formations: 'activity',
-        auto_link: 'activity',
-        auto_unlink: 'activity',
+        sync_formations: 'sync',
+        auto_link: 'sync',
+        auto_unlink: 'sync',
         member_created: 'activity',
         checkin: 'activity',
         renew: 'activity',
@@ -65,9 +65,14 @@
             var d = n.details ? JSON.parse(n.details) : null;
             if (d && d.event_id) return { label: 'Ouvrir la formation', href: 'formation.html?id=' + encodeURIComponent(d.event_id) };
             if (d && d.ticket_id) return { label: 'Ouvrir le ticket', href: 'ticket.html?id=' + encodeURIComponent(d.ticket_id) };
+            if (d && d.member_id) return { label: 'Ouvrir le membre', href: 'membre.html?id=' + encodeURIComponent(d.member_id) };
             if (n.type === 'room_needed') return { label: 'Planning des salles', href: 'salles.html' };
             if (n.type === 'awaiting_validation') return { label: 'Planning des salles', href: 'salles.html' };
             if (n.type === 'ticket_urgent') return { label: 'Incidents', href: 'tickets.html' };
+            if (n.type === 'waitlist_match') return { label: 'Voir les formations', href: 'formations.html' };
+            if (n.type === 'sync_formations') return { label: 'Voir les formations', href: 'formations.html' };
+            if (n.type === 'auto_link' || n.type === 'auto_unlink') return { label: 'Voir les inscrits', href: 'formations.html' };
+            if (n.type === 'checkin' || n.type === 'renew' || n.type === 'print' || n.type === 'member_created') return { label: 'Ouvrir Membres', href: 'membres.html' };
         } catch (e) {}
         return null;
     }
@@ -102,7 +107,7 @@
         if (totalEl) totalEl.textContent = items.length + ' notification' + (items.length > 1 ? 's' : '') + (unread ? ' · ' + unread + ' non lue' + (unread > 1 ? 's' : '') : '');
 
         // compteurs par catégorie sur les boutons de filtre (répartition visible)
-        var counts = { all: items.length, unread: 0, read: 0, alerts: 0, reminders: 0, activity: 0 };
+        var counts = { all: items.length, unread: 0, alerts: 0, reminders: 0, waitlist: 0, sync: 0, activity: 0 };
         items.forEach(function (n) {
             if (n.is_read) counts.read++; else counts.unread++;
             counts[categoryOf(n)]++;
@@ -118,7 +123,6 @@
         var filtered = items.filter(function (n) {
             if (currentFilter === 'all') return true;
             if (currentFilter === 'unread') return !n.is_read;
-            if (currentFilter === 'read') return !!n.is_read;
             return categoryOf(n) === currentFilter;
         });
         if (q) {
@@ -140,7 +144,7 @@
         var remaining = filtered.length - shownCount;
         filtered = filtered.slice(0, shownCount);
 
-        var CAT_LABEL = { alerts: '⚠️ Alerte', reminders: '⏳ Rappel', activity: 'ℹ️ Activité' };
+        var CAT_LABEL = { alerts: '⚠️ Alerte', reminders: '⏳ Rappel', waitlist: '🎯 Attente', sync: '🔄 Synchro', activity: 'ℹ️ Activité' };
         listEl.innerHTML = filtered.map(function (n) {
             var cat = categoryOf(n);
             var act = actionOf(n);
