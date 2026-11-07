@@ -21,7 +21,10 @@
         flux: '🧑‍🤝‍🧑 Nouveaux usagers du jour',
         inclusion: '🤝 Inclusion numérique',
         prints: '🖨️ Impressions à solder',
-        chart: '📈 Visites (graphique + heatmap)'
+        chart: '📈 Visites (graphique + heatmap)',
+        agenda: '📅 Aujourd’hui à l’Atelier (agenda du jour)',
+        waited: '🎯 Les formations les plus attendues',
+        lastnotifs: '🔔 Dernières notifications'
     };
 
     function getHidden() {
