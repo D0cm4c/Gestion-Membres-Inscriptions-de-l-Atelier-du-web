@@ -37,11 +37,10 @@
             <p>⏳ Chargement des données…</p>
         </div>
 
-        <section id="todayAgenda" aria-label="Agenda du jour" hidden></section>
-        <section id="mostWaited" aria-label="Formations les plus attendues" hidden></section>
-        <section id="lastNotifs" aria-label="Dernières notifications" hidden></section>
-
         <section class="mosaic" id="dashboardMosaic" aria-label="Tableau de bord en mosaïque">
+            <section id="todayAgenda" class="span-2" aria-label="Agenda du jour" hidden data-tile="agenda"></section>
+            <section id="mostWaited" class="span-2" aria-label="Formations les plus attendues" hidden data-tile="waited"></section>
+            <section id="lastNotifs" class="span-2" aria-label="Dernières notifications" hidden data-tile="lastnotifs"></section>
             <div class="kpi-card" data-tile="kpi0">
                 <span class="kpi-icon" aria-hidden="true">👥</span>
                 <div>
