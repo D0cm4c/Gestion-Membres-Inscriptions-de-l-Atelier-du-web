@@ -152,8 +152,36 @@
         el.hidden = false;
     }
 
+    // Formations les plus attendues : le classement des listes d'attente (dashboard)
+    function renderMostWaited() {
+        var el = document.getElementById('mostWaited');
+        if (!el) return;
+        var rows = [];
+        try { rows = ADWDatabase.getMostWaitedFormations(5) || []; } catch (e) { rows = []; }
+        if (!rows.length) { el.hidden = true; return; }
+        var total = rows.reduce(function (s, r) { return s + r.waiting; }, 0);
+        var html = '<div class="stat-card today-agenda" style="margin-bottom:1.3rem;">' +
+            '<h3>\u{1F3AF} Les formations les plus attendues <span class="members-count">' + total + ' en attente</span></h3>' +
+            '<div class="agenda-list">';
+        rows.forEach(function (r, i) {
+            html += '<a class="agenda-item" href="' + (r.event_id
+                ? 'formation.html?id=' + encodeURIComponent(r.event_id)
+                : 'formations.html') + '" style="text-decoration:none;">' +
+                '<span class="mw-rank">' + (i + 1) + '</span>' +
+                '<span class="agenda-title">' + escapeHtml(r.title) + '</span>' +
+                '<span class="agenda-count has-attendees">' + r.waiting + ' en attente' +
+                (r.contacted ? ' \u00b7 ' + r.contacted + ' contact\u00e9' + (r.contacted > 1 ? 's' : '') : '') +
+                '</span>' +
+                '</a>';
+        });
+        html += '</div></div>';
+        el.innerHTML = html;
+        el.hidden = false;
+    }
+
     function render() {
         renderTodayAgenda();
+        renderMostWaited();
 
         var total = one('SELECT COUNT(*) v FROM members');
         var active = one('SELECT COUNT(*) v FROM members WHERE date(end_date) >= date(\'now\') OR end_date IS NULL');

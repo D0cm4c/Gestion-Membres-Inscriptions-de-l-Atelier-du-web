@@ -552,6 +552,21 @@
         return rows;
     };
 
+    // Formations les plus attendues (dashboard) : waitlist groupée par formation
+    // (event_id ou intitulé libre), triée par nombre de membres en attente.
+    Database.getMostWaitedFormations = function (limit) {
+        limit = parseInt(limit, 10) || 5;
+        return this.queryAll(
+            'SELECT COALESCE(formation_event_id, formation_title) AS fkey, ' +
+            'MAX(formation_title) AS title, MAX(formation_event_id) AS event_id, ' +
+            'COUNT(*) AS waiting, ' +
+            'SUM(CASE WHEN status = ' + "'" + 'contacted' + "'" + ' THEN 1 ELSE 0 END) AS contacted ' +
+            'FROM waitlist ' +
+            'GROUP BY COALESCE(formation_event_id, formation_title) ' +
+            'ORDER BY waiting DESC, title ASC LIMIT ' + limit
+        );
+    };
+
     // Intérêts d'un membre (fiche membre)
     Database.getMemberWaitlist = function (memberId) {
         return this.queryAll('SELECT * FROM waitlist WHERE member_id = ? ORDER BY created_at ASC', [String(memberId)]);
