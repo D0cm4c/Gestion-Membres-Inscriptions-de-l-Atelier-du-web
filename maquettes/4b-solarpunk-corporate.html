@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquette 4b — Solarpunk corporate</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+:root {
+    --terre: #F4F1E8;        /* beige terre, plus sobre */
+    --foret: #2D5A3D;         /* vert forêt — ancre corporate */
+    --mousse: #7FAE6C;       /* vert mousse plus profond */
+    --soleil: #E8A93C;        /* ocre soleil, moins candide */
+    --argile: #C77B4F;        /* terracotta plus sérieuse */
+    --encre: #1F2B1C;
+    --blanc: #FFFFFF;
+    --bord: #DDD8C8;          /* filet discret */
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--terre); color: var(--encre); display: flex; min-height: 100vh; font-size: 14px; }
+.side { width: 225px; background: var(--foret); flex-shrink: 0; border-right: 3px solid var(--soleil); }
+.brand { color: var(--blanc); font-weight: 700; font-size: 1.05rem; padding: 1.1rem 1.1rem 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.15); }
+.brand small { display: block; color: var(--mousse); font-size: 0.66rem; font-weight: 600; letter-spacing: 1.8px; text-transform: uppercase; margin-top: 0.25rem; }
+.nav a { display: flex; align-items: center; gap: 0.6rem; padding: 0.62rem 1.1rem; color: #D5DFCE; text-decoration: none; font-weight: 500; font-size: 0.86rem; border-left: 3px solid transparent; }
+.nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav a.active { background: rgba(255,255,255,0.1); color: var(--soleil); border-left-color: var(--soleil); font-weight: 600; }
+.nav .badge { margin-left: auto; background: var(--argile); color: var(--blanc); font-weight: 600; font-size: 0.66rem; padding: 0.08rem 0.45rem; border-radius: 3px; }
+.main { flex: 1; padding: 1.4rem 1.8rem; max-width: 1050px; }
+.topbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.3rem; }
+h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.3px; }
+h1 em { font-style: normal; color: var(--foret); border-bottom: 3px solid var(--soleil); padding-bottom: 0.1rem; }
+.search { flex: 1; max-width: 380px; padding: 0.55rem 0.9rem; border: 1px solid var(--bord); border-radius: 6px; background: var(--blanc); font-family: inherit; font-weight: 500; font-size: 0.85rem; }
+.search:focus { outline: none; border-color: var(--mousse); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; margin-bottom: 1.4rem; }
+.kpi { background: var(--blanc); border: 1px solid var(--bord); border-left: 3px solid var(--mousse); border-radius: 6px; padding: 0.85rem 1rem; }
+.kpi:nth-child(1) { border-left-color: var(--argile); }
+.kpi:nth-child(3) { border-left-color: var(--soleil); }
+.kpi .num { font-size: 1.8rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.kpi .lab { font-size: 0.72rem; font-weight: 600; color: #6E7A64; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.8px; }
+.card { background: var(--blanc); border: 1px solid var(--bord); border-radius: 6px; padding: 1.05rem 1.15rem; margin-bottom: 1.1rem; }
+.card h3 { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.85rem; color: var(--foret); }
+.row { display: flex; align-items: center; gap: 0.7rem; padding: 0.58rem 0.75rem; border-radius: 4px; margin-bottom: 0.4rem; background: var(--terre); font-weight: 500; font-size: 0.88rem; border: 1px solid transparent; }
+.row:hover { border-color: var(--mousse); background: #EFEBDE; }
+.row:last-child { margin-bottom: 0; }
+.slot { background: var(--soleil); color: var(--encre); padding: 0.14rem 0.55rem; border-radius: 3px; font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.slot.pm { background: var(--argile); color: var(--blanc); }
+.count { margin-left: auto; background: var(--foret); color: var(--blanc); padding: 0.14rem 0.55rem; border-radius: 3px; font-weight: 600; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+.rank { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; background: var(--foret); color: var(--soleil); border-radius: 3px; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+.hint { font-size: 0.76rem; color: #7A8070; font-weight: 400; }
+.notif { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.65rem 0.3rem; border-bottom: 1px solid var(--bord); }
+.notif:last-child { border-bottom: none; }
+.notif .msg { font-weight: 500; font-size: 0.88rem; line-height: 1.4; }
+.notif .meta { font-size: 0.72rem; color: #7A8070; font-weight: 500; margin-top: 0.15rem; }
+.tag { display: inline-block; padding: 0.08rem 0.5rem; border-radius: 3px; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: var(--argile); color: var(--blanc); }
+.tag.attente { background: var(--mousse); color: var(--encre); }
+</style>
+</head>
+<body>
+<nav class="side">
+    <div class="brand">Atelier du Web<small>EPN · Saint-Gilles</small></div>
+    <div class="nav">
+        <a href="#">📊 Tableau de bord</a>
+        <a href="#">👥 Membres</a>
+        <a href="#">🎓 Formations</a>
+        <a href="#">📅 Salles</a>
+        <a href="#">🛠️ Incidents</a>
+        <a href="#">💡 Suggestions</a>
+        <a href="#" class="active">🔔 Notifications <span class="badge">3</span></a>
+    </div>
+</nav>
+<main class="main">
+    <div class="topbar">
+        <h1><em>Notifications</em></h1>
+        <input class="search" placeholder="Rechercher : membre, formation…">
+    </div>
+    <div class="kpis">
+        <div class="kpi"><div class="num">3</div><div class="lab">Alertes</div></div>
+        <div class="kpi"><div class="num">5</div><div class="lab">En attente</div></div>
+        <div class="kpi"><div class="num">12</div><div class="lab">Synchros</div></div>
+        <div class="kpi"><div class="num">38</div><div class="lab">Total</div></div>
+    </div>
+    <div class="card">
+        <h3>🌱 Aujourd'hui à l'Atelier</h3>
+        <div class="row"><span class="slot">Matin</span><strong>Créez des designs avec Canva</strong><span class="hint">9h30–12h30 · L'Atelier du web</span><span class="count">6 inscrits</span></div>
+        <div class="row"><span class="slot pm">A-midi</span><strong>Initiation à WordPress</strong><span class="hint">13h30–16h30 · Salle 2</span><span class="count">4 inscrits</span></div>
+    </div>
+    <div class="card">
+        <h3>🌻 Les plus attendues</h3>
+        <div class="row"><span class="rank">1</span><strong>Créez des designs avec Canva</strong><span class="count">5 en attente</span></div>
+        <div class="row"><span class="rank">2</span><strong>Initiation à WordPress</strong><span class="count">4 en attente</span></div>
+    </div>
+    <div class="card">
+        <h3>🔔 Dernières notifications</h3>
+        <div class="notif">
+            <span>⚠️</span>
+            <div>
+                <div class="msg">« Créez des designs avec Canva » n'a pas de salle attribuée</div>
+                <div class="meta">il y a 2 h · <span class="tag">Alerte</span></div>
+            </div>
+        </div>
+        <div class="notif">
+            <span>🎯</span>
+            <div>
+                <div class="msg">3 membres en attente pour « Initiation à WordPress » — nouvelles dates dispo</div>
+                <div class="meta">il y a 5 h · <span class="tag attente">Attente</span></div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
