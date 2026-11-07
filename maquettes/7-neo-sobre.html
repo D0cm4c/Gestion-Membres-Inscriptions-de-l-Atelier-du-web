@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquette 7 — Neo-sobre (Notion/Linear)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+:root {
+    --bg: #FAFAF9;        /* gris chaud très clair */
+    --text: #37352F;      /* encre Notion */
+    --soft: #9B9A93;
+    --hover: #F1F0EE;
+    --accent: #EB5757;    /* rouge discret */
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14.5px; }
+.side { width: 228px; padding: 1.6rem 0.8rem; flex-shrink: 0; }
+.brand { font-weight: 600; font-size: 0.95rem; padding: 0 0.7rem 1.1rem; display: flex; align-items: center; gap: 0.55rem; }
+.brand .dot { width: 1.35rem; height: 1.35rem; background: var(--text); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 0.7rem; font-weight: 600; }
+.brand small { display: block; color: var(--soft); font-size: 0.7rem; font-weight: 400; }
+.nav a { display: flex; align-items: center; gap: 0.6rem; padding: 0.42rem 0.7rem; border-radius: 7px; color: var(--text); text-decoration: none; font-weight: 500; font-size: 0.88rem; margin-bottom: 1px; }
+.nav a:hover { background: var(--hover); }
+.nav a.active { background: var(--hover); font-weight: 600; }
+.nav a.active::before { content: ''; width: 3px; height: 15px; background: var(--accent); border-radius: 2px; margin-left: -0.7rem; margin-right: 0.35rem; }
+.nav .badge { margin-left: auto; color: var(--soft); font-size: 0.72rem; font-weight: 500; }
+.main { flex: 1; padding: 2.6rem 3rem; max-width: 880px; }
+h1 { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.4px; margin-bottom: 0.4rem; }
+.sub { color: var(--soft); font-size: 0.88rem; margin-bottom: 2rem; }
+.search { width: 100%; border: 1px solid #E9E8E6; border-radius: 8px; background: #fff; font-family: inherit; font-size: 0.9rem; padding: 0.6rem 0.9rem; margin-bottom: 2.2rem; color: var(--text); }
+.search:focus { outline: none; border-color: #C8C7C4; box-shadow: 0 0 0 3px rgba(55,53,47,0.05); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3.2rem; margin-bottom: 2.8rem; padding: 0 0.2rem; }
+.kpi .num { font-size: 1.85rem; font-weight: 600; letter-spacing: -1px; line-height: 1; }
+.kpi:nth-child(1) .num { color: var(--accent); }
+.kpi .lab { font-size: 0.8rem; color: var(--soft); margin-top: 0.3rem; }
+section { margin-bottom: 2.6rem; }
+section h2 { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--soft); margin-bottom: 0.55rem; }
+.row { display: flex; align-items: baseline; gap: 0.9rem; padding: 0.55rem 0.5rem; border-radius: 6px; text-decoration: none; color: var(--text); }
+.row:hover { background: var(--hover); }
+.row .title { font-weight: 500; font-size: 0.94rem; }
+.row .hint { font-size: 0.82rem; color: var(--soft); }
+.row .n { margin-left: auto; font-size: 0.82rem; color: var(--soft); font-variant-numeric: tabular-nums; }
+.row .slot { font-size: 0.78rem; color: var(--soft); width: 3.6rem; flex-shrink: 0; }
+.row .slot.pm { color: var(--accent); }
+.row .rank { color: var(--soft); font-size: 0.85rem; width: 1rem; flex-shrink: 0; }
+.notif { display: flex; gap: 0.75rem; padding: 0.6rem 0.5rem; border-radius: 6px; align-items: flex-start; }
+.notif:hover { background: var(--hover); }
+.notif .msg { font-weight: 500; font-size: 0.92rem; line-height: 1.45; }
+.notif .meta { font-size: 0.78rem; color: var(--soft); margin-top: 0.15rem; }
+.tag { font-size: 0.72rem; font-weight: 500; color: var(--soft); }
+.tag.alert { color: var(--accent); }
+</style>
+</head>
+<body>
+<nav class="side">
+    <div class="brand">
+        <span class="dot">A</span>
+        <span>Atelier du Web<small>EPN · Saint-Gilles</small></span>
+    </div>
+    <div class="nav">
+        <a href="#">🏠 Tableau de bord</a>
+        <a href="#">👥 Membres</a>
+        <a href="#">🎓 Formations</a>
+        <a href="#">📅 Salles</a>
+        <a href="#">🛠️ Incidents</a>
+        <a href="#">💡 Suggestions</a>
+        <a href="#" class="active">🔔 Notifications <span class="badge">3</span></a>
+    </div>
+</nav>
+<main class="main">
+    <h1>Notifications</h1>
+    <p class="sub">Ce qui demande votre attention aujourd'hui.</p>
+    <input class="search" placeholder="Rechercher dans les notifications…">
+    <div class="kpis">
+        <div class="kpi"><div class="num">3</div><div class="lab">alertes</div></div>
+        <div class="kpi"><div class="num">5</div><div class="lab">en attente</div></div>
+        <div class="kpi"><div class="num">12</div><div class="lab">synchros</div></div>
+        <div class="kpi"><div class="num">38</div><div class="lab">au total</div></div>
+    </div>
+    <section>
+        <h2>Aujourd'hui à l'Atelier</h2>
+        <a class="row" href="#">
+            <span class="slot">Matin</span>
+            <span class="title">Créez des designs avec Canva</span>
+            <span class="hint">9h30–12h30 · L'Atelier du web</span>
+            <span class="n">6 inscrits</span>
+        </a>
+        <a class="row" href="#">
+            <span class="slot pm">A-midi</span>
+            <span class="title">Initiation à WordPress</span>
+            <span class="hint">13h30–16h30 · Salle 2</span>
+            <span class="n">4 inscrits</span>
+        </a>
+    </section>
+    <section>
+        <h2>Les plus attendues</h2>
+        <a class="row" href="#">
+            <span class="rank">1</span>
+            <span class="title">Créez des designs avec Canva</span>
+            <span class="n">5 en attente</span>
+        </a>
+        <a class="row" href="#">
+            <span class="rank">2</span>
+            <span class="title">Initiation à WordPress</span>
+            <span class="n">4 en attente</span>
+        </a>
+    </section>
+    <section>
+        <h2>Récentes</h2>
+        <div class="notif">
+            <span>⚠️</span>
+            <div>
+                <div class="msg">« Créez des designs avec Canva » n'a pas de salle attribuée</div>
+                <div class="meta">Il y a 2 h · <span class="tag alert">Alerte</span></div>
+            </div>
+        </div>
+        <div class="notif">
+            <span>🎯</span>
+            <div>
+                <div class="msg">3 membres en attente pour « Initiation à WordPress » — nouvelles dates dispo</div>
+                <div class="meta">Il y a 5 h · <span class="tag">Attente</span></div>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>
