@@ -179,9 +179,50 @@
         el.hidden = false;
     }
 
+    // 3 dernières notifications (dashboard) — aperçu du centre, lien vers notifications.html
+    function renderLastNotifs() {
+        var el = document.getElementById('lastNotifs');
+        if (!el) return;
+        var items = [];
+        try { items = ADWDatabase.listNotifications(3) || []; } catch (e) { items = []; }
+        if (!items.length) { el.hidden = true; return; }
+        function ago(iso) {
+            if (!iso) return '';
+            try {
+                var d = new Date(String(iso).replace(' ', 'T') + (String(iso).indexOf('Z') === -1 ? 'Z' : ''));
+                var mins = Math.round((Date.now() - d.getTime()) / 60000);
+                if (isNaN(mins)) return '';
+                if (mins < 1) return 'a l\u2019instant';
+                if (mins < 60) return 'il y a ' + mins + ' min';
+                var h = Math.round(mins / 60);
+                if (h < 24) return 'il y a ' + h + ' h';
+                return 'il y a ' + Math.round(h / 24) + ' j';
+            } catch (e2) { return ''; }
+        }
+        function icoOf(n) {
+            return n.severity === 'success' ? '✅' : n.severity === 'warning' ? '⚠️' : n.severity === 'danger' ? '❌' : 'ℹ️';
+        }
+        var html = '<div class="stat-card today-agenda" style="margin-bottom:1.3rem;">' +
+            '<h3>🔔 Derni\u00e8res notifications <a href="notifications.html" class="btn btn-secondary btn-small" style="margin-left:auto;font-size:0.72rem;">Tout voir \u2192</a></h3>' +
+            '<div class="agenda-list">';
+        items.forEach(function (n) {
+            var msg = n.message || '';
+            if (msg.length > 110) msg = msg.slice(0, 107) + '\u2026';
+            html += '<a class="agenda-item" href="notifications.html" style="text-decoration:none;">' +
+                '<span class="notif-ico sev-' + escapeHtml(n.severity) + '">' + icoOf(n) + '</span>' +
+                '<span class="agenda-title" style="flex:1;min-width:0;">' + escapeHtml(msg) + '</span>' +
+                '<span class="form-hint" style="white-space:nowrap;">' + ago(n.created_at) + '</span>' +
+                '</a>';
+        });
+        html += '</div></div>';
+        el.innerHTML = html;
+        el.hidden = false;
+    }
+
     function render() {
         renderTodayAgenda();
         renderMostWaited();
+        renderLastNotifs();
 
         var total = one('SELECT COUNT(*) v FROM members');
         var active = one('SELECT COUNT(*) v FROM members WHERE date(end_date) >= date(\'now\') OR end_date IS NULL');
