@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquette 1 — Néobrutalisme</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+:root {
+    --ink: #111111;
+    --paper: #FFF8E7;
+    --pop: #FF5D8F;
+    --electric: #4D7CFE;
+    --lime: #B8F135;
+    --sun: #FFC900;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Space Grotesk', sans-serif; background: var(--paper); color: var(--ink); display: flex; min-height: 100vh; }
+.side { width: 230px; background: var(--ink); padding: 1.4rem 0; flex-shrink: 0; }
+.brand { color: var(--sun); font-weight: 700; font-size: 1.25rem; padding: 0 1.2rem 1.2rem; border-bottom: 3px solid #333; margin-bottom: 1rem; }
+.brand small { display: block; color: #888; font-size: 0.7rem; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; }
+.nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1.2rem; color: #CCC; text-decoration: none; font-weight: 500; border-left: 6px solid transparent; margin: 2px 0; }
+.nav a:hover { color: #fff; background: #222; }
+.nav a.active { background: var(--pop); color: var(--ink); border-left: 6px solid var(--ink); font-weight: 700; }
+.nav .ico { font-size: 1.1rem; }
+.nav .badge { margin-left: auto; background: var(--sun); color: var(--ink); font-weight: 700; font-size: 0.7rem; padding: 0.1rem 0.5rem; border: 2px solid var(--ink); }
+.main { flex: 1; padding: 1.6rem 2rem; max-width: 1100px; }
+.topbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem; }
+h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: -1px; text-transform: uppercase; }
+h1 em { font-style: normal; background: var(--sun); padding: 0 0.4rem; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+.search { flex: 1; max-width: 380px; padding: 0.7rem 1rem; border: 3px solid var(--ink); background: #fff; font-family: inherit; font-weight: 500; box-shadow: 4px 4px 0 var(--ink); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; margin-bottom: 1.8rem; }
+.kpi { background: #fff; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 1rem 1.2rem; }
+.kpi:nth-child(1) { background: var(--lime); }
+.kpi:nth-child(2) { background: var(--sun); }
+.kpi:nth-child(3) { background: var(--pop); }
+.kpi:nth-child(4) { background: var(--electric); color: #fff; }
+.kpi .num { font-size: 2.2rem; font-weight: 700; line-height: 1; }
+.kpi .lab { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.3rem; }
+.card { background: #fff; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 1.3rem 1.4rem; margin-bottom: 1.4rem; }
+.card h3 { font-size: 1.05rem; font-weight: 700; text-transform: uppercase; display: inline-block; background: var(--ink); color: #fff; padding: 0.25rem 0.8rem; margin-bottom: 1rem; }
+.row { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0.9rem; border: 2px solid var(--ink); margin-bottom: 0.6rem; background: var(--paper); font-weight: 500; }
+.row:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); }
+.slot { background: var(--sun); border: 2px solid var(--ink); padding: 0.15rem 0.55rem; font-weight: 700; font-size: 0.75rem; }
+.slot.pm { background: var(--pop); }
+.count { margin-left: auto; background: var(--lime); border: 2px solid var(--ink); padding: 0.15rem 0.6rem; font-weight: 700; font-size: 0.8rem; }
+.rank { display: inline-flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; background: var(--pop); border: 2px solid var(--ink); font-weight: 700; flex-shrink: 0; }
+.hint { font-size: 0.75rem; color: #666; font-weight: 500; }
+.notif { display: flex; gap: 0.8rem; align-items: flex-start; border-bottom: 2px dashed #CCC; padding: 0.7rem 0.3rem; }
+.notif .sev { font-size: 1.1rem; }
+.notif .msg { font-weight: 500; font-size: 0.9rem; }
+.notif .meta { font-size: 0.72rem; color: #888; font-weight: 500; }
+.tag { display: inline-block; border: 2px solid var(--ink); padding: 0.05rem 0.5rem; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; background: var(--electric); color: #fff; }
+.tag.alert { background: var(--pop); color: var(--ink); }
+.tag.attente { background: var(--lime); color: var(--ink); }
+</style>
+</head>
+<body>
+<nav class="side">
+    <div class="brand">Atelier du Web<small>EPN · Saint-Gilles</small></div>
+    <div class="nav">
+        <a href="#"><span class="ico">📊</span> Tableau de bord</a>
+        <a href="#"><span class="ico">👥</span> Membres</a>
+        <a href="#"><span class="ico">🎓</span> Formations</a>
+        <a href="#"><span class="ico">📅</span> Salles</a>
+        <a href="#"><span class="ico">🛠️</span> Incidents</a>
+        <a href="#"><span class="ico">💡</span> Suggestions</a>
+        <a href="#" class="active"><span class="ico">🔔</span> Notifications <span class="badge">3</span></a>
+    </div>
+</nav>
+<main class="main">
+    <div class="topbar">
+        <h1><em>Notifications</em></h1>
+        <input class="search" placeholder="Rechercher : membre, formation, incident…">
+    </div>
+    <div class="kpis">
+        <div class="kpi"><div class="num">3</div><div class="lab">Alertes</div></div>
+        <div class="kpi"><div class="num">5</div><div class="lab">En attente</div></div>
+        <div class="kpi"><div class="num">12</div><div class="lab">Synchros</div></div>
+        <div class="kpi"><div class="num">38</div><div class="lab">Total</div></div>
+    </div>
+    <div class="card">
+        <h3>📅 Aujourd'hui à l'Atelier</h3>
+        <div class="row"><span class="slot">Matin</span><strong>Créez des designs avec Canva</strong><span class="hint">de 9h30 à 12h30 · L'Atelier du web</span><span class="count">6 inscrits</span></div>
+        <div class="row"><span class="slot pm">A-midi</span><strong>Initiation à WordPress</strong><span class="hint">de 13h30 à 16h30 · Salle 2</span><span class="count">4 inscrits</span></div>
+    </div>
+    <div class="card">
+        <h3>🎯 Les plus attendues</h3>
+        <div class="row"><span class="rank">1</span><strong>Créez des designs avec Canva</strong><span class="count">5 en attente</span></div>
+        <div class="row"><span class="rank">2</span><strong>Initiation à WordPress</strong><span class="count">4 en attente</span></div>
+    </div>
+    <div class="card">
+        <h3>🔔 Dernières notifications</h3>
+        <div class="notif">
+            <span class="sev">⚠️</span>
+            <div>
+                <div class="msg">« Créez des designs avec Canva » n'a pas de salle attribuée</div>
+                <div class="meta">il y a 2 h · <span class="tag alert">Alerte</span></div>
+            </div>
+        </div>
+        <div class="notif">
+            <span class="sev">🎯</span>
+            <div>
+                <div class="msg">3 membres en attente pour « Initiation à WordPress » — nouvelles dates dispo</div>
+                <div class="meta">il y a 5 h · <span class="tag attente">Attente</span></div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

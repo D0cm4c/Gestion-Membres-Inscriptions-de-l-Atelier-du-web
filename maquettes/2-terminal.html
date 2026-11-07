@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquette 2 — Terminal</title>
+<style>
+:root {
+    --bg: #0A0E0A;
+    --panel: #0F150F;
+    --phos: #33FF66;
+    --phos-dim: #1E9944;
+    --amber: #FFB000;
+    --cyan: #00D4FF;
+    --grid: #1A241A;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'IBM Plex Mono', 'Fira Mono', 'Courier New', monospace; background: var(--bg); color: var(--phos); display: flex; min-height: 100vh; font-size: 14px; }
+.side { width: 240px; border-right: 1px solid var(--grid); padding: 1.2rem 0; flex-shrink: 0; background: var(--panel); }
+.brand { padding: 0 1.2rem 1rem; border-bottom: 1px solid var(--grid); margin-bottom: 1rem; }
+.brand .t1 { font-weight: 700; color: var(--phos); font-size: 1rem; }
+.brand .t1::before { content: '> '; color: var(--phos-dim); }
+.brand .t2 { color: var(--phos-dim); font-size: 0.72rem; margin-top: 0.2rem; }
+.nav a { display: block; padding: 0.55rem 1.2rem; color: var(--phos-dim); text-decoration: none; font-size: 0.85rem; border-left: 2px solid transparent; }
+.nav a::before { content: '$ '; opacity: 0.5; }
+.nav a:hover { color: var(--phos); background: var(--grid); }
+.nav a.active { color: var(--bg); background: var(--phos); border-left: 2px solid var(--amber); font-weight: 700; }
+.nav a.active::before { content: ''; }
+.nav a .badge { color: var(--amber); font-weight: 700; float: right; }
+.main { flex: 1; padding: 1.4rem 2rem; max-width: 1000px; }
+.topbar { display: flex; align-items: center; gap: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--grid); margin-bottom: 1.4rem; }
+.prompt { color: var(--phos-dim); }
+.prompt b { color: var(--phos); }
+h1 { font-size: 1.15rem; font-weight: 700; color: var(--cyan); }
+.search { flex: 1; max-width: 400px; background: transparent; border: 1px solid var(--grid); border-bottom-color: var(--phos-dim); color: var(--phos); font-family: inherit; padding: 0.5rem 0.8rem; font-size: 0.85rem; }
+.search:focus { outline: none; border-color: var(--phos); box-shadow: 0 0 12px rgba(51,255,102,0.25); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi { border: 1px solid var(--grid); padding: 0.9rem 1rem; background: var(--panel); position: relative; }
+.kpi::before { content: attr(data-sys); position: absolute; top: -0.55rem; left: 0.8rem; background: var(--bg); color: var(--phos-dim); font-size: 0.65rem; padding: 0 0.4rem; }
+.kpi .num { font-size: 1.9rem; font-weight: 700; color: var(--cyan); }
+.kpi.hot .num { color: var(--amber); }
+.kpi .lab { font-size: 0.7rem; color: var(--phos-dim); margin-top: 0.2rem; }
+.panel { border: 1px solid var(--grid); background: var(--panel); margin-bottom: 1.3rem; }
+.panel header { padding: 0.55rem 1rem; border-bottom: 1px solid var(--grid); color: var(--phos); font-size: 0.82rem; font-weight: 700; }
+.panel .body { padding: 0.9rem 1rem; }
+.line { display: flex; align-items: center; gap: 0.8rem; padding: 0.5rem 0.6rem; border-bottom: 1px dashed var(--grid); font-size: 0.85rem; color: var(--phos); }
+.line:last-child { border-bottom: none; }
+.line:hover { background: var(--grid); }
+.line .t { color: var(--amber); font-size: 0.72rem; }
+.line .n { color: var(--cyan); font-weight: 700; margin-left: auto; }
+.line .rank { color: var(--phos-dim); }
+.notif-line { padding: 0.6rem 0.6rem; border-bottom: 1px dashed var(--grid); font-size: 0.82rem; }
+.notif-line .sev { margin-right: 0.5rem; }
+.notif-line .meta { color: var(--phos-dim); font-size: 0.72rem; margin-top: 0.2rem; }
+.tag { border: 1px solid; padding: 0 0.4rem; font-size: 0.65rem; text-transform: uppercase; }
+.tag.alert { color: var(--amber); border-color: var(--amber); }
+.tag.attente { color: var(--cyan); border-color: var(--cyan); }
+body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.12) 2px 4px); pointer-events: none; }
+</style>
+</head>
+<body>
+<nav class="side">
+    <div class="brand">
+        <div class="t1">atelier-du-web</div>
+        <div class="t2">EPN://Saint-Gilles · v2.0</div>
+    </div>
+    <div class="nav">
+        <a href="#">dashboard</a>
+        <a href="#">membres</a>
+        <a href="#">formations</a>
+        <a href="#">salles</a>
+        <a href="#">incidents</a>
+        <a href="#">suggestions</a>
+        <a href="#" class="active">notifications <span class="badge">[3]</span></a>
+    </div>
+</nav>
+<main class="main">
+    <div class="topbar">
+        <span class="prompt"><b>adw</b>:~/notifications$</span>
+        <h1>ls -la --alerts</h1>
+        <input class="search" placeholder="grep membre|formation…">
+    </div>
+    <div class="kpis">
+        <div class="kpi hot" data-sys="ALERTES"><div class="num">3</div><div class="lab">à traiter</div></div>
+        <div class="kpi" data-sys="ATTENTE"><div class="num">5</div><div class="lab">membres</div></div>
+        <div class="kpi" data-sys="SYNCHRO"><div class="num">12</div><div class="lab">entrées</div></div>
+        <div class="kpi" data-sys="TOTAL"><div class="num">38</div><div class="lab">notifications</div></div>
+    </div>
+    <div class="panel">
+        <header>agenda --today</header>
+        <div class="body">
+            <div class="line"><span class="t">[MATIN]</span> créez-des-designs-avec-canva <span class="n">6 inscrits</span></div>
+            <div class="line"><span class="t">[A-MIDI]</span> initiation-à-wordpress <span class="n">4 inscrits</span></div>
+        </div>
+    </div>
+    <div class="panel">
+        <header>waitlist --top</header>
+        <div class="body">
+            <div class="line"><span class="rank">01</span> créez-des-designs-avec-canva <span class="n">5 en attente</span></div>
+            <div class="line"><span class="rank">02</span> initiation-à-wordpress <span class="n">4 en attente</span></div>
+        </div>
+    </div>
+    <div class="panel">
+        <header>tail -f notifications.log</header>
+        <div class="body">
+            <div class="notif-line">
+                <span class="sev">⚠</span> « Canva » : salle manquante — planifier
+                <div class="meta">il y a 2 h · <span class="tag alert">alerte</span></div>
+            </div>
+            <div class="notif-line">
+                <span class="sev">◆</span> 3 membres en attente pour « WordPress » — nouvelles dates
+                <div class="meta">il y a 5 h · <span class="tag attente">attente</span></div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

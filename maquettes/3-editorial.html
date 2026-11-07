@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquette 3 — Éditorial papier</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Libre+Franklin:wght@400;500;600&display=swap');
+:root {
+    --paper: #FAF6EE;
+    --ink: #1C1917;
+    --soft: #6B6459;
+    --rule: #D8D0C0;
+    --vermillon: #D93A2B;
+    --olive: #6B7A3A;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Libre Franklin', sans-serif; background: var(--paper); color: var(--ink); display: flex; min-height: 100vh; font-size: 15px; line-height: 1.55; }
+.side { width: 230px; border-right: 1px solid var(--ink); padding: 2rem 0; flex-shrink: 0; }
+.brand { padding: 0 1.4rem 1.4rem; border-bottom: 3px double var(--ink); margin-bottom: 1.2rem; }
+.brand .t1 { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.3rem; line-height: 1.1; letter-spacing: -0.5px; }
+.brand .t2 { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2.5px; color: var(--soft); margin-top: 0.4rem; }
+.nav a { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.6rem 1.4rem; color: var(--ink); text-decoration: none; font-size: 0.88rem; border-bottom: 1px solid var(--rule); }
+.nav a:hover { background: var(--ink); color: var(--paper); }
+.nav a.active { font-weight: 600; color: var(--vermillon); font-style: italic; }
+.nav a.active::before { content: '❧ '; }
+.nav .badge { margin-left: auto; color: var(--paper); background: var(--vermillon); font-size: 0.65rem; font-weight: 600; padding: 0.05rem 0.45rem; border-radius: 999px; }
+.main { flex: 1; padding: 2rem 2.4rem; max-width: 980px; }
+.masthead { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 3px double var(--ink); padding-bottom: 0.8rem; margin-bottom: 1.6rem; }
+.masthead h1 { font-family: 'Fraunces', serif; font-weight: 900; font-size: 2.1rem; letter-spacing: -1px; }
+.masthead .date { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--soft); }
+.search { width: 100%; border: none; border-bottom: 1px solid var(--ink); background: transparent; font-family: 'Fraunces', serif; font-style: italic; font-size: 1rem; padding: 0.5rem 0.1rem; margin-bottom: 1.8rem; color: var(--ink); }
+.search::placeholder { color: var(--soft); }
+.search:focus { outline: none; border-bottom-color: var(--vermillon); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); margin-bottom: 2rem; }
+.kpi { padding: 1rem 1.2rem; border-right: 1px solid var(--rule); }
+.kpi:last-child { border-right: none; }
+.kpi .num { font-family: 'Fraunces', serif; font-weight: 600; font-size: 2.4rem; line-height: 1; font-variant-numeric: oldstyle-nums; }
+.kpi.hot .num { color: var(--vermillon); }
+.kpi .lab { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--soft); margin-top: 0.35rem; }
+section { margin-bottom: 2.2rem; }
+section > h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.15rem; border-bottom: 1px solid var(--ink); padding-bottom: 0.4rem; margin-bottom: 0.9rem; display: flex; align-items: baseline; gap: 0.6rem; }
+section > h2 .count { font-family: 'Libre Franklin', sans-serif; font-size: 0.72rem; color: var(--soft); font-weight: 400; margin-left: auto; letter-spacing: 1px; text-transform: uppercase; }
+.row { display: flex; align-items: baseline; gap: 1rem; padding: 0.65rem 0.2rem; border-bottom: 1px dotted var(--rule); text-decoration: none; color: var(--ink); }
+.row:hover { background: #F3EDDF; }
+.row .slot { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--olive); width: 4.2rem; flex-shrink: 0; }
+.row .slot.pm { color: var(--vermillon); }
+.row .title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.02rem; }
+.row .hint { font-size: 0.78rem; color: var(--soft); font-style: italic; }
+.row .n { margin-left: auto; font-variant-numeric: oldstyle-nums; font-size: 0.95rem; color: var(--soft); flex-shrink: 0; }
+.row .rank { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.3rem; color: var(--vermillon); width: 1.6rem; flex-shrink: 0; }
+.notif { padding: 0.75rem 0.2rem; border-bottom: 1px dotted var(--rule); }
+.notif .msg { font-size: 0.92rem; }
+.notif .msg b { font-family: 'Fraunces', serif; }
+.notif .meta { font-size: 0.72rem; color: var(--soft); font-style: italic; margin-top: 0.2rem; display: flex; gap: 0.7rem; align-items: center; }
+.tag { font-style: normal; text-transform: uppercase; letter-spacing: 1px; font-size: 0.62rem; font-weight: 600; color: var(--vermillon); border: 1px solid currentColor; padding: 0.05rem 0.4rem; }
+.tag.attente { color: var(--olive); }
+.notif:first-of-type .msg::first-letter { font-family: 'Fraunces', serif; font-weight: 900; font-size: 2.6rem; float: left; line-height: 0.8; padding-right: 0.4rem; color: var(--vermillon); }
+</style>
+</head>
+<body>
+<nav class="side">
+    <div class="brand">
+        <div class="t1">Atelier<br>du Web</div>
+        <div class="t2">EPN · Saint-Gilles</div>
+    </div>
+    <div class="nav">
+        <a href="#">Tableau de bord</a>
+        <a href="#">Membres</a>
+        <a href="#">Formations</a>
+        <a href="#">Salles</a>
+        <a href="#">Incidents</a>
+        <a href="#">Suggestions</a>
+        <a href="#" class="active">Notifications <span class="badge">3</span></a>
+    </div>
+</nav>
+<main class="main">
+    <div class="masthead">
+        <h1>Notifications</h1>
+        <span class="date">Vendredi 6 novembre 2026</span>
+    </div>
+    <input class="search" placeholder="Rechercher dans les archives…">
+    <div class="kpis">
+        <div class="kpi hot"><div class="num">3</div><div class="lab">Alertes</div></div>
+        <div class="kpi"><div class="num">5</div><div class="lab">En attente</div></div>
+        <div class="kpi"><div class="num">12</div><div class="lab">Synchros</div></div>
+        <div class="kpi"><div class="num">38</div><div class="lab">Total</div></div>
+    </div>
+    <section>
+        <h2>Aujourd'hui à l'Atelier <span class="count">2 formations</span></h2>
+        <a class="row" href="#">
+            <span class="slot">Matin</span>
+            <span class="title">Créez des designs avec Canva</span>
+            <span class="hint">de 9h30 à 12h30 · L'Atelier du web</span>
+            <span class="n">6 inscrits</span>
+        </a>
+        <a class="row" href="#">
+            <span class="slot pm">A-midi</span>
+            <span class="title">Initiation à WordPress</span>
+            <span class="hint">de 13h30 à 16h30 · Salle 2</span>
+            <span class="n">4 inscrits</span>
+        </a>
+    </section>
+    <section>
+        <h2>Les plus attendues <span class="count">9 membres en liste d'attente</span></h2>
+        <a class="row" href="#">
+            <span class="rank">1</span>
+            <span class="title">Créez des designs avec Canva</span>
+            <span class="n">5 en attente</span>
+        </a>
+        <a class="row" href="#">
+            <span class="rank">2</span>
+            <span class="title">Initiation à WordPress</span>
+            <span class="n">4 en attente</span>
+        </a>
+    </section>
+    <section>
+        <h2>Dernières brèves</h2>
+        <div class="notif">
+            <div class="msg"><b>Salle manquante</b> — « Créez des designs avec Canva » attend une affectation dans le planning.</div>
+            <div class="meta">il y a 2 h <span class="tag">Alerte</span></div>
+        </div>
+        <div class="notif">
+            <div class="msg">Trois membres attendent une nouvelle session d'« Initiation à WordPress » — les dates sont disponibles.</div>
+            <div class="meta">il y a 5 h <span class="tag attente">Attente</span></div>
+        </div>
+    </section>
+</main>
+</body>
+</html>
