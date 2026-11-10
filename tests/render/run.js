@@ -225,6 +225,44 @@ function main() {
                 });
             });
 
+            // ===== Page Statistiques : le chart doit se declarer (regression chartMode) =====
+            chain = chain.then(function () {
+                return browser.newPage().then(function (page) {
+                    var errs = [];
+                    page.on("pageerror", function (e) { errs.push(String(e)); });
+                    return page.goto(base + "stats.html", { waitUntil: "load" })
+                        .then(function () { return page.waitForTimeout(1000); })
+                        .then(function () {
+                            return page.evaluate(function () {
+                                var card = document.getElementById('visitsChartCard');
+                                var chart = document.getElementById('visitsChart');
+                                return {
+                                    chartVisible: !!(card && !card.hidden),
+                                    hasBars: !!(chart && chart.children.length > 0),
+                                    totalFilled: !!(document.getElementById('statTotal'))
+                                };
+                            });
+                        })
+                        .then(function (s) {
+                            var checks = [
+                                ["carte graphique visible (chartMode ok)", s.chartVisible],
+                                ["barres du graphique rendues", s.hasBars],
+                                ["KPI membres present", s.totalFilled]
+                            ];
+                            var fails = checks.filter(function (c) { return !c[1]; });
+                            if (errs.length) fails.push(["erreurs JS", false, errs.join(" | ")]);
+                            if (fails.length) {
+                                failures++;
+                                console.error("ECHEC stats.html (chart/heatmap)");
+                                fails.forEach(function (f) { console.error("    - " + f[0]); });
+                            } else {
+                                console.log("OK stats.html (graphique + heatmap rendus)");
+                            }
+                            return page.close();
+                        });
+                });
+            });
+
             // ===== Page Notifications : scenario comportemental =====
             // Seeder des notifs, tester filtres + marquage individuel + pagination.
             chain = chain.then(function () {
