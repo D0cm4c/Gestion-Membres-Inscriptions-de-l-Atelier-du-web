@@ -66,8 +66,13 @@
                 </div>
             </div>
 
-            <section id="todayAgenda" class="span-2" aria-label="Agenda du jour" hidden></section>
-            <section id="lastNotifs" class="span-2" aria-label="Dernières notifications" hidden></section>
+            <section id="todayAgenda" class="span-4" aria-label="Agenda du jour" hidden></section>
+
+            <div class="stat-card span-2">
+                <h2>📋 Dernières visites</h2>
+                <ul class="recent-list" id="recentVisits"></ul>
+                <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> · Dernière : <strong id="statLastVisit">—</strong></p>
+            </div>
 
             <div class="stat-card span-2" id="printsDueCard">
                 <h2>🖨️ Impressions à solder</h2>
@@ -76,14 +81,12 @@
                 <a class="btn btn-secondary btn-small" href="membres.html?prints=due" style="margin-top:0.75rem;">→ Voir tous les membres concernés</a>
             </div>
 
+            <section id="lastNotifs" class="span-2" aria-label="Dernières notifications" hidden></section>
+
+
             <section id="mostWaited" class="span-2" aria-label="Formations les plus attendues" hidden></section>
 
-            <div class="stat-card span-4">
-                <h2>📋 Dernières visites</h2>
-                <ul class="recent-list" id="recentVisits"></ul>
-                <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> · Dernière : <strong id="statLastVisit">—</strong></p>
-            </div>
-        </section>
+
         </section>
 
         <section class="quick-actions" hidden id="quickActions">
