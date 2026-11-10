@@ -257,11 +257,13 @@ function main() {
                                         var chart = document.getElementById('visitsChart');
                                         var legend = document.getElementById('statusDonutLegend');
                                         var donut = document.getElementById('statusDonut');
+                                        var loading = document.getElementById('dashLoading');
                                         return {
                                             chartVisible: !!(card && !card.hidden),
                                             hasBars: !!(chart && chart.children.length > 0),
                                             donutLegendFilled: !!(legend && legend.children.length > 0),
-                                            donutStyled: !!(donut && donut.style && (donut.style.background || donut.style.backgroundImage))
+                                            donutStyled: !!(donut && donut.style && (donut.style.background || donut.style.backgroundImage)),
+                                            loadingHidden: !!(loading && loading.hidden)
                                         };
                                     });
                                 });
@@ -271,7 +273,8 @@ function main() {
                                 ["carte graphique visible (chartMode ok)", s && s.chartVisible],
                                 ["barres du graphique rendues", s && s.hasBars],
                                 ["donut statuts sociaux rempli (STATUS_COLORS ok)", s && s.donutLegendFilled],
-                                ["donut style applique", s && s.donutStyled]
+                                ["donut style applique", s && s.donutStyled],
+                                ["loader caché après chargement", s && s.loadingHidden]
                             ];
                             var fails = checks.filter(function (c) { return !c[1]; });
                             if (errs.length) fails.push(["erreurs JS", false, errs.join(" | ")]);
