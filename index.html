@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://atelierduweb.be; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
     <title>Tableau de bord — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=68">
+    <link rel="stylesheet" href="styles.css?v=69">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -36,49 +36,53 @@
             <p>⏳ Chargement des données…</p>
         </div>
 
-        <section class="mosaic" id="dashboardMosaic" aria-label="Tableau de bord en mosaïque">
-            <div class="kpi-card kpi-hero span-2">
-                <span class="kpi-icon" aria-hidden="true">📅</span>
+        <section class="mosaic" id="dashboardMosaic" aria-label="Tableau de bord en mosa\u00efque">
+            <div class="kpi-card kpi-hero">
+                <span class="kpi-icon" aria-hidden="true">\U0001F4C5</span>
                 <div>
                     <div class="stat-num" id="statVisitsToday">0</div>
                     <div class="stat-label">Visites aujourd'hui</div>
                 </div>
             </div>
-            <div class="kpi-card span-2">
-                <span class="kpi-icon" aria-hidden="true">🛠️</span>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">\U0001F6E0\uFE0F</span>
                 <div>
                     <div class="stat-num" id="statTicketsOpen">0</div>
                     <div class="stat-label">Incidents ouverts</div>
                 </div>
             </div>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">\U0001F9D1\u200D\U0001F91D\u200D\U0001F9D1</span>
+                <div>
+                    <div class="stat-num" id="statFluxNew">0</div>
+                    <div class="stat-label">Nouveaux aujourd'hui</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">\U0001F3AF</span>
+                <div>
+                    <div class="stat-num" id="statWaiting">0</div>
+                    <div class="stat-label">En liste d'attente</div>
+                </div>
+            </div>
 
             <section id="todayAgenda" class="span-2" aria-label="Agenda du jour" hidden></section>
-            <section id="lastNotifs" class="span-2" aria-label="Dernières notifications" hidden></section>
-
-            <div class="stat-card span-1 ghost">
-                <h2>🧑‍🤝‍🧑 Nouveaux usagers du jour</h2>
-                <ul style="list-style:none;">
-                    <li><strong>Visites du jour :</strong> <span id="fluxTotal">—</span></li>
-                    <li><strong>Nouveaux (première visite) :</strong> <span id="fluxNew">—</span></li>
-                    <li><strong>Usagers connus :</strong> <span id="fluxKnown">—</span></li>
-                </ul>
-                <p class="form-hint" id="fluxHint"></p>
-            </div>
-
-            <div class="stat-card span-3">
-                <h2>📋 Dernières visites</h2>
-                <ul class="recent-list" id="recentVisits"></ul>
-                <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> · Dernière : <strong id="statLastVisit">—</strong></p>
-            </div>
+            <section id="lastNotifs" class="span-2" aria-label="Derni\u00e8res notifications" hidden></section>
 
             <div class="stat-card span-2" id="printsDueCard">
-                <h2>🖨️ Impressions à solder</h2>
+                <h2>\U0001F5A8\uFE0F Impressions \u00e0 solder</h2>
                 <ul class="recent-list" id="printsDueList"></ul>
                 <p class="form-hint" id="printsDueTotal"></p>
-                <a class="btn btn-secondary btn-small" href="membres.html?prints=due" style="margin-top:0.75rem;">→ Voir tous les membres concernés</a>
+                <a class="btn btn-secondary btn-small" href="membres.html?prints=due" style="margin-top:0.75rem;">\u2192 Voir tous les membres concern\u00e9s</a>
             </div>
 
             <section id="mostWaited" class="span-2" aria-label="Formations les plus attendues" hidden></section>
+
+            <div class="stat-card span-4">
+                <h2>\U0001F4CB Derni\u00e8res visites</h2>
+                <ul class="recent-list" id="recentVisits"></ul>
+                <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> \u00b7 Derni\u00e8re : <strong id="statLastVisit">\u2014</strong></p>
+            </div>
         </section>
         </section>
 
@@ -143,7 +147,7 @@
     <script src="db.js?v=43"></script>
     <script src="suggestions.js?v=2"></script>
     <script src="globalsearch.js?v=3"></script>
-    <script src="dashboard.js?v=33"></script>
+    <script src="dashboard.js?v=34"></script>
 <script>
         // PWA : enregistrement du service worker (silencieux si non supporté)
         if ('serviceWorker' in navigator) {

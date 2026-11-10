@@ -248,22 +248,19 @@
         cards.forEach(function (c) { c.removeAttribute('hidden'); });
         if (loading) loading.hidden = true;
 
-        renderFlux();
-        renderRecentVisits();
-        renderPrintsDue();
-    }
-
-    // Nouveaux vs connus du jour (extrait de l'ancienne renderAnalytics — reste au dashboard)
-    function renderFlux() {
+        // KPI Nouveaux aujourd'hui (ex-carte flux) + KPI En liste d'attente
         var todayFlux = ADWDatabase.queryAll(
             "SELECT v.member_id, (SELECT COUNT(*) FROM visits v2 WHERE v2.member_id = v.member_id AND v2.visit_date < v.visit_date) AS prior " +
             "FROM visits v WHERE v.visit_date = date('now')");
         var newToday = 0;
         todayFlux.forEach(function (r) { if (r.prior === 0) newToday++; });
-        setText('fluxTotal', String(todayFlux.length));
-        setText('fluxNew', newToday + (todayFlux.length ? ' (' + Math.round((newToday / todayFlux.length) * 100) + ' %)' : ''));
-        setText('fluxKnown', String(todayFlux.length - newToday));
-        setText('fluxHint', 'Chaque visite d\u2019un nouveau usager compte double : il d\u00e9couvre le service.');
+        setText('statFluxNew', newToday);
+        var waiting = 0;
+        try { waiting = one('SELECT COUNT(*) v FROM waitlist'); } catch (e) {}
+        setText('statWaiting', waiting);
+
+        renderRecentVisits();
+        renderPrintsDue();
     }
 
 

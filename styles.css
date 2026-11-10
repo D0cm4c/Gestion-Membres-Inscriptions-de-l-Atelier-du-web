@@ -220,6 +220,7 @@ body {
 
 .mosaic .span-2 { grid-column: span 2; }
 .mosaic .span-3 { grid-column: span 3; }
+.mosaic .span-4 { grid-column: 1 / -1; }
 .mosaic .span-1 { grid-column: span 1; }
 .mosaic .chart-card { grid-column: 1 / -1; }
 
