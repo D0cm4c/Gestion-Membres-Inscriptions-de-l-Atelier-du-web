@@ -216,7 +216,7 @@
                         (dateInfo ? '<div class="f-card-weekday">' + esc(dateInfo) + '</div>' : '') +
                         '<div class="f-card-time">' + (timeShort ? esc(timeShort) : '') + '</div>' +
                         '</div>' +
-                        (row ? '<a class="f-card-count' + (row.attendee_count ? ' has-attendees' : '') + '" href="formation.html?id=' + encodeURIComponent(ev.id) + '" title="Voir la fiche formation et les inscrits"><span class="f-count-num">' + row.attendee_count + '</span><span class="f-count-lbl">inscrit' + (row.attendee_count > 1 ? 's' : '') + '</span></a>' : '') +
+                        (row ? '<a class="f-card-count' + (row.attendee_count ? ' has-attendees' : '') + '" href="formation.html?id=' + encodeURIComponent(ev.id) + '" title="Voir la fiche formation et les inscrits"><span class="f-count-num">' + row.attendee_count + '/' + (row.paid_count || 0) + '</span><span class="f-count-lbl">inscrit' + (row.attendee_count > 1 ? 's' : '') + '/pay\u00e9' + ((row.paid_count || 0) > 1 ? 's' : '') + '</span></a>' : '') +
                         '</div>' +
                         '<div class="f-card-body">' +
                         '<h3 class="f-card-title">' + esc(ev.title) + '</h3>' +
