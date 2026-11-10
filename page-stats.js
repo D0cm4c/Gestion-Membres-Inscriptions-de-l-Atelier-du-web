@@ -19,7 +19,28 @@
         if (el) el.textContent = String(value);
     }
 
-    var chartMode = 'days'; // granularit\u00e9 du graphique (14 jours / 12 mois)
+    var chartMode = 'days';
+    var ADWDatabase = window.ADWDatabase;
+    var chartDaysBtn = document.getElementById('chartDaysBtn');
+    var chartMonthsBtn = document.getElementById('chartMonthsBtn');
+    var annualReportBtn = document.getElementById('annualReportBtn');
+
+    // Couleurs et libell\u00e9s des statuts sociaux (donut inclusion) \u2014 extraits de dashboard.js
+    var STATUS_COLORS = {
+        cpas: '#2F9BE4',
+        actiris: '#6C5CE7',
+        travailleur: '#18A55F',
+        etudiant: '#EFA02C',
+        pensionne: '#E8734A',
+        mutuelle: '#B57BD6',
+        interim: '#4ECDC4',
+        enfant: '#95A5B8'
+    };
+    var STATUS_NAMES = {
+        cpas: 'CPAS / Orbem', actiris: 'Actiris', travailleur: 'Travailleur.se',
+        etudiant: '\u00c9tudiant', pensionne: 'Pensionn\u00e9', mutuelle: 'Mutuelle',
+        interim: 'Int\u00e9rim', enfant: 'Enfant'
+    };
 
     function eur(v) { return Number(v).toFixed(2).replace('.', ',') + ' \u20ac'; }
 
@@ -286,11 +307,8 @@
         renderChart();
         renderHeatmap();
 
-        var chartDaysBtn = document.getElementById('chartDaysBtn');
-        var chartMonthsBtn = document.getElementById('chartMonthsBtn');
         if (chartDaysBtn) chartDaysBtn.addEventListener('click', function () { renderChart('days'); });
         if (chartMonthsBtn) chartMonthsBtn.addEventListener('click', function () { renderChart('months'); });
-        var annualReportBtn = document.getElementById('annualReportBtn');
         if (annualReportBtn) annualReportBtn.addEventListener('click', buildAnnualReport);
 
         var cards = document.querySelectorAll('.stat-card, .kpi-card, .chart-card');

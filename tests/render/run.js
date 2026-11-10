@@ -226,28 +226,52 @@ function main() {
             });
 
             // ===== Page Statistiques : le chart doit se declarer (regression chartMode) =====
+            // NB : seed de donnees REELLES (membres avec statut social + visites) —
+            // les chemins avec donnees revelent les references non declarees
+            // (STATUS_COLORS etc.) que la base vide ne touche jamais.
             chain = chain.then(function () {
                 return browser.newPage().then(function (page) {
                     var errs = [];
                     page.on("pageerror", function (e) { errs.push(String(e)); });
                     return page.goto(base + "stats.html", { waitUntil: "load" })
-                        .then(function () { return page.waitForTimeout(1000); })
+                        .then(function () { return page.waitForTimeout(900); })
                         .then(function () {
                             return page.evaluate(function () {
-                                var card = document.getElementById('visitsChartCard');
-                                var chart = document.getElementById('visitsChart');
-                                return {
-                                    chartVisible: !!(card && !card.hidden),
-                                    hasBars: !!(chart && chart.children.length > 0),
-                                    totalFilled: !!(document.getElementById('statTotal'))
-                                };
+                                var db = window.ADWDatabase;
+                                if (!db || !db.db) return { seeded: false };
+                                try { db.run("DELETE FROM members"); db.run("DELETE FROM visits"); } catch (e) {}
+                                db.run("INSERT INTO members (id, member_no, first_name, last_name, subscription, social_status, postal_code, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))", ["st1", "9001", "Alice", "Test", "monthly", "cpas", "1060"]);
+                                db.run("INSERT INTO members (id, member_no, first_name, last_name, subscription, social_status, postal_code, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))", ["st2", "9002", "Bob", "Test", "none", "etudiant", "1000"]);
+                                db.run("INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, date('now'), 1)", ["sv1", "st1"]);
+                                db.run("INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, date('now','-1 day'), 1)", ["sv2", "st2"]);
+                                return { seeded: true };
                             });
+                        })
+                        .then(function (seed) {
+                            if (!seed || !seed.seeded) { errs.push("seed impossible"); return null; }
+                            return page.reload({ waitUntil: "load" })
+                                .then(function () { return page.waitForTimeout(1100); })
+                                .then(function () {
+                                    return page.evaluate(function () {
+                                        var card = document.getElementById('visitsChartCard');
+                                        var chart = document.getElementById('visitsChart');
+                                        var legend = document.getElementById('statusDonutLegend');
+                                        var donut = document.getElementById('statusDonut');
+                                        return {
+                                            chartVisible: !!(card && !card.hidden),
+                                            hasBars: !!(chart && chart.children.length > 0),
+                                            donutLegendFilled: !!(legend && legend.children.length > 0),
+                                            donutStyled: !!(donut && donut.style && (donut.style.background || donut.style.backgroundImage))
+                                        };
+                                    });
+                                });
                         })
                         .then(function (s) {
                             var checks = [
-                                ["carte graphique visible (chartMode ok)", s.chartVisible],
-                                ["barres du graphique rendues", s.hasBars],
-                                ["KPI membres present", s.totalFilled]
+                                ["carte graphique visible (chartMode ok)", s && s.chartVisible],
+                                ["barres du graphique rendues", s && s.hasBars],
+                                ["donut statuts sociaux rempli (STATUS_COLORS ok)", s && s.donutLegendFilled],
+                                ["donut style applique", s && s.donutStyled]
                             ];
                             var fails = checks.filter(function (c) { return !c[1]; });
                             if (errs.length) fails.push(["erreurs JS", false, errs.join(" | ")]);
@@ -256,9 +280,11 @@ function main() {
                                 console.error("ECHEC stats.html (chart/heatmap)");
                                 fails.forEach(function (f) { console.error("    - " + f[0]); });
                             } else {
-                                console.log("OK stats.html (graphique + heatmap rendus)");
+                                console.log("OK stats.html (graphique + heatmap + donut rendus avec donnees)");
                             }
-                            return page.close();
+                            return page.evaluate(function () {
+                                try { window.ADWDatabase.run("DELETE FROM members"); window.ADWDatabase.run("DELETE FROM visits"); } catch (e) {}
+                            }).catch(function () {}).then(function () { return page.close(); });
                         });
                 });
             });
