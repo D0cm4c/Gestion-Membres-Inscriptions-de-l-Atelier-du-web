@@ -140,8 +140,8 @@
                 '<div class="hero-actions"><button class="btn btn-primary" id="bookBtn">Réserver sur le site</button>' +
                 '<button class="btn btn-secondary" id="printSheetBtn" title="Feuille de séance imprimable : liste des inscrits avec cases paiement et présence à cocher au stylo">🖨️ Feuille de séance</button></div>' +
                 '<a class="f-card-count' + (attendees.length ? ' has-attendees' : '') + '" style="position:absolute;right:1.4rem;bottom:1rem;text-align:center;" href="#inscrits" title="Voir les inscrits">' +
-                '<span class="f-count-num" style="font-size:3.4rem;line-height:1;font-weight:800;">' + attendees.length + '</span>' +
-                '<span class="f-count-lbl" style="font-size:0.95rem;">inscrit' + (attendees.length > 1 ? 's' : '') + '</span></a>' +
+                '<span class="f-count-num" style="font-size:3.4rem;line-height:1;font-weight:800;">' + attendees.length + '/' + attendees.filter(function (a) { return a.payment; }).length + '</span>' +
+                '<span class="f-count-lbl" style="font-size:0.95rem;">inscrit' + (attendees.length > 1 ? 's' : '') + '/pay\u00e9' + (attendees.filter(function (a) { return a.payment; }).length > 1 ? 's' : '') + '</span></a>' +
                 '</div>';
 
             // ---- KPI de la formation : aperçu de son fonctionnement (oct. 2026) ----

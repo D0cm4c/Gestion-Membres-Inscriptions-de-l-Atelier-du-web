@@ -490,7 +490,10 @@
     };
 
     Database.listFormations = function () {
-        return this.queryAll('SELECT f.*, (SELECT COUNT(*) FROM formations_members fm WHERE fm.formation_id = f.id) AS attendee_count FROM formations f ORDER BY f.start_date ASC');
+        return this.queryAll('SELECT f.*, ' +
+            '(SELECT COUNT(*) FROM formations_members fm WHERE fm.formation_id = f.id) AS attendee_count, ' +
+            '(SELECT COUNT(*) FROM formations_members fm WHERE fm.formation_id = f.id AND fm.payment IS NOT NULL) AS paid_count ' +
+            'FROM formations f ORDER BY f.start_date ASC');
     };
 
     Database.getFormation = function (formationId) {
