@@ -19,6 +19,7 @@ var IS_CI = process.argv.includes('--ci');
 
 var PAGES = [
     { file: 'index.html', title: 'Tableau de bord', activeNav: 'Tableau de bord', searchId: 'siteSearch' },
+    { file: 'stats.html', title: 'Statistiques', activeNav: 'Statistiques', searchId: 'siteSearch' },
     { file: 'membres.html', title: 'Membres', activeNav: 'Membres', searchId: 'searchInput' },
     { file: 'formations.html', title: 'Formations', activeNav: 'Formations', searchId: 'searchInput' },
     { file: 'salles.html', title: 'Planning des salles', activeNav: 'Salles', searchId: null },

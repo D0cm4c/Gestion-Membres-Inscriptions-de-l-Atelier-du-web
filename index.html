@@ -23,11 +23,10 @@
 
     <main id="main">
         <section class="hero">
-            <p class="hero-lead">Vue d'ensemble de votre espace public numérique : membres, abonnements et visites en un coup d'œil.</p>
+            <p class="hero-lead">La journée d'aujourd'hui d'un coup d'œil : formations, visites, alertes et actions à mener. Les statistiques de pilotage vivent sur la page → Statistiques.</p>
             <div class="hero-actions">
                 <button class="btn btn-primary" id="quickCheckinBtn">✅ Pointer une visite</button>
                 <button class="btn btn-primary" id="quickPrintBtn">🖨️ Impression</button>
-                <button class="btn btn-secondary" id="annualReportBtn" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">📊 Rapport annuel</button>
                 <a href="membres.html" class="btn btn-secondary" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">👥 Gérer les membres</a>
                 <a href="https://atelierduweb.be" class="btn btn-secondary" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">🌐 atelierduweb.be</a>
             </div>
@@ -38,99 +37,25 @@
         </div>
 
         <section class="mosaic" id="dashboardMosaic" aria-label="Tableau de bord en mosaïque">
-            <section id="todayAgenda" class="span-2" aria-label="Agenda du jour" hidden data-tile="agenda"></section>
-            <section id="mostWaited" class="span-2" aria-label="Formations les plus attendues" hidden data-tile="waited"></section>
-            <section id="lastNotifs" class="span-2" aria-label="Dernières notifications" hidden data-tile="lastnotifs"></section>
-            <div class="kpi-card" data-tile="kpi0">
-                <span class="kpi-icon" aria-hidden="true">👥</span>
-                <div>
-                    <div class="stat-num" id="statTotal">0</div>
-                    <div class="stat-label">Membres au total</div>
-                </div>
-            </div>
-            <div class="kpi-card" data-tile="kpi1">
-                <span class="kpi-icon" aria-hidden="true">✅</span>
-                <div>
-                    <div class="stat-num" id="statActive">0</div>
-                    <div class="stat-label">Inscriptions actives <span class="kpi-extra" id="statActivePct"></span></div>
-                </div>
-            </div>
-            <div class="kpi-card kpi-hero" data-tile="kpi2">
+            <div class="kpi-card kpi-hero">
                 <span class="kpi-icon" aria-hidden="true">📅</span>
                 <div>
                     <div class="stat-num" id="statVisitsToday">0</div>
                     <div class="stat-label">Visites aujourd'hui</div>
                 </div>
             </div>
-            <div class="kpi-card" data-tile="kpi3">
-                <span class="kpi-icon" aria-hidden="true">💶</span>
-                <div>
-                    <div class="stat-num" id="statRevenueMonth">0 €</div>
-                    <div class="stat-label">Revenus visites ce mois</div>
-                </div>
-            </div>
-            <div class="kpi-card" data-tile="kpi4">
+            <div class="kpi-card">
                 <span class="kpi-icon" aria-hidden="true">🛠️</span>
                 <div>
                     <div class="stat-num" id="statTicketsOpen">0</div>
                     <div class="stat-label">Incidents ouverts</div>
                 </div>
             </div>
-        
 
-        
-            <div class="stat-card span-2" data-tile="members">
-                <h2>📊 Membres</h2>
-                <ul>
-                    <li><strong>Membres actifs :</strong> <span id="statActive2">—</span></li>
-                    <li><strong>Inscriptions expirées :</strong> <span id="statExpired">—</span></li>
-                    <li><strong>Nouveaux ce mois :</strong> <span id="statNewMonth">—</span></li>
-                    <li><strong>Abonnements mensuels (3 €) :</strong> <span id="statMonthly">—</span></li>
-                    <li><strong>Abonnements annuels (30 €) :</strong> <span id="statYearly">—</span></li>
-                </ul>
-            </div>
+            <section id="todayAgenda" class="span-2" aria-label="Agenda du jour" hidden></section>
+            <section id="lastNotifs" class="span-2" aria-label="Dernières notifications" hidden></section>
 
-            <div class="stat-card alerts span-1 ghost" data-tile="alerts">
-                <h2>🚨 Alertes</h2>
-                <ul id="alertsList"></ul>
-            </div>
-
-            <div class="stat-card span-1" data-tile="recent">
-                <h2>📋 Dernières visites</h2>
-                <ul class="recent-list" id="recentVisits"></ul>
-                <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> · Dernière : <strong id="statLastVisit">—</strong></p>
-            </div>
-        
-
-        
-            <div class="stat-card span-2" data-tile="occupancy">
-                <h2>🔥 Occupation des postes</h2>
-                <div class="occupancy-bar" role="img" id="occupancyBar"
-                    aria-label="Taux d'occupation des postes du jour"></div>
-                <ul style="list-style:none;">
-                    <li><strong id="occupancyToday">—</strong></li>
-                    <li class="form-hint" id="occupancyHint"></li>
-                </ul>
-            </div>
-
-            <div class="stat-card span-2" data-tile="retention">
-                <h2>📉 Rétention des inscrits</h2>
-                <ul style="list-style:none;">
-                    <li><strong>Habitués (5+ visites) :</strong> <span id="retRegulars">—</span></li>
-                    <li><strong>One-shot (1 visite) :</strong> <span id="retOneshot">—</span></li>
-                    <li><strong>Inscrits sans aucune visite :</strong> <span id="retNever">—</span></li>
-                    <li><strong>Silencieux (60+ jours sans visite) :</strong> <span id="retSilent">—</span></li>
-                </ul>
-                <p class="form-hint">Les silencieux sont des candidats à la relance.</p>
-            </div>
-
-            <div class="stat-card span-1" data-tile="profile">
-                <h2>🧭 Profil des usagers</h2>
-                <ul style="list-style:none;" id="profileList"></ul>
-                <p class="form-hint" id="profileHint"></p>
-            </div>
-
-            <div class="stat-card span-1 ghost" data-tile="flux">
+            <div class="stat-card span-1 ghost">
                 <h2>🧑‍🤝‍🧑 Nouveaux usagers du jour</h2>
                 <ul style="list-style:none;">
                     <li><strong>Visites du jour :</strong> <span id="fluxTotal">—</span></li>
@@ -140,49 +65,20 @@
                 <p class="form-hint" id="fluxHint"></p>
             </div>
 
-            <div class="stat-card span-2" data-tile="inclusion">
-                <h2>🤝 Inclusion numérique</h2>
-                <ul style="list-style:none;">
-                    <li><strong>Usagers publics vulnérables :</strong> <span id="inclVulnerable">—</span></li>
-                    <li><strong>Part des usagers CPAS / Orbem :</strong> <span id="inclCpas">—</span></li>
-                    <li><strong>Sans-abonnement (accès libre) :</strong> <span id="inclFree">—</span></li>
-                </ul>
-                <p class="form-hint" id="inclHint"></p>
-                <div class="donut-wrap">
-                    <div class="donut" id="statusDonut" role="img" aria-label="Répartition des statuts sociaux"></div>
-                    <ul class="donut-legend" id="statusDonutLegend" style="list-style:none;"></ul>
-                </div>
+            <div class="stat-card span-1">
+                <h2>📋 Dernières visites</h2>
+                <ul class="recent-list" id="recentVisits"></ul>
+                <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> · Dernière : <strong id="statLastVisit">—</strong></p>
             </div>
 
-            <div class="stat-card span-2" id="printsDueCard" data-tile="prints">
+            <div class="stat-card span-2" id="printsDueCard">
                 <h2>🖨️ Impressions à solder</h2>
                 <ul class="recent-list" id="printsDueList"></ul>
                 <p class="form-hint" id="printsDueTotal"></p>
                 <a class="btn btn-secondary btn-small" href="membres.html?prints=due" style="margin-top:0.75rem;">→ Voir tous les membres concernés</a>
             </div>
 
-                <section class="stat-card chart-card" hidden id="visitsChartCard" aria-label="Visualisation des visites" data-tile="chart" style="grid-column: 1 / -1;">
-            <div class="chart-header">
-                <h2>📈 Visites</h2>
-                <div class="segmented" role="group" aria-label="Granularité du graphique">
-                    <button class="seg-btn active" id="chartDaysBtn">14 jours</button>
-                    <button class="seg-btn" id="chartMonthsBtn">12 mois</button>
-                </div>
-            </div>
-            <div id="visitsChart" class="visits-chart"></div>
-            <div class="chart-header" style="margin-top:1.2rem;">
-                <h2>🗓️ Fréquentation — 12 dernières semaines</h2>
-            </div>
-            <div id="heatmap" class="heatmap-grid" role="img" aria-label="Carte de chaleur de la fréquentation quotidienne"></div>
-            <div class="heatmap-legend">
-                <span>Moins</span>
-                <span class="heat-cell"></span>
-                <span class="heat-cell l1"></span>
-                <span class="heat-cell l2"></span>
-                <span class="heat-cell l3"></span>
-                <span class="heat-cell l4"></span>
-                <span>Plus</span>
-            </div>
+            <section id="mostWaited" class="span-2" aria-label="Formations les plus attendues" hidden></section>
         </section>
         </section>
 
@@ -236,7 +132,7 @@
         </div>
     </div>
 
-    <script src="layout.js?v=6"></script>
+    <script src="layout.js?v=8"></script>
     <script src="escape.js?v=1"></script>
     <script src="auth.js?v=2"></script>
     <script src="backup.js?v=2"></script>
@@ -247,7 +143,7 @@
     <script src="db.js?v=43"></script>
     <script src="suggestions.js?v=2"></script>
     <script src="globalsearch.js?v=3"></script>
-    <script src="dashboard.js?v=31"></script>
+    <script src="dashboard.js?v=33"></script>
 <script>
         // PWA : enregistrement du service worker (silencieux si non supporté)
         if ('serviceWorker' in navigator) {

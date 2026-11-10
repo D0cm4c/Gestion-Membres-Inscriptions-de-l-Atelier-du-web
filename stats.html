@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://atelierduweb.be; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+    <title>Statistiques — Atelier du Web</title>
+    <link rel="stylesheet" href="styles.css?v=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0F3D5C">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+</head>
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <div class="app-layout">
+        <div data-layout-sidebar></div>
+<div class="app-main">
+        <div data-layout-topbar data-title="Statistiques" data-search-id="siteSearch" data-search-label="Rechercher" data-search-placeholder="Rechercher sur atelierduweb.be..."></div>
+
+    <main id="main">
+        <section class="hero">
+            <p class="hero-lead">Le pilotage de l'Atelier : santé des membres, rétention, profil des usagers et fréquentation — les chiffres pour la directrice et les rapports de la asbl.</p>
+            <div class="hero-actions">
+                <button class="btn btn-secondary" id="annualReportBtn" style="background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.3);">📊 Rapport annuel (CSV)</button>
+            </div>
+        </section>
+
+        <div class="empty-state" id="dashLoading">
+            <p>⏳ Chargement des statistiques…</p>
+        </div>
+
+        <section class="mosaic" id="statsMosaic" aria-label="Statistiques en mosaïque">
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">👥</span>
+                <div>
+                    <div class="stat-num" id="statTotal">0</div>
+                    <div class="stat-label">Membres au total</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">✅</span>
+                <div>
+                    <div class="stat-num" id="statActive">0</div>
+                    <div class="stat-label">Inscriptions actives <span class="kpi-extra" id="statActivePct"></span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon" aria-hidden="true">💶</span>
+                <div>
+                    <div class="stat-num" id="statRevenueMonth">0 €</div>
+                    <div class="stat-label">Revenus visites ce mois</div>
+                </div>
+            </div>
+
+            <div class="stat-card span-2">
+                <h2>📊 Membres</h2>
+                <ul>
+                    <li><strong>Inscriptions expirées :</strong> <span id="statExpired">—</span></li>
+                    <li><strong>Nouveaux ce mois :</strong> <span id="statNewMonth">—</span></li>
+                    <li><strong>Abonnements mensuels (3 €) :</strong> <span id="statMonthly">—</span></li>
+                    <li><strong>Abonnements annuels (30 €) :</strong> <span id="statYearly">—</span></li>
+                </ul>
+            </div>
+
+            <div class="stat-card span-2">
+                <h2>📈 Rétention des inscrits</h2>
+                <ul style="list-style:none;">
+                    <li><strong>Habitués (5+ visites) :</strong> <span id="retRegulars">—</span></li>
+                    <li><strong>One-shot (1 visite) :</strong> <span id="retOneshot">—</span></li>
+                    <li><strong>Inscrits sans aucune visite :</strong> <span id="retNever">—</span></li>
+                    <li><strong>Silencieux (60+ jours sans visite) :</strong> <span id="retSilent">—</span></li>
+                </ul>
+                <p class="form-hint">Les silencieux sont des candidats à la relance.</p>
+            </div>
+
+            <div class="stat-card span-1">
+                <h2>🧭 Profil des usagers</h2>
+                <ul style="list-style:none;" id="profileList"></ul>
+                <p class="form-hint" id="profileHint"></p>
+            </div>
+
+            <div class="stat-card span-2">
+                <h2>🤝 Inclusion numérique</h2>
+                <ul style="list-style:none;">
+                    <li><strong>Usagers publics vulnérables :</strong> <span id="inclVulnerable">—</span></li>
+                    <li><strong>Part des usagers CPAS / Orbem :</strong> <span id="inclCpas">—</span></li>
+                    <li><strong>Sans-abonnement (accès libre) :</strong> <span id="inclFree">—</span></li>
+                </ul>
+                <p class="form-hint" id="inclHint"></p>
+                <div class="donut-wrap">
+                    <div class="donut" id="statusDonut" role="img" aria-label="Répartition des statuts sociaux"></div>
+                    <ul class="donut-legend" id="statusDonutLegend" style="list-style:none;"></ul>
+                </div>
+            </div>
+
+            <section class="stat-card chart-card" hidden id="visitsChartCard" aria-label="Visualisation des visites" style="grid-column: 1 / -1;">
+            <div class="chart-header">
+                <h2>📈 Visites</h2>
+                <div class="segmented" role="group" aria-label="Granularité du graphique">
+                    <button class="seg-btn active" id="chartDaysBtn">14 jours</button>
+                    <button class="seg-btn" id="chartMonthsBtn">12 mois</button>
+                </div>
+            </div>
+            <div id="visitsChart" class="visits-chart"></div>
+            <div class="chart-header" style="margin-top:1.2rem;">
+                <h2>🗓️ Fréquentation — 12 dernières semaines</h2>
+            </div>
+            <div id="heatmap" class="heatmap-grid" role="img" aria-label="Carte de chaleur de la fréquentation quotidienne"></div>
+            <div class="heatmap-legend">
+                <span>Moins</span>
+                <span class="heat-cell"></span>
+                <span class="heat-cell l1"></span>
+                <span class="heat-cell l2"></span>
+                <span class="heat-cell l3"></span>
+                <span class="heat-cell l4"></span>
+                <span>Plus</span>
+            </div>
+        </section>
+        </section>
+    </main>
+
+    </div>
+    </div>
+    <footer class="site-footer">
+        <p>© 2024 Atelier du Web — Espace Public Numérique de Saint-Gilles — <a href="https://atelierduweb.be">atelierduweb.be</a></p>
+    </footer>
+
+    <script src="layout.js?v=4"></script>
+    <script src="escape.js?v=1"></script>
+    <script src="auth.js?v=2"></script>
+    <script src="backup.js?v=2"></script>
+    <script src="vendor/sql-wasm.js"></script>
+    <script src="theme.js?v=15"></script>
+    <script src="nav.js?v=2"></script>
+    <script src="notifications.js?v=3"></script>
+    <script src="db.js?v=14"></script>
+    <script src="suggestions.js?v=2"></script>
+    <script src="globalsearch.js?v=3"></script>
+    <script src="page-stats.js?v=3"></script>
+<script>
+        // PWA : enregistrement du service worker (silencieux si non supporté)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>
