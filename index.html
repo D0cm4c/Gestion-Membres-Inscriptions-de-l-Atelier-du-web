@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://atelierduweb.be; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
     <title>Tableau de bord — Atelier du Web</title>
-    <link rel="stylesheet" href="styles.css?v=67">
+    <link rel="stylesheet" href="styles.css?v=68">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -37,14 +37,14 @@
         </div>
 
         <section class="mosaic" id="dashboardMosaic" aria-label="Tableau de bord en mosaïque">
-            <div class="kpi-card kpi-hero">
+            <div class="kpi-card kpi-hero span-2">
                 <span class="kpi-icon" aria-hidden="true">📅</span>
                 <div>
                     <div class="stat-num" id="statVisitsToday">0</div>
                     <div class="stat-label">Visites aujourd'hui</div>
                 </div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card span-2">
                 <span class="kpi-icon" aria-hidden="true">🛠️</span>
                 <div>
                     <div class="stat-num" id="statTicketsOpen">0</div>
@@ -65,7 +65,7 @@
                 <p class="form-hint" id="fluxHint"></p>
             </div>
 
-            <div class="stat-card span-1">
+            <div class="stat-card span-3">
                 <h2>📋 Dernières visites</h2>
                 <ul class="recent-list" id="recentVisits"></ul>
                 <p class="form-hint">Visites ce mois : <strong id="statVisitsMonth">0</strong> · Dernière : <strong id="statLastVisit">—</strong></p>
