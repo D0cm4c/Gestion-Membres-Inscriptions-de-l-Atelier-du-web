@@ -313,6 +313,8 @@
 
         var cards = document.querySelectorAll('.stat-card, .kpi-card, .chart-card');
         cards.forEach(function (c) { c.removeAttribute('hidden'); });
+        var loading = document.getElementById('dashLoading');
+        if (loading) loading.hidden = true; // cacher le loader dans le chemin de SUCCES aussi
     }).catch(function (err) {
         var loading = document.getElementById('dashLoading');
         if (loading) loading.hidden = true;
