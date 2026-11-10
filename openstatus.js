@@ -19,6 +19,13 @@
         return hh + 'h' + (mm ? String(mm).padStart(2, '0') : '');
     }
 
+    // Date du jour dans la topbar (module partag\u00e9 \u2014 les pages qui la remplissent aussi
+    // \u00e9crivent la m\u00eame valeur, c'est idempotent)
+    var todayDateEl = document.getElementById('todayDate');
+    if (todayDateEl) {
+        todayDateEl.textContent = new Date().toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
     function update() {
         var el = document.getElementById('openStatus');
         if (!el) return;
