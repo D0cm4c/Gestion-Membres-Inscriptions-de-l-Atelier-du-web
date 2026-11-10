@@ -224,27 +224,10 @@
         renderMostWaited();
         renderLastNotifs();
 
-        var total = one('SELECT COUNT(*) v FROM members');
-        var active = one('SELECT COUNT(*) v FROM members WHERE date(end_date) >= date(\'now\') OR end_date IS NULL');
-        var expired = one('SELECT COUNT(*) v FROM members WHERE date(end_date) < date(\'now\') AND end_date IS NOT NULL');
-        var monthly = one('SELECT COUNT(*) v FROM members WHERE subscription = \'monthly\'');
-        var yearly = one('SELECT COUNT(*) v FROM members WHERE subscription = \'yearly\'');
-        var newThisMonth = one('SELECT COUNT(*) v FROM members WHERE date(created_at) >= date(\'now\', \'start of month\')');
         var visitsToday = one('SELECT COUNT(*) v FROM visits WHERE visit_date = date(\'now\')');
         var visitsMonth = one('SELECT COUNT(*) v FROM visits WHERE strftime(\'%Y-%m\', visit_date) = strftime(\'%Y-%m\', \'now\')');
-        var revenueMonth = one('SELECT COALESCE(SUM(amount), 0) v FROM visits WHERE strftime(\'%Y-%m\', visit_date) = strftime(\'%Y-%m\', \'now\')');
-
-        setText('statTotal', total);
-        setText('statActive', active);
-        setText('statActive2', active);
-        setText('statExpired', expired);
-        setText('statMonthly', monthly);
-        setText('statYearly', yearly);
-        setText('statNewMonth', newThisMonth);
         setText('statVisitsToday', visitsToday);
         setText('statVisitsMonth', visitsMonth);
-        var rev = document.getElementById('statRevenueMonth');
-        if (rev) rev.textContent = revenueMonth.toFixed(2).replace('.', ',') + ' €';
 
         var ticketsEl = document.getElementById('statTicketsOpen');
         if (ticketsEl) {
@@ -254,60 +237,36 @@
             try { unassignedT = one('SELECT COUNT(*) v FROM tickets WHERE status IN (\'open\', \'in_progress\') AND priority = \'urgent\' AND (assignee IS NULL OR assignee = \'\')'); } catch (e) {}
             ticketsEl.textContent = openT;
             ticketsEl.title = openT + ' incident(s) ouvert(s)' +
-                (urgentT ? ' — dont ' + urgentT + ' urgent(s)' : '') +
-                (unassignedT ? ' (' + unassignedT + ' non assigné(s))' : '');
+                (urgentT ? ' \u2014 dont ' + urgentT + ' urgent(s)' : '') +
+                (unassignedT ? ' (' + unassignedT + ' non assign\u00e9(s))' : '');
         }
 
-        var activePct = total ? Math.round((active / total) * 100) : 0;
-        setText('statActivePct', activePct + ' %');
-
         var lastVisit = one('SELECT MAX(visit_date) v FROM visits');
-        setText('statLastVisit', lastVisit || '—');
+        setText('statLastVisit', lastVisit || '\u2014');
 
         var cards = document.querySelectorAll('.stat-card, .kpi-grid, .chart-card');
         cards.forEach(function (c) { c.removeAttribute('hidden'); });
         if (loading) loading.hidden = true;
 
-        renderAlerts(expired, visitsToday);
+        renderFlux();
         renderRecentVisits();
         renderPrintsDue();
-        renderAnalytics(visitsToday, monthly, yearly);
-        renderChart();
-        renderHeatmap();
-        renderStatusDonut();
     }
 
-    function renderAlerts(expired, visitsToday) {
-        var alertsList = document.getElementById('alertsList');
-        if (!alertsList) return;
-        var alerts = [];
-        if (expired > 0) {
-            alerts.push({ text: expired + ' inscription' + (expired > 1 ? 's' : '') + ' expirée' + (expired > 1 ? 's' : '') + ' à renouveler', icon: '⚠️' });
-        }
-        var expiringSoon = one('SELECT COUNT(*) v FROM members WHERE date(end_date) BETWEEN date(\'now\') AND date(\'now\', \'+30 days\')');
-        if (expiringSoon > 0) {
-            alerts.push({ text: expiringSoon + ' inscription' + (expiringSoon > 1 ? 's' : '') + ' expire' + (expiringSoon > 1 ? 'nt' : '') + ' dans les 30 jours', icon: '⏳' });
-        }
-        if (visitsToday === 0) {
-            alerts.push({ text: 'Aucune visite pointée aujourd\'hui', icon: '📌' });
-        }
-        try {
-            var openTickets = one('SELECT COUNT(*) v FROM tickets WHERE status IN (\'open\', \'in_progress\')');
-            var urgentOld = one('SELECT COUNT(*) v FROM tickets WHERE priority = \'urgent\' AND status IN (\'open\', \'in_progress\') AND created_at < datetime(\'now\', \'-2 days\')');
-            if (openTickets > 0) {
-                alerts.push({ text: openTickets + ' incident' + (openTickets > 1 ? 's' : '') + ' ouvert' + (openTickets > 1 ? 's' : '') + ' (page Incidents)', icon: '🛠️' });
-            }
-            if (urgentOld > 0) {
-                alerts.push({ text: urgentOld + ' incident' + (urgentOld > 1 ? 's' : '') + ' urgent' + (urgentOld > 1 ? 's' : '') + ' de plus de 48h sans résolution', icon: '🚨' });
-            }
-        } catch (e) { /* table tickets absente (vieille base) : ignorer */ }
-        if (alerts.length === 0) {
-            alerts.push({ text: 'Tout est en ordre ✨', icon: '✅' });
-        }
-        alertsList.innerHTML = alerts.map(function (a) {
-            return '<li><span aria-hidden="true">' + a.icon + '</span> ' + escapeHtml(a.text) + '</li>';
-        }).join('');
+    // Nouveaux vs connus du jour (extrait de l'ancienne renderAnalytics — reste au dashboard)
+    function renderFlux() {
+        var todayFlux = ADWDatabase.queryAll(
+            "SELECT v.member_id, (SELECT COUNT(*) FROM visits v2 WHERE v2.member_id = v.member_id AND v2.visit_date < v.visit_date) AS prior " +
+            "FROM visits v WHERE v.visit_date = date('now')");
+        var newToday = 0;
+        todayFlux.forEach(function (r) { if (r.prior === 0) newToday++; });
+        setText('fluxTotal', String(todayFlux.length));
+        setText('fluxNew', newToday + (todayFlux.length ? ' (' + Math.round((newToday / todayFlux.length) * 100) + ' %)' : ''));
+        setText('fluxKnown', String(todayFlux.length - newToday));
+        setText('fluxHint', 'Chaque visite d\u2019un nouveau usager compte double : il d\u00e9couvre le service.');
     }
+
+
 
     function renderRecentVisits() {
         var recentList = document.getElementById('recentVisits');
@@ -337,82 +296,7 @@
         return v.toFixed(2).replace('.', ',') + ' \u20AC';
     }
 
-    function renderAnalytics(visitsToday, monthly, yearly) {
-        var section = document.getElementById('analyticsSection');
-        if (section) section.removeAttribute('hidden');
 
-        /* --- 1. Occupation --- */
-        var occPct = Math.min(100, Math.round((visitsToday / PCS) * 100));
-        var ob = document.getElementById('occupancyBar');
-        if (ob) {
-            var segs = '';
-            for (var i = 0; i < PCS; i++) {
-                segs += '<span class="pc-seg' + (i < visitsToday ? ' busy' : '') + '" title="Poste ' + (i + 1) + (i < visitsToday ? ' : occup\u00e9' : ' : libre') + '"></span>';
-            }
-            ob.innerHTML = segs;
-            ob.setAttribute('aria-label', visitsToday + ' postes occup\u00e9s sur ' + PCS + ' (' + occPct + ' %)');
-        }
-        setText('occupancyToday', visitsToday + ' / ' + PCS + ' postes occup\u00e9s (' + occPct + ' %)');
-        var avg = one("SELECT COUNT(*) v FROM visits WHERE visit_date > date('now', '-7 days')");
-        setText('occupancyHint', 'Moyenne 7 derniers jours : ' + Math.round(avg / 7) + ' visites/jour');
-
-        /* --- 2. Rétention --- */
-        var perMember = ADWDatabase.queryAll(
-            'SELECT m.id, ' +
-            '(SELECT COUNT(*) FROM visits v WHERE v.member_id = m.id) AS visits, ' +
-            '(SELECT MAX(visit_date) FROM visits v WHERE v.member_id = m.id) AS last_visit ' +
-            'FROM members m');
-        var regulars = 0, oneshot = 0, never = 0, silent = 0;
-        var totalVisits = 0;
-        perMember.forEach(function (r) {
-            totalVisits += r.visits;
-            if (r.visits >= 5) regulars++;
-            else if (r.visits === 1) oneshot++;
-            else if (r.visits === 0) never++;
-            if (r.visits > 0 && r.last_visit && r.last_visit < new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10)) silent++;
-        });
-        var regularVisits = perMember.filter(function (r) { return r.visits >= 5; }).reduce(function (s, r) { return s + r.visits; }, 0);
-        setText('retRegulars', regulars + ' membres (' + (totalVisits ? Math.round((regularVisits / totalVisits) * 100) : 0) + ' % des visites)');
-        setText('retOneshot', String(oneshot));
-        setText('retNever', String(never));
-        setText('retSilent', String(silent));
-
-        /* --- 3. Profil socio-spatial --- */
-        var byCp = ADWDatabase.queryAll(
-            "SELECT postal_code, COUNT(*) c FROM members WHERE postal_code IS NOT NULL AND postal_code != '' GROUP BY postal_code ORDER BY c DESC LIMIT 4");
-        var totalCp = one("SELECT COUNT(*) v FROM members WHERE postal_code IS NOT NULL AND postal_code != ''");
-        var sg = one("SELECT COUNT(*) v FROM members WHERE postal_code IN ('1000','1020','1030','1040','1050','1060','1070','1080','1090','1100','1120','1130','1140','1150','1160','1170','1180','1190','1200','1210')");
-        var pl = document.getElementById('profileList');
-        if (pl) {
-            pl.innerHTML = byCp.map(function (r) {
-                var pct = totalCp ? Math.round((r.c / totalCp) * 100) : 0;
-                return '<li><strong>' + escapeHtml(r.postal_code) + '</strong> : ' + r.c + ' membres (' + pct + ' %)</li>';
-            }).join('') || '<li class="form-hint">Aucun code postal renseign\u00e9.</li>';
-        }
-        setText('profileHint', totalCp ? Math.round((sg / totalCp) * 100) + ' % des usagers viennent de la R\u00e9gion de Bruxelles-Capitale' : 'Renseignez les codes postaux pour activer cette analyse.');
-
-        /* --- 3b. Nouveaux vs connus du jour --- */
-        var todayFlux = ADWDatabase.queryAll(
-            "SELECT v.member_id, (SELECT COUNT(*) FROM visits v2 WHERE v2.member_id = v.member_id AND v2.visit_date < v.visit_date) AS prior " +
-            "FROM visits v WHERE v.visit_date = date('now')");
-        var newToday = 0;
-        todayFlux.forEach(function (r) { if (r.prior === 0) newToday++; });
-        setText('fluxTotal', String(todayFlux.length));
-        setText('fluxNew', newToday + (todayFlux.length ? ' (' + Math.round((newToday / todayFlux.length) * 100) + ' %)' : ''));
-        setText('fluxKnown', String(todayFlux.length - newToday));
-        setText('fluxHint', 'Chaque visite d\u2019un nouveau usager compte double : il d\u00e9couvre le service.');
-
-        /* --- 4. Inclusion numérique (mission service public) --- */
-        var totalM = one('SELECT COUNT(*) v FROM members');
-        var vulnerable = one("SELECT COUNT(*) v FROM members WHERE social_status IN ('cpas', 'mutuelle', 'interim', 'actiris')");
-        var cpasPart = one("SELECT COUNT(*) v FROM members WHERE social_status = 'cpas'");
-        var noSub = one("SELECT COUNT(*) v FROM members WHERE subscription = 'none' OR subscription IS NULL");
-        var pct = function (v) { return totalM ? Math.round((v / totalM) * 100) : 0; };
-        setText('inclVulnerable', vulnerable + ' membres (' + pct(vulnerable) + ' %)');
-        setText('inclCpas', pct(cpasPart) + ' %');
-        setText('inclFree', noSub + ' membres (' + pct(noSub) + ' %)');
-        setText('inclHint', 'CPAS/Orbem, mutuellistes, intérimaires et accompagnés Actiris : le public prioritaire de la médiation numérique.');
-    }
 
     function renderPrintsDue() {
         var list = document.getElementById('printsDueList');
@@ -453,99 +337,11 @@
 
     var annualReportBtn = document.getElementById('annualReportBtn');
 
-    function buildAnnualReport() {
-        var year = new Date().getFullYear();
-        var sep = ';';
-        var lines = [];
-        var add = function (k, v) { lines.push('"' + String(k).replace(/"/g, '""') + '"' + sep + '"' + String(v).replace(/"/g, '""') + '"'); };
-        var total = one('SELECT COUNT(*) v FROM members');
-        var active = one("SELECT COUNT(*) v FROM members WHERE date(end_date) >= date('now') OR end_date IS NULL");
-        var visitsYear = one("SELECT COUNT(*) v FROM visits WHERE strftime('%Y', visit_date) = '" + year + "'");
-        var uniqueVisitors = one("SELECT COUNT(DISTINCT member_id) v FROM visits WHERE strftime('%Y', visit_date) = '" + year + "'");
-        var monthly = one("SELECT COUNT(*) v FROM members WHERE subscription = 'monthly'");
-        var yearly = one("SELECT COUNT(*) v FROM members WHERE subscription = 'yearly'");
-        var vuln = one("SELECT COUNT(*) v FROM members WHERE social_status IN ('cpas','mutuelle','interim','actiris')");
-        var seniors = one('SELECT COUNT(*) v FROM members WHERE age >= 65');
 
-        lines.push('"Rapport annuel ' + year + ' \u2014 Atelier du Web (EPN)"');
-        add('Généré le', new Date().toLocaleDateString('fr-BE'));
-        lines.push('');
-        lines.push('"Usagers"');
-        add('Membres enregistrés (total)', total);
-        add('Inscriptions actives', active);
-        add('Abonnements mensuels', monthly);
-        add('Abonnements annuels', yearly);
-        lines.push('');
-        lines.push('"Fréquentation ' + year + '"');
-        add('Visites de l\u2019année', visitsYear);
-        add('Usagers uniques ayant visité', uniqueVisitors);
-        lines.push('');
-        lines.push('"Inclusion numérique"');
-        add('Usagers publics vulnérables (CPAS/Orbem, mutuelle, intérim, Actiris)', vuln);
-        add('Usagers seniors (65+)', seniors);
-        lines.push('');
-        lines.push('"Statuts sociaux (répartition)"');
-        ADWDatabase.queryAll("SELECT social_status, COUNT(*) c FROM members WHERE social_status IS NOT NULL AND social_status != '' GROUP BY social_status ORDER BY c DESC").forEach(function (r) {
-            add(r.social_status, r.c + ' (' + (total ? Math.round((r.c / total) * 100) : 0) + ' %)');
-        });
-        lines.push('');
-        lines.push('"Codes postaux (top 10)"');
-        ADWDatabase.queryAll("SELECT postal_code, COUNT(*) c FROM members WHERE postal_code IS NOT NULL AND postal_code != '' GROUP BY postal_code ORDER BY c DESC LIMIT 10").forEach(function (r) {
-            add(r.postal_code, r.c);
-        });
-        lines.push('');
-        lines.push('"Genres"');
-        ADWDatabase.queryAll("SELECT gender, COUNT(*) c FROM members WHERE gender IS NOT NULL AND gender != '' GROUP BY gender").forEach(function (r) {
-            add(r.gender, r.c);
-        });
-
-        var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'rapport-annuel-' + year + '-atelierduweb.csv';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        showToast('📊 Rapport annuel ' + year + ' téléchargé');
-    }
-
-    if (annualReportBtn) annualReportBtn.addEventListener('click', buildAnnualReport);
 
     /* ============ Heatmap fréquentation (12 semaines) ============ */
 
-    function renderHeatmap() {
-        var hm = document.getElementById('heatmap');
-        if (!hm) return;
-        var rows = ADWDatabase.queryAll(
-            "SELECT visit_date, COUNT(*) c FROM visits WHERE visit_date >= date('now', '-83 days') GROUP BY visit_date");
-        var byDay = {};
-        rows.forEach(function (r) { byDay[r.visit_date] = r.c; });
 
-        var max = 1;
-        rows.forEach(function (r) { if (r.c > max) max = r.c; });
-
-        var today = new Date();
-        var todayDow = today.getDay();
-        var start = new Date(today);
-        start.setDate(start.getDate() - 83);
-        while (start.getDay() !== 1) start.setDate(start.getDate() - 1);
-
-        var frag = document.createDocumentFragment();
-        var d = new Date(start);
-        var todayIso = today.toISOString().slice(0, 10);
-        while (d <= today) {
-            var iso = d.toISOString().slice(0, 10);
-            var c = byDay[iso] || 0;
-            var lvl = c === 0 ? '' : (c <= max * 0.25 ? 'l1' : (c <= max * 0.5 ? 'l2' : (c <= max * 0.75 ? 'l3' : 'l4')));
-            var cell = document.createElement('span');
-            cell.className = 'heat-cell ' + lvl + (iso === todayIso ? ' today' : '');
-            cell.title = d.toLocaleDateString('fr-BE') + ' : ' + c + ' visite' + (c > 1 ? 's' : '');
-            frag.appendChild(cell);
-            d.setDate(d.getDate() + 1);
-        }
-        hm.innerHTML = '';
-        hm.appendChild(frag);
-        hm.setAttribute('aria-label', 'Carte de chaleur de la fréquentation quotidienne sur 12 semaines');
-    }
 
     /* ============ Donut statuts sociaux ============ */
 
@@ -565,104 +361,7 @@
         interim: 'Intérim', enfant: 'Enfant'
     };
 
-    function renderStatusDonut() {
-        var donut = document.getElementById('statusDonut');
-        var legend = document.getElementById('statusDonutLegend');
-        if (!donut || !legend) return;
-        var rows = ADWDatabase.queryAll(
-            "SELECT social_status, COUNT(*) c FROM members WHERE social_status IS NOT NULL AND social_status != '' GROUP BY social_status ORDER BY c DESC");
-        var total = 0;
-        rows.forEach(function (r) { total += r.c; });
-        if (!total) {
-            donut.style.background = 'var(--bg)';
-            legend.innerHTML = '<li class="form-hint">Renseignez les statuts sociaux pour voir la répartition.</li>';
-            return;
-        }
-        var stops = [];
-        var acc = 0;
-        rows.forEach(function (r) {
-            var from = (acc / total) * 100;
-            acc += r.c;
-            var to = (acc / total) * 100;
-            var color = STATUS_COLORS[r.social_status] || '#95A5B8';
-            stops.push(color + ' ' + from + '% ' + to + '%');
-        });
-        donut.style.background = 'conic-gradient(' + stops.join(', ') + ')';
-        legend.innerHTML = rows.slice(0, 6).map(function (r) {
-            var color = STATUS_COLORS[r.social_status] || '#95A5B8';
-            return '<li><span class="donut-dot" style="background:' + color + '"></span>' +
-                escapeHtml(STATUS_NAMES[r.social_status] || r.social_status) +
-                ' <strong>' + Math.round((r.c / total) * 100) + ' %</strong></li>';
-        }).join('');
-    }
 
-    /* ============ Graphique des visites ============ */
-
-    var chartDaysBtn = document.getElementById('chartDaysBtn');
-    var chartMonthsBtn = document.getElementById('chartMonthsBtn');
-    var chartMode = 'days';
-
-    function renderChart(mode) {
-        chartMode = mode || chartMode;
-        var chart = document.getElementById('visitsChart');
-        if (!chart) return;
-        var chartCard = document.getElementById('visitsChartCard');
-        if (chartCard) chartCard.removeAttribute('hidden');
-        if (chartDaysBtn) chartDaysBtn.classList.toggle('active', chartMode === 'days');
-        if (chartMonthsBtn) chartMonthsBtn.classList.toggle('active', chartMode === 'months');
-
-        var buckets = [];
-        var now = new Date();
-        var i, key, label;
-
-        if (chartMode === 'days') {
-            for (i = 13; i >= 0; i--) {
-                var d = new Date(now);
-                d.setDate(d.getDate() - i);
-                key = d.toISOString().slice(0, 10);
-                label = d.toLocaleDateString('fr-BE', { day: '2-digit', month: '2-digit' });
-                buckets.push({ key: key, label: label });
-            }
-            var rows = ADWDatabase.queryAll(
-                'SELECT visit_date, COUNT(*) c FROM visits WHERE visit_date >= date(\'now\', \'-13 days\') GROUP BY visit_date');
-            var byKey = {};
-            rows.forEach(function (r) { byKey[r.visit_date] = r.c; });
-            buckets.forEach(function (b) { b.count = byKey[b.key] || 0; });
-        } else {
-            for (i = 11; i >= 0; i--) {
-                var m = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                key = m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0');
-                label = m.toLocaleDateString('fr-BE', { month: 'short' });
-                buckets.push({ key: key, label: label });
-            }
-            var rowsM = ADWDatabase.queryAll(
-                'SELECT strftime(\'%Y-%m\', visit_date) ym, COUNT(*) c FROM visits ' +
-                'WHERE visit_date >= date(\'now\', \'-11 months\', \'start of month\') GROUP BY ym');
-            var byKeyM = {};
-            rowsM.forEach(function (r) { byKeyM[r.ym] = r.c; });
-            buckets.forEach(function (b) { b.count = byKeyM[b.key] || 0; });
-        }
-
-        var max = 1;
-        buckets.forEach(function (b) { if (b.count > max) max = b.count; });
-
-        chart.innerHTML = '';
-        var frag = document.createDocumentFragment();
-        buckets.forEach(function (b) {
-            var col = document.createElement('div');
-            col.className = 'chart-col';
-            col.title = b.label + ' : ' + b.count + ' visite' + (b.count > 1 ? 's' : '');
-            col.innerHTML =
-                '<span class="chart-value">' + (b.count || '') + '</span>' +
-                '<span class="chart-bar" style="height:' + Math.max(4, Math.round((b.count / max) * 100)) + '%"></span>' +
-                '<span class="chart-label">' + escapeHtml(b.label) + '</span>';
-            frag.appendChild(col);
-        });
-        chart.appendChild(frag);
-    }
-
-    if (chartDaysBtn) chartDaysBtn.addEventListener('click', function () { renderChart('days'); });
-    if (chartMonthsBtn) chartMonthsBtn.addEventListener('click', function () { renderChart('months'); });
 
     /* ============ Check-in rapide ============ */
 
@@ -805,7 +504,6 @@
             [visitId, member.id, today, amount]).then(function () {
             closeCheckin();
             render();
-            renderChart();
             pulseVisitsKpi();
             showToast('✅ Visite de ' + member.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)'));
         });
@@ -916,7 +614,6 @@
                     ADWDatabase.run('INSERT INTO prints (id, member_id, print_date, type, amount, paid) VALUES (?, ?, ?, ?, ?, 0)',
                         [printId, m.id, today, type, amount]).then(function () {
                         render();
-                        renderChart();
                         showToast('🖨️ Impression ' + (type === 'bw' ? 'N&B' : 'couleur') + ' pour ' + m.first_name + ' (' + amount.toFixed(2).replace('.', ',') + ' €)');
                         displayPrintResults(searchMembers(printSearch ? printSearch.value : ''));
                     });
@@ -937,117 +634,6 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && printModal && !printModal.hidden) closePrint();
     });
-
-    /* ---------- Drag'n'drop de la mosaïque ---------- */
-
-    var TILE_ORDER_KEY = 'atelierduweb_tile_order';
-
-    function initTileDrag() {
-        var mosaic = document.getElementById('dashboardMosaic');
-        if (!mosaic) return;
-        var tiles = mosaic.querySelectorAll('[data-tile]');
-        if (!tiles.length) return;
-
-        var saved = null;
-        try { saved = JSON.parse(localStorage.getItem(TILE_ORDER_KEY)) || []; } catch (e) { /* best effort */ }
-
-        // masquer les tuiles désactivées dans Paramètres
-        var hiddenTiles = [];
-        try { hiddenTiles = JSON.parse(localStorage.getItem('atelierduweb_tiles_hidden')) || []; } catch (e) { /* best effort */ }
-        tiles.forEach(function (tile) {
-            if (hiddenTiles.indexOf(tile.getAttribute('data-tile')) !== -1) {
-                tile.style.display = 'none';
-            }
-        });
-
-        // apply saved order
-        if (saved.length) {
-            saved.forEach(function (tid) {
-                var el = mosaic.querySelector('[data-tile="' + tid + '"]');
-                if (el) mosaic.appendChild(el);
-            });
-        }
-
-        mosaic._dragTile = null;
-
-        tiles.forEach(function (tile) {
-            tile.setAttribute('draggable', 'true');
-
-            tile.addEventListener('dragstart', function (e) {
-                mosaic._dragTile = tile;
-                tile.classList.add('tile-dragging');
-                if (e.dataTransfer) {
-                    e.dataTransfer.effectAllowed = 'move';
-                    try { e.dataTransfer.setData('text/plain', tile.getAttribute('data-tile')); } catch (err) { /* IE */ }
-                }
-            });
-
-            tile.addEventListener('dragend', function () {
-                tile.classList.remove('tile-dragging');
-                mosaic.querySelectorAll('.tile-drop-target').forEach(function (t) { t.classList.remove('tile-drop-target'); });
-                mosaic._dragTile = null;
-                saveTileOrder(mosaic);
-            });
-
-            tile.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                if (!mosaic._dragTile || mosaic._dragTile === tile) return;
-                tile.classList.add('tile-drop-target');
-            });
-
-            tile.addEventListener('dragleave', function () {
-                tile.classList.remove('tile-drop-target');
-            });
-
-            tile.addEventListener('drop', function (e) {
-                e.preventDefault();
-                if (!mosaic._dragTile || mosaic._dragTile === tile) return;
-                tile.classList.remove('tile-drop-target');
-                var rect = tile.getBoundingClientRect();
-                var before = (e.clientX - rect.left) < rect.width / 2;
-                mosaic.insertBefore(mosaic._dragTile, before ? tile : tile.nextSibling);
-            });
-        });
-
-        // Drop aussi sur la grille elle-même (zones vides) :
-        // la tuile est insérée à l'emplacement le plus proche du curseur.
-        mosaic.addEventListener('dragover', function (e) {
-            e.preventDefault();
-        });
-
-        mosaic.addEventListener('drop', function (e) {
-            e.preventDefault();
-            var dragTile = mosaic._dragTile;
-            if (!dragTile) return;
-            if (e.target !== mosaic) return; // le drop sur une tuile est déjà géré
-            var tilesArr = Array.prototype.slice.call(mosaic.querySelectorAll('[data-tile]'));
-            if (!tilesArr.length) { mosaic.appendChild(dragTile); return; }
-            var best = null;
-            var bestDist = Infinity;
-            tilesArr.forEach(function (t) {
-                if (t === dragTile) return;
-                var r = t.getBoundingClientRect();
-                var cx = r.left + r.width / 2;
-                var cy = r.top + r.height / 2;
-                var d = (e.clientX - cx) * (e.clientX - cx) + (e.clientY - cy) * (e.clientY - cy);
-                if (d < bestDist) { bestDist = d; best = t; }
-            });
-            if (!best) { mosaic.appendChild(dragTile); return; }
-            var r = best.getBoundingClientRect();
-            var after = (e.clientX - r.left) > r.width / 2;
-            mosaic.insertBefore(dragTile, after ? best.nextSibling : best);
-        });
-    }
-
-    function saveTileOrder(mosaic) {
-        var order = [];
-        mosaic.querySelectorAll('[data-tile]').forEach(function (t) {
-            order.push(t.getAttribute('data-tile'));
-        });
-        try { localStorage.setItem(TILE_ORDER_KEY, JSON.stringify(order)); } catch (e) { /* best effort */ }
-    }
-
-    initTileDrag();
 
     ADWDatabase.init().then(render).catch(function (err) {
         if (loading) {
