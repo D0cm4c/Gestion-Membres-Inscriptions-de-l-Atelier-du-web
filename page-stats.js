@@ -19,6 +19,8 @@
         if (el) el.textContent = String(value);
     }
 
+    var chartMode = 'days'; // granularit\u00e9 du graphique (14 jours / 12 mois)
+
     function eur(v) { return Number(v).toFixed(2).replace('.', ',') + ' \u20ac'; }
 
     // ===== KPI + carte Membres (stats détaillées) =====
