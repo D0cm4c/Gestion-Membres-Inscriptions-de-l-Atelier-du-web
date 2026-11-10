@@ -100,6 +100,16 @@ En cours / ouvert :
 - Améliorations proposées (non tranchées) : visuel — agenda du jour (dashboard), print-friendly, vue compacte planning ; fonctionnel — recherche globale, vue annuelle salles (détection créneaux libres), rappel auto des formations sans salle.
 - Feuille de route restante : fiches formations détaillées (tarifs, participants).
 
+## 📦 État actuel — session du 6-10 nov. 2026 (à la suite)
+
+Fait dans cette session (PRs #110 à #125, toutes fusionnées) :
+- **Listes d'attente** (table `waitlist`) : fiche formation (carte liste d'attente, contacts, bouton Inscrire = prefill site), fiche membre (intérêts multi-formations, dropdown dédoublonné de toutes les formations déjà synchro + intitulé libre), matching à la synchro (event_id ou titre normalisé sans dates, garde anti-LIKE '%%', anti-doublon, anti-spam quotidien), retrait auto à l'inscription, purge RGPD, test unitaire normalizeTitle en CI.
+- **Page Notifications** (`notifications.html`) : le centre complet (filtres Tous/Non lus/Alertes/Attente/Synchros/Activité avec compteurs, recherche texte, pagination, marquage individuel, actions ciblées par notif, bouton « Copier les contacts » pour les notifs de listes d'attente) ; la cloche devient un aperçu léger (SQL direct, bouton Tout voir) ; badge non-lus sur le lien sidebar ; familles = verbes : Alertes (agir), Attente (proposer), Synchros (journal), Activité (le reste) — décision EPN : danger et warning fusionnés.
+- **La grande séparation dashboard/stats** : NOUVELLE PAGE `stats.html` (KPI membres/actifs/revenus/visites-mois, stats détaillées, rétention, profil, inclusion + donut, graphique 14j/12m + heatmap, rapport annuel CSV) pour la directrice ; dashboard allégé pour l'accueillant (5 secondes) ; SUPPRIMÉS : drag'n'drop, cases à cocher des tuiles (section Paramètres), carte Occupation, carte Alertes (fusion dans les notifs).
+- **Dashboard final** (disposition validée par l'utilisateur) : L1 4 KPI compacts (Visites aujourd'hui · Incidents ouverts · Nouveaux aujourd'hui · En liste d'attente) / L2 Agenda du jour PLEINE LARGEUR / L3 Dernières visites + Impressions à solder / L4 Notifications + Plus attendues. Carte « Les plus attendues » (classement des listes d'attente) et « Dernières notifications » (3 dernières) sur le dashboard.
+- **Compteurs « X/Y inscrits/payés »** : badges des cartes formations.html (format nu X/Y, détail au survol) et grand compteur de formation.html ; `paid_count` dans listFormations.
+- **Maquettes design** : 8 directions explorées sur la branche jetable `maquettes-design` (jamais fusionnée) — néobrutalisme, terminal, éditorial, solarpunk, solarpunk-corporate (4b, coup de cœur de l'utilisateur, « gardée sous le coude »), claymorphism, swiss, neo-sobre. Liens via raw.githack.com.
+
 ## 🧠 Leçons apprises (méthodes qui ont marché)
 
 1. PRs incrémentales, une fonctionnalité complète par PR, fusionnées dans l'ordre.
@@ -116,6 +126,9 @@ En cours / ouvert :
 12. **Résumer et faire valider avant de pousser** : présenter le résumé de chaque action (fichiers, but, impact) et obtenir l'aval explicite de l'utilisateur avant commit/push — l'utilisateur garde le contrôle du dépôt.
 13. **Le préfill peut remplacer le tracking** : quand l'app fournit elle-même les données du formulaire distant (n° de membre), la donnée revient avec la réservation → le matching automatique fait la réconciliation. Pas besoin d'un système de vérification que personne n'utiliserait.
 14. **Modale pour le parcours rapide, page pour le lien profond** : dans une liste de gestion (inscrits), l'aperçu en modale évite la navigation ; la page dédiée reste pour le partage/deep-linking.
+15. **Jamais d'emoji via échappements Unicode dans les heredocs/scripts de génération** (nov. 2026, 3 pièges dans la session) : écrire les emojis en caractères directs (📅), jamais en `\U0001F4C5` — le double-échappement des heredocs les laisse en texte littéral dans le HTML et la CI ne les voit pas. De même, vérifier l'équilibre des balises après un réordonnancement de blocs HTML (une fermeture orpheline sort des cartes de la grille CSS sans casser les tests).
+16. **Une migration de fonctions emporte TOUTES ses dépendances** (nov. 2026, page Statistiques) : lors du déplacement de fonctions d'un fichier à l'autre, lister les variables du scope module qu'elles référencent (chartMode, STATUS_COLORS, alias ADWDatabase, boutons DOM) — et tester avec des DONNÉES RÉELLES : la base vide n'exécute pas les chemins qui référencent ces variables (le donut des statuts sociaux ne casse que s'il y a des membres avec statut).
+17. **Un `.catch()` avale les pageerror — les tests doivent vérifier le RÉSULTAT, pas les erreurs** : le scénario CI seed des données et vérifie que les éléments sont rendus (barres du graphique, donut rempli, loader caché). Un test sur base vide + surveillance des pageerror ne détecte rien quand l'init avale ses erreurs.
 15. **Sidebar et topbar partagées = risque de divergence** (leçon historique, RESOLUE par la PR #21) : depuis l'externalisation dans `layout.js`, une seule source de vérité — le risque de divergence entre pages n'existe plus. Ancienne règle d'audit page-par-page supprimée.
 
 ## 📜 Historique des PRs
