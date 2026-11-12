@@ -292,6 +292,61 @@ function main() {
                 });
             });
 
+            // ===== Migration des attentes (option C) : l'attente survit a la session =====
+            // Seed : formation PASSEE avec 2 attentes event_id, dont un membre qui a
+            // deja une attente generique du meme titre (anti-doublon -> drop).
+            chain = chain.then(function () {
+                return browser.newPage().then(function (page) {
+                    var errs = [];
+                    page.on("pageerror", function (e) { errs.push(String(e)); });
+                    return page.goto(base + "formations.html", { waitUntil: "load" })
+                        .then(function () { return page.waitForTimeout(900); })
+                        .then(function () {
+                            return page.evaluate(function () {
+                                var db = window.ADWDatabase;
+                                if (!db || !db.db) return { ok: false, why: "pas de db" };
+                                try { db.run("DELETE FROM waitlist"); } catch (e) {}
+                                try { db.run("INSERT INTO formations (id, event_id, title, start_date) VALUES ('', 'past1', 'Canva Test', '2020-01-01')".replace("'', ", "'fpast', ")); } catch (e) {}
+                                db.run("INSERT INTO members (id, member_no, first_name, last_name) VALUES ('wm1', '9101', 'Wait', 'One')");
+                                db.run("INSERT INTO members (id, member_no, first_name, last_name) VALUES ('wm2', '9102', 'Wait', 'Two')");
+                                // wm1 : attente event_id (doit etre migree)
+                                db.run("INSERT INTO waitlist (id, member_id, formation_event_id, formation_title) VALUES ('wp1', 'wm1', 'past1', 'Canva Test')");
+                                // wm2 : attente event_id + attente generique du meme titre (doublon -> drop de l'event_id)
+                                db.run("INSERT INTO waitlist (id, member_id, formation_event_id, formation_title) VALUES ('wp2', 'wm2', 'past1', 'Canva Test')");
+                                db.run("INSERT INTO waitlist (id, member_id, formation_event_id, formation_title) VALUES ('wp3', 'wm2', NULL, 'Canva Test')");
+                                var res = db.migratePastFormationWaitlists();
+                                var rows = db.queryAll("SELECT id, member_id, formation_event_id, formation_title FROM waitlist ORDER BY id");
+                                return { ok: true, res: res, rows: rows };
+                            });
+                        })
+                        .then(function (s) {
+                            var checks = [];
+                            if (!s || !s.ok) {
+                                checks.push(["seed/migration impossible", false, s && s.why]);
+                            } else {
+                                var wp1 = s.rows.filter(function (r) { return r.id === "wp1"; })[0];
+                                var wp2 = s.rows.filter(function (r) { return r.id === "wp2"; })[0];
+                                var wp3 = s.rows.filter(function (r) { return r.id === "wp3"; })[0];
+                                checks.push(["wp1 migree en generique (event_id NULL, titre garde)", wp1 && wp1.formation_event_id === null && wp1.formation_title === "Canva Test"]);
+                                checks.push(["wp2 (doublon) supprimee, wp3 (generique) conservee", !wp2 && !!wp3]);
+                                checks.push(["compteurs : migrated=1, dropped=1", s.res && s.res.migrated === 1 && s.res.dropped === 1]);
+                            }
+                            if (errs.length) checks.push(["erreurs JS", false, errs.join(" | ")]);
+                            var fails = checks.filter(function (c) { return !c[1]; });
+                            if (fails.length) {
+                                failures++;
+                                console.error("ECHEC migration attentes (option C)");
+                                fails.forEach(function (f) { console.error("    - " + f[0] + (f[2] ? " : " + f[2] : "")); });
+                            } else {
+                                console.log("OK migration attentes (option C) : l'attente survit a la session");
+                            }
+                            return page.evaluate(function () {
+                                try { window.ADWDatabase.run("DELETE FROM waitlist"); } catch (e) {}
+                            }).catch(function () {}).then(function () { return page.close(); });
+                        });
+                });
+            });
+
             // ===== Page Notifications : scenario comportemental =====
             // Seeder des notifs, tester filtres + marquage individuel + pagination.
             chain = chain.then(function () {

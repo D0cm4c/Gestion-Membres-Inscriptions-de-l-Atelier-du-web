@@ -467,6 +467,9 @@
             var placeholders = keptIds.map(function () { return '?'; }).join(', ');
             db.run('DELETE FROM formations WHERE id NOT IN (' + placeholders + ')', keptIds);
         }
+        // L'attente survit \u00e0 la session : migrer les attentes des sessions
+        // pass\u00e9es ou disparues vers le sujet (option C \u2014 d\u00e9cision EPN)
+        try { this.migratePastFormationWaitlists(); } catch (e) { /* best effort */ }
         this.persist();
         return keptIds.length;
     };
@@ -510,9 +513,24 @@
         // Le membre s'inscrit \u2192 il sort de la liste d'attente (plus besoin de l'attendre)
         // NB : formationId est l'id INTERNE ; la waitlist stocke l'event_id MEC -> r\u00e9soudre
         try {
-            var ev = this.queryAll('SELECT event_id FROM formations WHERE id = ?', [String(formationId)])[0];
+            var ev = this.queryAll('SELECT event_id, title FROM formations WHERE id = ?', [String(formationId)])[0];
             if (ev && ev.event_id) {
                 this.run('DELETE FROM waitlist WHERE member_id = ? AND formation_event_id = ?', [String(memberId), String(ev.event_id)]);
+            }
+            // L'attente est sur le SUJET : retirer aussi les attentes g\u00e9n\u00e9riques du m\u00eame titre
+            // (migration option C \u2014 un membre inscrit n'attend plus, peu importe la session)
+            if (ev && ev.title) {
+                var nt = this.normalizeTitle(ev.title);
+                if (nt && nt.length >= 4) {
+                    var gens = this.queryAll(
+                        'SELECT id, formation_title FROM waitlist WHERE member_id = ? AND formation_event_id IS NULL',
+                        [String(memberId)]);
+                    gens.forEach(function (g) {
+                        if (this.normalizeTitle(g.formation_title) === nt) {
+                            this.run('DELETE FROM waitlist WHERE id = ?', [g.id]);
+                        }
+                    }, this);
+                }
             }
         } catch (e) {}
         var existing = this.queryAll('SELECT id FROM formations_members WHERE formation_id = ? AND member_id = ?', [formationId, memberId]);
@@ -602,6 +620,63 @@
             'WHERE formation_event_id = ? OR (formation_event_id IS NULL AND LOWER(formation_title) LIKE ?) ' +
             'ORDER BY w.created_at ASC',
             [String(eventId || ''), '%' + norm + '%']);
+    };
+
+    // Option C (d\u00e9cision EPN) \u2014 L'attente survit \u00e0 la session : quand une formation
+    // passe (start_date < aujourd'hui) ou dispara\u00eet du flux, ses attentes event_id
+    // deviennent G\u00c9N\u00c9RIQUES (le sujet, sans event_id). Elles seront re-match\u00e9es
+    // automatiquement \u00e0 la prochaine session du m\u00eame titre \u2014 matchWaitlistForFormation
+    // couvre d\u00e9j\u00e0 les intitul\u00e9s libres (LIKE sur titre normalis\u00e9).
+    // Anti-doublon : si le membre a d\u00e9j\u00e0 une attente g\u00e9n\u00e9rique identique, l'entr\u00e9e
+    // event_id est supprim\u00e9e au lieu d'\u00eatre migr\u00e9e (on garde la plus ancienne info).
+    Database.migratePastFormationWaitlists = function () {
+        var self = this;
+        var today = new Date().toISOString().slice(0, 10);
+        var migrated = 0, dropped = 0;
+
+        function makeGeneric(entry, title) {
+            var dup = self.queryAll(
+                'SELECT id FROM waitlist WHERE member_id = ? AND formation_event_id IS NULL AND formation_title = ?',
+                [entry.member_id, title]);
+            if (dup.length) {
+                self.run('DELETE FROM waitlist WHERE id = ?', [entry.id]);
+                dropped++;
+            } else {
+                self.run('UPDATE waitlist SET formation_event_id = NULL, formation_title = ? WHERE id = ?',
+                    [title, entry.id]);
+                migrated++;
+            }
+        }
+
+        // 1. Formations pass\u00e9es encore en table (titre = le leur)
+        var past = this.queryAll(
+            'SELECT DISTINCT f.event_id, f.title FROM formations f ' +
+            'JOIN waitlist w ON w.formation_event_id = f.event_id ' +
+            'WHERE f.start_date IS NOT NULL AND f.start_date < ?', [today]);
+        past.forEach(function (pf) {
+            var entries = self.queryAll('SELECT * FROM waitlist WHERE formation_event_id = ?', [pf.event_id]);
+            entries.forEach(function (e) { makeGeneric(e, pf.title); });
+        });
+
+        // 2. Attentes orphelines (event_id disparu de la table formations \u2014 flux nettoy\u00e9)
+        var orphans = this.queryAll(
+            'SELECT w.* FROM waitlist w WHERE w.formation_event_id IS NOT NULL ' +
+            'AND NOT EXISTS (SELECT 1 FROM formations f WHERE f.event_id = w.formation_event_id)');
+        orphans.forEach(function (e) { makeGeneric(e, e.formation_title || 'Formation'); });
+
+        if (migrated + dropped > 0) {
+            try { this.flush(); } catch (e) {}
+            // Journal (famille Synchros) \u2014 best effort si le module notifs est charg\u00e9
+            try {
+                if (window.ADWNotifications && window.ADWNotifications.push) {
+                    window.ADWNotifications.push('sync',
+                        '\u{1F504} Sessions pass\u00e9es : ' + migrated + ' attente(s) transf\u00e9r\u00e9e(s) sur le sujet \u2014 ' +
+                        'ces membres seront rattach\u00e9s automatiquement \u00e0 la prochaine session du m\u00eame titre.',
+                        'info', { migrated: migrated, dropped: dropped, day: today });
+                }
+            } catch (e2) {}
+        }
+        return { migrated: migrated, dropped: dropped };
     };
 
     Database.markWaitlistContacted = function (entryIds) {
