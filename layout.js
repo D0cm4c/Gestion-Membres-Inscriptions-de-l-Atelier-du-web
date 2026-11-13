@@ -48,8 +48,6 @@
             html += '<a class="btn btn-secondary btn-small" href="' + cfg.backHref + '">\u2190 ' + cfg.backLabel + '</a>';
         }
         html += '<h1 class="topbar-title"' + (cfg.titleId ? ' id="' + cfg.titleId + '"' : '') + '>' + cfg.title + '</h1>';
-        html += '<p class="topbar-date" id="todayDate"></p>';
-        html += '<span class="open-status" id="openStatus" role="status" aria-live="polite"></span>';
         if (cfg.searchId) {
             html += '<div class="search-bar">';
             html += '<span class="search-icon" aria-hidden="true">\uD83D\uDD0D</span>';
@@ -57,6 +55,8 @@
             html += '<input type="text" id="' + cfg.searchId + '" placeholder="' + cfg.searchPlaceholder + '">';
             html += '</div>';
         }
+        html += '<p class="topbar-date" id="todayDate"></p>';
+        html += '<span class="open-status" id="openStatus" role="status" aria-live="polite"></span>';
         html += '<span id="notifCenter" style="display:inline-flex' + (cfg.searchId ? '' : ';margin-left:auto') + '"></span>';
         html += '<button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">\uD83C\uDF17</button>';
         html += '</header>';

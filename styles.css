@@ -163,7 +163,7 @@ body {
 .topbar {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 1rem;
     padding: 0.95rem 2rem;
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
@@ -173,10 +173,10 @@ body {
     z-index: 50;
 }
 
-.topbar-title { font-size: 1.3rem; font-weight: 800; color: var(--primary); letter-spacing: -0.4px; }
-.topbar-date { font-size: 0.85rem; color: var(--text-soft); font-weight: 500; }
+.topbar-title { font-size: 1.35rem; font-weight: 700; color: var(--text); letter-spacing: -0.3px; border-bottom: 3px solid var(--primary); padding-bottom: 0.1rem; }
+.topbar-date { font-size: 0.78rem; color: var(--text-soft); font-weight: 500; }
 
-.search-bar { position: relative; margin-left: auto; width: 340px; max-width: 40vw; }
+.search-bar { position: relative; flex: 1; max-width: 380px; min-width: 0; }
 
 .search-bar input {
     width: 100%;
@@ -269,18 +269,19 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.35rem 0.9rem;
-    border-radius: 999px;
-    font-size: 0.83rem;
-    font-weight: 700;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     white-space: nowrap;
     transition: background 0.3s, color 0.3s;
 }
 
 .open-status.open {
-    background: var(--success-bg);
-    color: var(--success);
-    box-shadow: 0 0 0 3px rgba(24, 165, 95, 0.12);
+    background: #bbcc6a;
+    color: #2B2226;
 }
 
 .open-status.closed {
