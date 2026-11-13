@@ -10,6 +10,7 @@
     --side-text: #D9CDB8;
 
     --bg: #F7F3EA;
+    --row: #F3EEE2; /* lignes-pilules : un ton sous le blanc */
     --surface: #FFFFFF;
     --border: #E5DCC8;
     --text: #2B2226;
@@ -751,9 +752,12 @@ main {
     align-items: center;
     gap: 0.6rem;
     flex-wrap: wrap;
-    padding: 0.5rem 0.6rem;
-    border-radius: var(--radius-sm);
-    transition: background 0.15s;
+    padding: 0.58rem 0.75rem;
+    margin-bottom: 0.4rem;
+    background: var(--row);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: background 0.15s, border-color 0.15s;
 }
 .m-card .visits-list li:hover { background: var(--accent-light); }
 .f-line-title { flex: 1; min-width: 0; }
@@ -932,9 +936,10 @@ main {
 }
 .visits-list li {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 0.5rem 0.95rem; font-size: 0.87rem; border-bottom: 1px solid var(--bg);
+    padding: 0.58rem 0.75rem; margin: 0.4rem; background: var(--row);
+    border: 1px solid transparent; border-radius: 4px; font-size: 0.87rem;
 }
-.visits-list li:last-child { border-bottom: none; }
+.visits-list li:hover { border-color: #bbcc6a; }
 
 .member-no {
     font-size: 0.74rem; font-weight: 700; color: var(--accent-hover);
@@ -1339,10 +1344,10 @@ main {
 
 .checkin-item {
     display: flex; align-items: center; gap: 0.75rem;
-    padding: 0.6rem 0.85rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    padding: 0.58rem 0.75rem;
+    background: var(--row);
+    border: 1px solid transparent;
+    border-radius: 4px;
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s, transform 0.12s;
 }
@@ -1363,9 +1368,12 @@ main {
 /* ============ Visites récentes ============ */
 .recent-list li {
     display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.5rem 0; border-bottom: 1px solid var(--bg); font-size: 0.91rem;
+    padding: 0.58rem 0.75rem; background: var(--row);
+    border: 1px solid transparent; border-radius: 4px;
+    margin-bottom: 0.4rem; font-size: 0.91rem;
 }
-.recent-list li:last-child { border-bottom: none; }
+.recent-list li:last-child { margin-bottom: 0; }
+.recent-list li:hover { border-color: #bbcc6a; }
 .rv-name { font-weight: 700; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rv-date { color: var(--text-soft); font-size: 0.84rem; }
 
@@ -1547,6 +1555,7 @@ main {
         --side-bg-2: #201A1E;
         --side-text: #A8988F;
         --bg: #1A161A;
+        --row: #2E282D;
         --surface: #252025;
         --border: #3A3238;
         --text: #EFE9E0;
@@ -1593,6 +1602,7 @@ main {
         --side-bg-2: #3A2E33;
         --side-text: #D9CDB8;
         --bg: #F7F3EA;
+        --row: #F3EEE2;
         --surface: #FFFFFF;
         --border: #E5DCC8;
         --text: #2B2226;
@@ -1635,6 +1645,7 @@ main {
         --side-bg-2: #201A1E;
         --side-text: #A8988F;
         --bg: #1A161A;
+        --row: #2E282D;
         --surface: #252025;
         --border: #3A3238;
         --text: #EFE9E0;
