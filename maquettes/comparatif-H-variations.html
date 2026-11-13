@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparatif H — 4 variations du bordeaux apprivoisé</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #1a1d22; color: #fff; padding: 1.5rem; }
+h1 { font-size: 1.3rem; margin-bottom: 0.4rem; }
+.lead { font-size: 0.85rem; color: #9aa0a8; margin-bottom: 1.5rem; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; }
+.pal { background: #fff; border-radius: 10px; overflow: hidden; }
+.pal h2 { font-size: 0.95rem; padding: 0.8rem 1rem 0.3rem; }
+.pal .desc { font-size: 0.72rem; padding: 0 1rem 0.7rem; }
+.swatches { display: flex; height: 2.2rem; }
+.swatches span { flex: 1; }
+/* mini dashboard commun */
+.md { padding: 0.8rem 1rem 1rem; font-size: 11px; }
+.md .kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.7rem; }
+.md .k { background: #fff; border: 1px solid #00000012; border-left: 3px solid; border-radius: 5px; padding: 0.5rem 0.6rem; }
+.md .k .n { font-size: 1.25rem; font-weight: 700; line-height: 1; }
+.md .k .l { font-size: 0.58rem; font-weight: 600; margin-top: 0.15rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.65; }
+.md .hero { border-left-width: 3px; }
+.md .card { background: #fff; border: 1px solid #00000012; border-radius: 5px; padding: 0.6rem 0.7rem; margin-bottom: 0.5rem; }
+.md .card h3 { font-size: 0.72rem; font-weight: 700; margin-bottom: 0.4rem; }
+.md .row { display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.45rem; border-radius: 4px; margin-bottom: 0.25rem; font-weight: 500; }
+.md .slot { padding: 0.08rem 0.35rem; border-radius: 3px; font-weight: 700; font-size: 0.55rem; text-transform: uppercase; }
+.md .count { margin-left: auto; padding: 0.08rem 0.35rem; border-radius: 3px; font-weight: 600; font-size: 0.58rem; }
+.md .tag { padding: 0.05rem 0.35rem; border-radius: 3px; font-size: 0.52rem; font-weight: 700; text-transform: uppercase; }
+
+/* ===== H1 : référence ===== */
+.pal-a .md { background: #F7F3EA; }
+.pal-a h2, .pal-a .desc { color: #2B2226; }
+.pal-a .hero { background: #3A2E33; border-color: #9f0c45; color: #fff; }
+.pal-a .hero .n { color: #F2A883; }
+.pal-a .k { border-left-color: #F2A883; }
+.pal-a .card h3 { color: #3A2E33; }
+.pal-a .row { background: #F3EEE2; }
+.pal-a .slot { background: #2B2226; color: #F2A883; }
+.pal-a .count { background: #2B2226; color: #fff; }
+.pal-a .tag { background: #9f0c45; color: #fff; }
+
+/* ===== H2 : corail dominant ===== */
+.pal-b .md { background: #F7F3EA; }
+.pal-b h2, .pal-b .desc { color: #2B2226; }
+.pal-b .hero { background: #ea885a; border-color: #D46A3F; color: #fff; }
+.pal-b .k { border-left-color: #ea885a; }
+.pal-b .card h3 { color: #2B2226; }
+.pal-b .row { background: #F3EEE2; }
+.pal-b .slot { background: #ea885a; color: #fff; }
+.pal-b .count { background: #2B2226; color: #fff; }
+.pal-b .tag { background: #D46A3F; color: #fff; }
+
+/* ===== H3 : bordeaux plus présent ===== */
+.pal-c .md { background: #F7F3EA; }
+.pal-c h2, .pal-c .desc { color: #2B2226; }
+.pal-c .hero { background: #6E1233; border-color: #9f0c45; color: #fff; }
+.pal-c .hero .n { color: #F2A883; }
+.pal-c .k { border-left-color: #C97F8F; }
+.pal-c .card h3 { color: #6E1233; }
+.pal-c .row { background: #F3EEE2; }
+.pal-c .slot { background: #6E1233; color: #F2A883; }
+.pal-c .count { background: #2B2226; color: #fff; }
+.pal-c .tag { background: #9f0c45; color: #fff; }
+
+/* ===== H4 : aérien (zéro aplat sombre) ===== */
+.pal-d .md { background: #F7F3EA; }
+.pal-d h2, .pal-d .desc { color: #2B2226; }
+.pal-d .hero { background: #fff; border-color: #9f0c45; color: #2B2226; }
+.pal-d .hero .n { color: #9f0c45; }
+.pal-d .k { border-left-color: #F2A883; }
+.pal-d .card h3 { color: #3A2E33; }
+.pal-d .row { background: #F3EEE2; }
+.pal-d .slot { background: #3A2E33; color: #F2A883; }
+.pal-d .count { background: #F2A883; color: #3A2E33; }
+.pal-d .tag { background: #9f0c45; color: #fff; }
+</style>
+</head>
+<body>
+<h1>🎨 Comparatif H — 4 dosages de la recette brun + bordeaux + corail</h1>
+<p class="lead">H1 = la référence (brun-noir structure, bordeaux micro-doses) · H2 = corail dominant · H3 = bordeaux plus présent · H4 = aérien (zéro aplat sombre)</p>
+
+<div class="grid">
+
+<div class="pal pal-a">
+    <div class="swatches"><span style="background:#3A2E33"></span><span style="background:#9f0c45"></span><span style="background:#F2A883"></span><span style="background:#F7F3EA"></span><span style="background:#2B2226"></span></div>
+    <h2>H1 — Référence (la maquette H)</h2>
+    <p class="desc">Brun-noir en structure, bordeaux en micro-doses, corail clair en chaleur.</p>
+    <div class="md">
+        <div class="kpi">
+            <div class="k hero"><div class="n">12</div><div class="l">Visites</div></div>
+            <div class="k"><div class="n">2</div><div class="l">Incidents</div></div>
+            <div class="k"><div class="n">9</div><div class="l">En attente</div></div>
+        </div>
+        <div class="card">
+            <h3>🌱 Aujourd'hui à l'Atelier</h3>
+            <div class="row"><span class="slot">Matin</span><strong>Canva</strong><span class="count">6/4</span></div>
+            <div class="row"><span class="slot">A-midi</span><strong>WordPress</strong><span class="count">4/2</span></div>
+        </div>
+        <div class="card">
+            <h3>🔔 Notifications</h3>
+            <div class="row">⚠️ Salle manquante <span class="tag">Alerte</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="pal pal-b">
+    <div class="swatches"><span style="background:#ea885a"></span><span style="background:#D46A3F"></span><span style="background:#F7F3EA"></span><span style="background:#ffffff"></span><span style="background:#2B2226"></span></div>
+    <h2>H2 — Corail dominant</h2>
+    <p class="desc">Le hero passe au corail : plus vif, plus chaleureux, bordeaux en badge seulement.</p>
+    <div class="md">
+        <div class="kpi">
+            <div class="k hero"><div class="n">12</div><div class="l">Visites</div></div>
+            <div class="k"><div class="n">2</div><div class="l">Incidents</div></div>
+            <div class="k"><div class="n">9</div><div class="l">En attente</div></div>
+        </div>
+        <div class="card">
+            <h3>🌱 Aujourd'hui à l'Atelier</h3>
+            <div class="row"><span class="slot">Matin</span><strong>Canva</strong><span class="count">6/4</span></div>
+            <div class="row"><span class="slot">A-midi</span><strong>WordPress</strong><span class="count">4/2</span></div>
+        </div>
+        <div class="card">
+            <h3>🔔 Notifications</h3>
+            <div class="row">⚠️ Salle manquante <span class="tag">Alerte</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="pal pal-c">
+    <div class="swatches"><span style="background:#6E1233"></span><span style="background:#9f0c45"></span><span style="background:#C97F8F"></span><span style="background:#F7F3EA"></span><span style="background:#F2A883"></span></div>
+    <h2>H3 — Bordeaux plus présent</h2>
+    <p class="desc">Bordeaux désaturé #6E1233 en hero et titres : plus d'identité charte, toujours pas criard.</p>
+    <div class="md">
+        <div class="kpi">
+            <div class="k hero"><div class="n">12</div><div class="l">Visites</div></div>
+            <div class="k"><div class="n">2</div><div class="l">Incidents</div></div>
+            <div class="k"><div class="n">9</div><div class="l">En attente</div></div>
+        </div>
+        <div class="card">
+            <h3>🌱 Aujourd'hui à l'Atelier</h3>
+            <div class="row"><span class="slot">Matin</span><strong>Canva</strong><span class="count">6/4</span></div>
+            <div class="row"><span class="slot">A-midi</span><strong>WordPress</strong><span class="count">4/2</span></div>
+        </div>
+        <div class="card">
+            <h3>🔔 Notifications</h3>
+            <div class="row">⚠️ Salle manquante <span class="tag">Alerte</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="pal pal-d">
+    <div class="swatches"><span style="background:#F7F3EA"></span><span style="background:#ffffff"></span><span style="background:#F2A883"></span><span style="background:#9f0c45"></span><span style="background:#3A2E33"></span></div>
+    <h2>H4 — Aérien</h2>
+    <p class="desc">Zéro aplat sombre : hero blanc à liseré bordeaux, chiffre bordeaux — tout en légèreté.</p>
+    <div class="md">
+        <div class="kpi">
+            <div class="k hero"><div class="n">12</div><div class="l">Visites</div></div>
+            <div class="k"><div class="n">2</div><div class="l">Incidents</div></div>
+            <div class="k"><div class="n">9</div><div class="l">En attente</div></div>
+        </div>
+        <div class="card">
+            <h3>🌱 Aujourd'hui à l'Atelier</h3>
+            <div class="row"><span class="slot">Matin</span><strong>Canva</strong><span class="count">6/4</span></div>
+            <div class="row"><span class="slot">A-midi</span><strong>WordPress</strong><span class="count">4/2</span></div>
+        </div>
+        <div class="card">
+            <h3>🔔 Notifications</h3>
+            <div class="row">⚠️ Salle manquante <span class="tag">Alerte</span></div>
+        </div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>
