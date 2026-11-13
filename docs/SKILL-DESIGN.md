@@ -1,125 +1,157 @@
-# SKILL-DESIGN — Le design de l'Atelier du Web (mémoire de travail)
+# SKILL-DESIGN — Bibliothèque de thèmes de l'Atelier du Web
 
-> **Comment utiliser ce skill** : toute session qui touche au design (couleurs, mise en page, composants, skin) DOIT lire ce fichier d'abord et s'y conformer. Toute nouvelle décision design validée par l'utilisateur s'ajoute ici.
+> **Comment utiliser ce skill** : ce fichier est la **collection de thèmes** du projet — comme des thèmes WordPress. Chaque thème est un **style graphique complet** : sa palette, sa typographie, ses formes, son ambiance, ses règles d'archi. Un design = un THÈME appliqué sur les 3 couches (couleur, archi CSS, skin).
 >
-> **Définition de travail** (précision de l'utilisateur, nov. 2026) : quand on parle de design, on parle de **TROIS couches** :
-> 1. **Couleur** — la palette et ses rôles
-> 2. **Archi CSS** — marges, coins, filets, ombres, typographie, états
-> 3. **Skin** — les habillages de composants spécifiques (bannières, avatars, modales)
+> Toute session design : 1) lit ce fichier, 2) identifie le thème actif, 3) s'y conforme OU crée/étoffe une fiche thème avec validation de l'utilisateur.
 >
-> Une livraison design n'est complète que si les trois couches sont traitées.
+> **Thème actif : 🌅 Crème-charte** (appliqué en prod, PR #128 + #129)
 
 ---
 
-## 🎨 Couche 1 — La palette « crème-charte » (validée nov. 2026, PR #128)
+## 🌅 THÈME 1 : Crème-charte — *corporate chaleureux* ⭐ ACTIF
 
-Chaque couleur a UN métier — rien ne se dispute :
+**L'histoire** : la chaleur d'un accueil associatif, la rigueur d'un outil pro. L'identité du site en filigrane.
 
-| Couleur | Hex | Métier |
-|---|---|---|
-| **Crème** | `#F7F3EA` | Fond de page — la chaleur qui donne envie |
-| **Blanc** | `#FFFFFF` | Surfaces (cartes), KPI hero — l'air |
-| **Encre brune** | `#2B2226` | Texte, sidebar, compteurs — la structure |
-| **Brun-noir** | `#3A2E33` | Hero de page, titres, aplats structure |
-| **Beige** | `#D9CDB8` | Texte sur fonds bruns (sidebar) |
-| **Beige foncé** | `#C4B49A` | Liserés, hover |
-| **Filet** | `#E5DCC8` | Bordures des cartes |
-| **Bordeaux** | `#9f0c45` | 🍒 L'IDENTITÉ de l'Atelier (charte du site) — primary/accent, chiffre hero, liserés. **TOUJOURS en micro-doses, JAMAIS en aplat dominant** |
-| **Lime** | `#bbcc6a` | 🍋 Le POSITIF (charte du site) — liseré KPI Nouveaux, cartouche Ouvert, tag Attente |
-| **Lime texte** | `#8FA344` | Chiffre sur blanc (contraste — le lime pur est illisible en texte) |
-| **Rouge** | `#D8434B` | ❤️ L'attention — alertes, badge non-lus |
-
-**Dark mode** : bruns chauds sombres (`#171216` sidebar, `#1A161A` fond, `#252025` surfaces), accent beige `#D9CDB8`, primary rosé `#E8A0BC` (lisible sur sombre). **Jamais de bleu nuit.**
-
-**Couleurs fonctionnelles** (statuts sociaux, donut, paiements) : violet `#6C5CE7`, bleu `#2F9BE4`, vert `#18A55F`, ambre `#EFA02C`, rouge `#D8434B` + variantes `-light`. Conservées telles quelles — calibrées pour la lisibilité en petit texte.
-
-### Les leçons couleur (à ne JAMAIS oublier)
-1. **Une charte vitrine ≠ une palette d'app** : le bordeaux du site marche en petits accents sur blanc ; à grande dose dans une app dense, il fatigue et agresse. L'identité en filigrane, pas en peinture.
-2. **Le lime a besoin d'un partenaire sombre** : brun dessous ou texte brun — seul sur crème, il délave.
-3. **Le contraste d'abord** : une couleur claire en texte sur blanc → toujours une variante foncée dérivée (lime → `#8FA344`).
-4. **Chaque couleur un métier** : identité / positif / attention / structure. Si deux couleurs font le même travail, une de trop.
-
----
-
-## 📐 Couche 2 — L'archi CSS « H4 aérien » (cahier des charges validé)
-
-### Coins — jamais plus de 6px
-| Élément | Rayon |
+| | |
 |---|---|
-| Cartes, KPI, recherche | **6px** (`--radius`) |
-| Petits blocs (slots, tags, compteurs, badges) | **3px** |
-| Cartouche Ouvert/Fermé | **4px** (`--radius-sm`) |
-| Sidebar | **0px** — bloc plein |
+| **Genre** | Corporate chaleureux, aérien |
+| **Typo** | Inter (400-700) |
+| **Formes** | Coins 6px max (cartes) / 3-4px (petits blocs) — jamais plus |
+| **Bordures** | Filets 1px beige — les cartes existent par leur contour, pas leur ombre |
+| **Ombres** | Quasi zéro (une très légère sur le hero) — hover = matière (bordure), pas position |
+| **Dégradés** | ZÉRO — tout aplat |
+| **Marge** | Cartes 1.05rem 1.15rem, resserrées, max-width 1440px |
 
-### Bordures — les filets font le travail
-- Cartes : **1px solid** filet — la carte existe par son contour, **pas par son ombre**
-- KPI : 1px + **liseré gauche 3px** qui code la nature de la carte (bordeaux = identité, beige, lime = positif, brun = structure)
-- Lignes : 1px transparent au repos → visible au hover
-- La profondeur vient des **valeurs de fond** (crème < blanc < crème teinté `#F3EEE2`), pas de la 3D
+**Palette (chaque couleur a UN métier)** :
+```
+Crème #F7F3EA (fond/chaleur) · Blanc #FFFFFF (surfaces/air) · Encre #2B2226 + Brun-noir #3A2E33 (structure)
+Beiges #D9CDB8/#C4B49A (liserés, texte sur brun) · Filet #E5DCC8
+Bordeaux #9f0c45 (IDENTITÉ — micro-doses : liserés, chiffre hero, badge)
+Lime #bbcc6a (POSITIF — KPI nouveaux, Ouvert, Attente) · Lime texte #8FA344 (contraste)
+Rouge #D8434B (ATTENTION — alertes) · Fonctionnels : violet/bleu/vert/ambre (statuts)
+```
+**Dark mode** : bruns chauds sombres (#171216/#1A161A/#252025), accent beige, primary rosé #E8A0BC — jamais de bleu nuit.
+**Référence** : `maquettes/H4-aerien-vert-rouge.html` (v5) — validé « J'ADORE ».
+**Leçons du thème** : charte vitrine ≠ app (bordeaux micro-doses) · le lime exige un brun dessous · contraste d'abord (lime foncé pour le texte).
 
-### Ombres — quasi inexistantes
-- Cartes au repos : **zéro ombre**
-- KPI hero : une seule très légère `0 4px 14px rgba(59,46,51,0.08)`
-- **Hover = changement de MATIÈRE, pas de position** : border visible + fond à peine teinté, **aucun translateY, aucun box-shadow au survol**
+---
 
-### Dégradés — **ZÉRO, définitif** (précision utilisateur : « c'est moche »)
-Tout est **aplat**. La profondeur visuelle vient uniquement de l'empilement des fonds.
+## 🧱 THÈME 2 : Brutalist — *néobrutalisme fun*
 
-### Marges — resserrées
-| Élément | Valeur |
+**L'histoire** : l'EPN qui assume sa personnalité — direct, tactile, mémorable.
+
+| | |
 |---|---|
-| Main | `1.6rem 2rem 2.5rem`, max-width **1440px** centré |
-| Cartes | `1.05rem 1.15rem` |
-| KPI | `0.85rem 1rem` |
-| Lignes | `0.58rem 0.75rem`, gap 0.7rem |
-| Gap KPI | `0.9rem` |
-| Gap cartes en grille | `1.1rem` |
+| **Genre** | Néobrutalisme |
+| **Typo** | Space Grotesk (500-700), titres UPPERCASE |
+| **Formes** | Coins **0** — tout est rectangle brut |
+| **Bordures** | **3px noir épaisses** partout |
+| **Ombres** | **Dures et décalées** (`6px 6px 0 noir`) — pas de flou |
+| **Hover** | Translate(-2px,-2px) + ombre qui pousse — l'objet « bouge » physiquement |
+| **Marge** | Généreuse, blocs colorés pleins |
 
-### Typographie (Inter)
-| Élément | Style |
+**Palette** :
+```
+Jaune crème #FFF8E7 (fond) · Noir #111111 (bordures, texte)
+Punchy : rose #FF5D8F · bleu électrique #4D7CFE · lime #B8F135 · jaune soleil #FFC900
+KPI = blocs de couleur pleine · tags = bordés 2px noir
+```
+**Référence** : `maquettes/1-neobrutalisme.html`.
+
+---
+
+## 🌻 THÈME 3 : Solarpunk — *coopérative verte*
+
+**L'histoire** : l'utopie verte et locale — valeurs écologie, entraide, quartier.
+
+| | |
 |---|---|
-| h1 | 1.35rem / 700 / -0.3px |
-| Titres cartes | 0.95rem / 700 |
-| KPI num | 1.8rem / 700 / **tabular-nums** |
-| KPI label | 0.72rem / 600 / UPPERCASE / 0.8px |
-| Lignes | 0.88rem / 500 |
-| Tags/slots | 0.64rem / 700 / UPPERCASE / 0.5px |
+| **Genre** | Solarpunk / corporate doux |
+| **Typo** | Nunito (600-800) — ronde, amicale |
+| **Formes** | Coins **très arrondis** (16-30px, pilules 999px) |
+| **Bordures** | Filets fins + halos de couleurs douces en fond |
+| **Ombres** | Douces et diffuses |
+| **Marge** | Généreuse, tout respire |
 
-### Icônes
-Les **emojis natifs** restent le système d'icônes (précision utilisateur : « on garde les emoji de l'original »).
-
----
-
-## 🧴 Couche 3 — Le skin (composants)
-
-- **Hero de page** : aplat brun-noir `#3A2E33`, boutons blancs translucides — pas de bordeaux plein
-- **KPI hero** : BLANC, liseré bordeaux, chiffre bordeaux (fini les gradients orange-violet)
-- **Sidebar** : encre brune pleine, liseré droit 3px bordeaux, lien actif = fond translucide + liseré gauche, sous-titre beige
-- **Bannières formations** (tones 0-9) : aplats des couleurs fonctionnelles
-- **Avatars membres** : aplats (vert actif, rouge expiré, gris inactif) — plus de gradients
-- **Cartes** : filet + fond blanc, lignes internes sur crème teinté `#F3EEE2`
+**Palette** :
+```
+Beige terre #F5EFE0 (fond) · Vert forêt #2D5A3D (sidebar, titres)
+Mousse #8FBF7A · Soleil #F2B84B · Terracotta #D98E5F · Encre verte #23331F
+Boutons pilules, badges ronds, rangs en cercles
+```
+**Variante corporate** (4b, le coup de cœur initial) : coins 3-6px, marges resserrées, typo Inter, ocre plus sobre — voir `maquettes/4b-solarpunk-corporate.html` et `4e-solarpunk-chaud.html`.
 
 ---
 
-## 🛠️ Le processus de design (la méthode qui a marché)
+## 🖥️ THÈME 4 : Terminal — *le geek assumé*
 
-1. **Maquettes complètes** pour explorer (branche jetable `maquettes-design`)
-2. **Comparatifs côte à côte** pour trancher : le MÊME composant en N palettes sur un écran — jamais itérer à l'aveugle
-3. **Validation explicite de l'utilisateur** avant transposition (« J'ADORE » = feu vert)
-4. **Transposition en 3 couches** : couleurs (`:root` + dark + hex en dur), puis archi (radius/ombres/hovers/marges), puis skin composant par composant
-5. **Jugement en réel** avant merge — la maquette ment, l'écran dit la vérité
+**L'histoire** : un EPN du web qui ressemble à ce que ses usagers imaginent — l'outil des hackers bienveillants.
 
-### Les pièges techniques rencontrés (leçons CI)
-- Emojis en caractères directs, jamais en échappements `\U` dans les scripts
-- Après réordonnancement de blocs HTML : vérifier l'équilibre des balises (fermeture orpheline = cartes hors grille)
-- Après changement de fond d'un composant (sombre → clair) : vérifier TOUS les textes enfants (le bug « label blanc sur fond blanc »)
-- `grep -c "couleur"` pour vérifier zéro résidu après une suppression de palette
+| | |
+|---|---|
+| **Genre** | Rétro-informatique |
+| **Typo** | IBM Plex Mono — monospace intégral |
+| **Formes** | Coins 0, panneaux à filets 1px grille |
+| **Texture** | Scanlines subtiles (repeating-linear-gradient sur overlay) |
+| **Titres** | Commandes : `agenda --today`, `waitlist --top`, prompt `adw:~$` |
+
+**Palette** :
+```
+Fond #0A0E0A (noir vert profond) · Phosphore #33FF66 (texte) · Dim #1E9944
+Ambre #FFB000 (alertes) · Cyan #00D4FF (liens/KPI)
+```
+**Référence** : `maquettes/2-terminal.html`.
 
 ---
 
-## 📍 Références
+## 📰 THÈME 5 : Éditorial — *le journal de l'Atelier*
 
-- Maquettes : branche `maquettes-design` (jetable, jamais fusionnée) — la référence finale : `maquettes/H4-aerien-vert-rouge.html` (v5)
-- Couleurs du site officiel (fournies par l'utilisateur) : `#9f0c45`, `#bbcc6a`, `#14171c`, `#ffffff`, `#eeeeee`
-- PR d'application : #128 (couleurs) + PR archi (radius 6px, aplats, hovers matière)
-- Historique du processus : 14 maquettes, 2 comparatifs, CONTEXT.md session nov. 2026
+**L'histoire** : l'app se lit comme un imprimé — cohérente avec la feuille de séance papier.
+
+| | |
+|---|---|
+| **Genre** | Presse / magazine |
+| **Typo** | Fraunces serif (titres, 600-900) + Libre Franklin (corps) |
+| **Formes** | Filets simples et **doubles** (masthead), aucune boîte — le contenu structure |
+| **Ornement** | Lettrine vermillon sur le premier paragraphe, chiffres oldstyle |
+| **Sections** | En articles : « Aujourd'hui », « Les plus attendues », « Dernières brèves » |
+
+**Palette** :
+```
+Crème papier #FAF6EE · Encre chaude #1C1917 · Gris encre #6B6459
+Vermillon #D93A2B (accents, lettrine) · Olive #6B7A3A (positif)
+```
+**Référence** : `maquettes/3-editorial.html`.
+
+---
+
+## 🎨 THÈME 6 : Claymorphism — *la pâte à modeler*
+
+Pastel bombé 3D douce (lavande/pêche/menthe), ombres internes+externes, ambiance Duolingo — `maquettes/5-claymorphism.html`.
+
+## 📐 THÈME 7 : Swiss — *l'affiche Bauhaus*
+
+Noir/blanc/rouge `#E63329`, typo Inter 900 **géante** (titres 3.4rem, KPI 3.2rem), grille stricte, zéro décoration — `maquettes/6-swiss.html`.
+
+## 🗒️ THÈME 8 : Neo-sobre — *l'invisible parfait*
+
+Gris chauds, zéro bordure, whitespace maximal, hiérarchie pure par la typo — le calme Notion/Linear — `maquettes/7-neo-sobre.html`.
+
+---
+
+## 🛠️ Le processus de design (valable pour tout thème)
+
+1. **Maquette complète** du thème (branche `maquettes-design`)
+2. **Comparatif côte à côte** : le même composant en N thèmes sur un écran — jamais trancher à l'aveugle
+3. **Validation explicite** de l'utilisateur
+4. **Application en 3 couches** : couleur (`:root` + dark + hex en dur) → archi (radius/ombres/hovers/marges/dégradés) → skin (composants)
+5. **Jugement en réel** avant merge
+
+### Pièges techniques (leçons CI)
+- Emojis en caractères directs, jamais en échappements dans les scripts
+- Équilibre des balises après réordonnancement HTML (fermeture orpheline = cartes hors grille)
+- Fond changé (sombre→clair) = vérifier TOUS les textes enfants (le label blanc sur blanc)
+- `grep -c` pour vérifier zéro résidu (gradients, couleurs bannies)
+
+### Perspective : un switcher de thème
+La structure est prête pour un **sélecteur de thème** (comme WordPress — Paramètres → Apparence) : chaque thème = un bloc de variables CSS (`[data-skin="brutalist"] { --bg: ...; --radius: 0; ... }`). Toutes les maquettes existantes fournissent déjà les valeurs. À faire quand l'utilisateur le demande.
