@@ -20,7 +20,8 @@
     --row: #F3EEE2;        /* lignes sur crème */
     --soft: #8A7E68;       /* brun secondaire chaud */
     --bord: #E5DCC8;       /* filet beige chaud */
-    --vert: #bbcc6a;        /* VERT OFFICIEL de la charte du site */
+    --vert: #bbcc6a;        /* LIME officiel de la charte — liserés, surfaces */
+    --vert-texte: #8FA344;  /* lime foncé dérivé — texte sur blanc (contraste) */
     --rouge: #D8434B;       /* rouge officiel (alertes, danger) */
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -46,7 +47,7 @@ h1 em { font-style: normal; color: var(--brun-noir); border-bottom: 3px solid va
 .kpi:nth-child(3) { border-left-color: var(--vert); } /* Nouveaux aujourd'hui : la bonne nouvelle */
 .kpi:nth-child(4) { border-left-color: var(--brun-noir); }
 .kpi .num { font-size: 1.8rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--nuit); }
-.kpi:nth-child(3) .num { color: var(--vert); }
+.kpi:nth-child(3) .num { color: var(--vert-texte); }
 .kpi:nth-child(1) .num { color: var(--bordeaux); }
 .kpi .lab { font-size: 0.72rem; font-weight: 600; color: var(--soft); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.8px; }
 .kpi:nth-child(1) .lab { color: var(--soft); }
