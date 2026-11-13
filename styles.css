@@ -103,7 +103,7 @@ body {
     background: var(--accent);
     display: flex; align-items: center; justify-content: center;
     font-weight: 800; font-size: 1.05rem; flex-shrink: 0;
-    box-shadow: 0 4px 14px rgba(232, 115, 74, 0.4);
+    box-shadow: none;
 }
 
 .brand-text { display: flex; flex-direction: column; line-height: 1.25; }
@@ -136,7 +136,7 @@ body {
 .side-nav a:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
 
 .side-nav a.active {
-    background: rgba(232, 115, 74, 0.18);
+    background: rgba(159, 12, 69, 0.08);
     color: #fff;
     box-shadow: inset 3px 0 0 var(--accent);
 }
@@ -197,7 +197,7 @@ body {
     outline: none;
     background: var(--surface);
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(232, 115, 74, 0.15);
+    box-shadow: none;
 }
 
 .search-bar .search-icon {
@@ -386,13 +386,7 @@ main {
     overflow: hidden;
 }
 
-.hero::after {
-    content: '';
-    position: absolute; right: -60px; top: -90px;
-    width: 260px; height: 260px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(232, 115, 74, 0.35) 0%, transparent 70%);
-    pointer-events: none;
-}
+.hero::after { content: none; }
 
 .hero-lead { opacity: 0.92; font-size: 0.98rem; max-width: 620px; }
 
@@ -512,7 +506,7 @@ main {
 .btn-primary {
     background: var(--accent);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(232, 115, 74, 0.35);
+    box-shadow: none;
 }
 .btn-primary:hover { filter: brightness(0.92); }
 
@@ -761,7 +755,7 @@ main {
     border-radius: var(--radius-sm);
     transition: background 0.15s;
 }
-.m-card .visits-list li:hover { background: rgba(232, 115, 74, 0.05); }
+.m-card .visits-list li:hover { background: var(--accent-light); }
 .f-line-title { flex: 1; min-width: 0; }
 .f-line-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 .f-link {
@@ -967,12 +961,10 @@ main {
 
 /* Fond de page : lumière diffusée de l'accent + grain subtil */
 .app-main {
-    background:
-        radial-gradient(1200px 500px at 70% -10%, rgba(232, 115, 74, 0.06) 0%, transparent 60%),
-        var(--bg);
+    background: var(--bg);
 }
 :root[data-theme="dark"] .app-main,
-:root[data-theme="light"] .app-main { background: radial-gradient(1200px 500px at 70% -10%, rgba(232, 115, 74, 0.05) 0%, transparent 60%), var(--bg); }
+:root[data-theme="light"] .app-main { background: var(--bg); }
 
 /* Topbar : verre dépoli premium */
 .topbar { backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); }
@@ -1262,7 +1254,7 @@ main {
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 .form-group input:hover, .form-group select:hover { border-color: var(--primary-soft); }
-.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(232, 115, 74, 0.15); }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); box-shadow: none; }
 
 .form-hint { font-size: 0.81rem; color: var(--text-soft); margin-top: 0.25rem; }
 
