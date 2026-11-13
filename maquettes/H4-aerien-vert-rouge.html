@@ -20,7 +20,7 @@
     --row: #F3EEE2;        /* lignes sur crème */
     --soft: #8A7E68;       /* brun secondaire chaud */
     --bord: #E5DCC8;       /* filet beige chaud */
-    --vert: #18A55F;        /* vert officiel (succès, ouvert, attente) */
+    --vert: #bbcc6a;        /* VERT OFFICIEL de la charte du site */
     --rouge: #D8434B;       /* rouge officiel (alertes, danger) */
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,7 +37,7 @@ body { font-family: 'Inter', sans-serif; background: var(--creme); color: var(--
 h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.3px; }
 h1 em { font-style: normal; color: var(--brun-noir); border-bottom: 3px solid var(--bordeaux); padding-bottom: 0.1rem; }
 .search { flex: 1; max-width: 380px; padding: 0.55rem 0.9rem; border: 1px solid var(--bord); border-radius: 6px; background: var(--blanc); font-family: inherit; font-weight: 500; font-size: 0.85rem; }
-.open-status { background: var(--vert); color: var(--blanc); font-weight: 600; font-size: 0.72rem; padding: 0.3rem 0.7rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.open-status { background: var(--vert); color: var(--nuit); font-weight: 600; font-size: 0.72rem; padding: 0.3rem 0.7rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 .date { font-size: 0.78rem; color: var(--soft); font-weight: 500; }
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; margin-bottom: 1.2rem; }
 .kpi { background: var(--blanc); border: 1px solid var(--bord); border-left: 3px solid var(--beige-fonce); border-radius: 6px; padding: 0.85rem 1rem; }
@@ -66,7 +66,7 @@ h1 em { font-style: normal; color: var(--brun-noir); border-bottom: 3px solid va
 .notif .msg { font-weight: 500; font-size: 0.88rem; line-height: 1.4; }
 .notif .meta { font-size: 0.72rem; color: var(--soft); font-weight: 500; margin-top: 0.15rem; }
 .tag { display: inline-block; padding: 0.08rem 0.5rem; border-radius: 3px; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: var(--rouge); color: var(--blanc); }
-.tag.attente { background: #E2F6EC; color: #0E6B3B; }
+.tag.attente { background: var(--vert); color: var(--nuit); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
 .card.in-grid { margin-bottom: 0; }
 </style>
