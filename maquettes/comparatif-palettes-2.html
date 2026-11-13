@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparatif palettes 2 — 4 nouvelles directions</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #1a1d22; color: #fff; padding: 1.5rem; }
+h1 { font-size: 1.3rem; margin-bottom: 0.4rem; }
+.lead { font-size: 0.85rem; color: #9aa0a8; margin-bottom: 1.5rem; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; }
+.pal { background: #fff; border-radius: 10px; overflow: hidden; }
+.pal h2 { font-size: 0.95rem; padding: 0.8rem 1rem 0.3rem; }
+.pal .desc { font-size: 0.72rem; padding: 0 1rem 0.7rem; }
+.swatches { display: flex; height: 2.2rem; }
+.swatches span { flex: 1; }
+/* mini dashboard commun */
+.md { padding: 0.8rem 1rem 1rem; font-size: 11px; }
+.md .kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.7rem; }
+.md .k { background: #fff; border: 1px solid #00000012; border-left: 3px solid; border-radius: 5px; padding: 0.5rem 0.6rem; }
+.md .k .n { font-size: 1.25rem; font-weight: 700; line-height: 1; }
+.md .k .l { font-size: 0.58rem; font-weight: 600; margin-top: 0.15rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.65; }
+.md .hero { border-left-width: 3px; }
+.md .card { background: #fff; border: 1px solid #00000012; border-radius: 5px; padding: 0.6rem 0.7rem; margin-bottom: 0.5rem; }
+.md .card h3 { font-size: 0.72rem; font-weight: 700; margin-bottom: 0.4rem; }
+.md .row { display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.45rem; border-radius: 4px; margin-bottom: 0.25rem; font-weight: 500; }
+.md .slot { padding: 0.08rem 0.35rem; border-radius: 3px; font-weight: 700; font-size: 0.55rem; text-transform: uppercase; }
+.md .count { margin-left: auto; padding: 0.08rem 0.35rem; border-radius: 3px; font-weight: 600; font-size: 0.58rem; }
+.md .tag { padding: 0.05rem 0.35rem; border-radius: 3px; font-size: 0.52rem; font-weight: 700; text-transform: uppercase; }
+
+/* ===== E : terracotta & sable ===== */
+.pal-a .md { background: #F5EDE0; }
+.pal-a h2, .pal-a .desc { color: #3A2E24; }
+.pal-a .hero { background: #B4552D; border-color: #B4552D; color: #fff; }
+.pal-a .k { border-left-color: #C97F55; }
+.pal-a .card h3 { color: #8A4526; }
+.pal-a .row { background: #F0E6D6; }
+.pal-a .slot { background: #B4552D; color: #fff; }
+.pal-a .count { background: #3A2E24; color: #fff; }
+.pal-a .tag { background: #C97F55; color: #fff; }
+
+/* ===== F : marine réchauffé ===== */
+.pal-a .md { background: #F2F5F8; }
+.pal-a h2, .pal-a .desc { color: #17252F; }
+.pal-a .hero { background: #0F3D5C; border-color: #0F3D5C; color: #fff; }
+.pal-a .k { border-left-color: #E8734A; }
+.pal-a .card h3 { color: #0F3D5C; }
+.pal-a .row { background: #F2F5F8; }
+.pal-a .slot { background: #0F3D5C; color: #fff; }
+.pal-a .count { background: #0F3D5C; color: #fff; }
+.pal-a .tag { background: #E8734A; color: #fff; }
+
+.pal-b .md { background: #F7F3EA; }
+.pal-b h2, .pal-b .desc { color: #17252F; }
+.pal-b .hero { background: #0F3D5C; border-color: #ea885a; color: #fff; }
+.pal-b .k { border-left-color: #ea885a; }
+.pal-b .card h3 { color: #0F3D5C; }
+.pal-b .row { background: #F3EEE2; }
+.pal-b .slot { background: #0F3D5C; color: #fff; }
+.pal-b .count { background: #0F3D5C; color: #fff; }
+.pal-b .tag { background: #ea885a; color: #fff; }
+
+/* ===== G : olive & miel ===== */
+.pal-b .md { background: #F7F3EA; }
+.pal-b h2, .pal-b .desc { color: #2B2A22; }
+.pal-b .hero { background: #2D5A3D; border-color: #D9A03F; color: #fff; }
+.pal-b .hero .n { color: #F2C879; }
+.pal-b .k { border-left-color: #5E8C5A; }
+.pal-b .card h3 { color: #2D5A3D; }
+.pal-b .row { background: #F3EEE2; }
+.pal-b .slot { background: #D9A03F; color: #fff; }
+.pal-b .count { background: #2D5A3D; color: #fff; }
+.pal-b .tag { background: #C97F55; color: #fff; }
+
+.pal-c .md { background: #F6F4EC; }
+.pal-c h2, .pal-c .desc { color: #2E2F24; }
+.pal-c .hero { background: #6B7A3A; border-color: #E8B84B; color: #fff; }
+.pal-c .hero .n { color: #F2D488; }
+.pal-c .k { border-left-color: #E8B84B; }
+.pal-c .card h3 { color: #55612F; }
+.pal-c .row { background: #EFEBDD; }
+.pal-c .slot { background: #E8B84B; color: #2E2F24; }
+.pal-c .count { background: #55612F; color: #fff; }
+.pal-c .tag { background: #A8874B; color: #fff; }
+
+/* ===== H : bordeaux apprivoisé ===== */
+.pal-c .md { background: #F7F3EA; }
+.pal-c h2, .pal-c .desc { color: #14171c; }
+.pal-c .hero { background: #ea885a; border-color: #D46A3F; color: #fff; }
+.pal-c .k { border-left-color: #ea885a; }
+.pal-c .card h3 { color: #14171c; }
+.pal-c .row { background: #F3EEE2; }
+.pal-c .slot { background: #ea885a; color: #fff; }
+.pal-c .count { background: #14171c; color: #fff; }
+.pal-c .tag { background: #D46A3F; color: #fff; }
+
+.pal-d .md { background: #F7F3EA; }
+.pal-d h2, .pal-d .desc { color: #2B2226; }
+.pal-d .hero { background: #3A2E33; border-color: #9f0c45; color: #fff; }
+.pal-d .hero .n { color: #F2A883; }
+.pal-d .k { border-left-color: #C97F8F; }
+.pal-d .card h3 { color: #3A2E33; }
+.pal-d .row { background: #F3EEE2; }
+.pal-d .slot { background: #2B2226; color: #F2A883; }
+.pal-d .count { background: #2B2226; color: #fff; }
+.pal-d .tag { background: #9f0c45; color: #fff; }
+
+.pal-d .md { background: #eeeeee; }
+.pal-d h2, .pal-d .desc { color: #14171c; }
+.pal-d .hero { background: #9f0c45; border-color: #9f0c45; color: #fff; }
+.pal-d .hero .n { color: #bbcc6a; }
+.pal-d .k { border-left-color: #bbcc6a; }
+.pal-d .card h3 { color: #9f0c45; }
+.pal-d .row { background: #eeeeee; }
+.pal-d .slot { background: #14171c; color: #bbcc6a; }
+.pal-d .count { background: #14171c; color: #fff; }
+.pal-d .tag { background: #9f0c45; color: #fff; }
+</style>
+</head>
+<body>
+<h1>🎨 Comparatif 2 — 4 nouvelles directions chaleureuses</h1>
+<p class="lead">E = terracotta &amp; sable · F = marine réchauffé (transition douce depuis l'actuelle) · G = olive &amp; miel · H = bordeaux apprivoisé (la charte rendue vivable)</p>
+
+<div class="grid">
+
+<div class="pal pal-a">
+    <div class="swatches"><span style="background:#B4552D"></span><span style="background:#C97F55"></span><span style="background:#F5EDE0"></span><span style="background:#ffffff"></span><span style="background:#3A2E24"></span></div>
+    <h2>E — Terracotta &amp; sable</h2>
+    <p class="desc">Terre cuite + sable : méditerranéen, chaleureux et sobre.</p>
+    <div class="md">
+        <div class="kpi">
+            <div class="k hero"><div class="n">12</div><div class="l">Visites</div></div>
+            <div class="k"><div class="n">2</div><div class="l">Incidents</div></div>
+            <div class="k"><div class="n">9</div><div class="l">En attente</div></div>
+        </div>
+        <div class="card">
+            <h3>🌱 Aujourd'hui à l'Atelier</h3>
+            <div class="row"><span class="slot">Matin</span><strong>Canva</strong><span class="count">6/4</span></div>
+            <div class="row"><span class="slot">A-midi</span><strong>WordPress</strong><span class="count">4/2</span></div>
+        </div>
+        <div class="card">
+            <h3>🔔 Notifications</h3>
+            <div class="row">⚠️ Salle manquante <span class="tag">Alerte</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="pal pal-b">
+    <div class="swatches"><span style="background:#0F3D5C"></span><span style="background:#ea885a"></span><span style="background:#F7F3EA"></span><span style="background:#ffffff"></span><span style="background:#17252F"></span></div>
+    <h2>F — Marine réchauffé</h2>
+    <p class="desc">Le marine familier + fond crème + corail : la transition douce depuis l'actuelle.</p>
+    <div class="md">
+        <div class="kpi">
+            <div class="k hero"><div class="n">12</div><div class="l">Visites</div></div>
+            <div class="k"><div class="n">2</div><div class="l">Incidents</div></div>
+            <div class="k"><div class="n">9</div><div class="l">En attente</div></div>
+        </div>
+        <div class="card">
+            <h3>🌱 Aujourd'hui à l'Atelier</h3>
+            <div class="row"><span class="slot">Matin</span><strong>Canva</strong><span class="count">6/4</span></div>
+            <div class="row"><span class="slot">A-midi</span><strong>WordPress</strong><span class="count">4/2</span></div>
+        </div>
+        <div class="card">
+            <h3>🔔 Notifications</h3>
+            <div class="row">⚠️ Salle manquante <span class="tag">Alerte</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="pal pal-c">
+    <div class="swatches"><span style="background:#6B7A3A"></span><span style="background:#E8B84B"></span><span style="background:#F6F4EC"></span><span style="background:#ffffff"></span><span style="background:#55612F"></span></div>
+    <h2>G — Olive &amp; miel</h2>
+    <p class="desc">Olive + miel + crème : naturelle, douce, apaisante.</p>
+    <div class="md">
+        <div class="kpi">
+            <div class="k hero"><div class="n">12</div><div class="l">Visites</div></div>
+            <div class="k"><div class="n">2</div><div class="l">Incidents</div></div>
+            <div class="k"><div class="n">9</div><div class="l">En attente</div></div>
+        </div>
+        <div class="card">
+            <h3>🌱 Aujourd'hui à l'Atelier</h3>
+            <div class="row"><span class="slot">Matin</span><strong>Canva</strong><span class="count">6/4</span></div>
+            <div class="row"><span class="slot">A-midi</span><strong>WordPress</strong><span class="count">4/2</span></div>
+        </div>
+        <div class="card">
+            <h3>🔔 Notifications</h3>
+            <div class="row">⚠️ Salle manquante <span class="tag">Alerte</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="pal pal-d">
+    <div class="swatches"><span style="background:#9f0c45"></span><span style="background:#F2A883"></span><span style="background:#3A2E33"></span><span style="background:#F7F3EA"></span><span style="background:#ffffff"></span></div>
+    <h2>H — Bordeaux apprivoisé</h2>
+    <p class="desc">La charte en micro-doses : bordeaux en liserés/badge, brun-noir chaud en structure.</p>
+    <div class="md">
+        <div class="kpi">
+            <div class="k hero"><div class="n">12</div><div class="l">Visites</div></div>
+            <div class="k"><div class="n">2</div><div class="l">Incidents</div></div>
+            <div class="k"><div class="n">9</div><div class="l">En attente</div></div>
+        </div>
+        <div class="card">
+            <h3>🌱 Aujourd'hui à l'Atelier</h3>
+            <div class="row"><span class="slot">Matin</span><strong>Canva</strong><span class="count">6/4</span></div>
+            <div class="row"><span class="slot">A-midi</span><strong>WordPress</strong><span class="count">4/2</span></div>
+        </div>
+        <div class="card">
+            <h3>🔔 Notifications</h3>
+            <div class="row">⚠️ Salle manquante <span class="tag">Alerte</span></div>
+        </div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>
