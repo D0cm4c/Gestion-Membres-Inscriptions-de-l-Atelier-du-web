@@ -110,6 +110,12 @@ Fait dans cette session (PRs #110 à #125, toutes fusionnées) :
 - **Compteurs « X/Y inscrits/payés »** : badges des cartes formations.html (format nu X/Y, détail au survol) et grand compteur de formation.html ; `paid_count` dans listFormations.
 - **Maquettes design** : 8 directions explorées sur la branche jetable `maquettes-design` (jamais fusionnée) — néobrutalisme, terminal, éditorial, solarpunk, solarpunk-corporate (4b, coup de cœur de l'utilisateur, « gardée sous le coude »), claymorphism, swiss, neo-sobre. Liens via raw.githack.com.
 
+## 🎨 Design — le skill (nov. 2026)
+
+Le design de l'app est désormais défini dans **`docs/SKILL-DESIGN.md`** — TOUTE session qui touche au design (couleurs, archi CSS, skin) doit le lire d'abord et s'y conformer. Définition de travail (précision utilisateur) : design = **couleur + archi CSS + skin** — trois couches, une livraison n'est complète que si les trois sont traitées.
+
+Le skill contient : la palette crème-charte (chaque couleur a UN métier), le cahier des charges architectural H4 (radius 6px max, filets pas d'ombres, zéro dégradé, hover = matière pas position, marges resserrées, typo Inter), le skin des composants, le processus de design validé (maquettes → comparatifs → validation → transposition 3 couches), et les leçons.
+
 ## 🧠 Leçons apprises (méthodes qui ont marché)
 
 1. PRs incrémentales, une fonctionnalité complète par PR, fusionnées dans l'ordre.
