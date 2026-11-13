@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquette 8 — Crème + bordeaux + corail (sans lime)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+:root {
+    --bordeaux: #9f0c45;   /* signature du site */
+    --nuit: #14171c;       /* quasi-noir bleuté */
+    --blanc: #ffffff;
+    --corail: #ea885a;     /* corail chaud — la couleur qui donne envie */
+    --corail-clair: #F2A883; /* variante claire */
+    --corail-fonce: #D46A3F; /* variante hover */
+    --corail-doux: #FBE9DE;  /* fond corail très pâle */
+    --creme: #F7F3EA;      /* fond crème chaud — la chaleur qui donne envie */
+    --row: #F3EEE2;        /* lignes sur crème */
+    --soft: #8A7E68;       /* brun secondaire chaud */
+    --bord: #E5DCC8;       /* filet beige chaud */
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--creme); color: var(--nuit); display: flex; min-height: 100vh; font-size: 14px; }
+.side { width: 225px; background: var(--nuit); flex-shrink: 0; border-right: 3px solid var(--bordeaux); }
+.brand { color: var(--blanc); font-weight: 700; font-size: 1.05rem; padding: 1.1rem 1.1rem 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.brand small { display: block; color: var(--corail-clair); font-size: 0.66rem; font-weight: 600; letter-spacing: 1.8px; text-transform: uppercase; margin-top: 0.25rem; }
+.nav a { display: flex; align-items: center; gap: 0.6rem; padding: 0.62rem 1.1rem; color: #c9cdd4; text-decoration: none; font-weight: 500; font-size: 0.86rem; border-left: 3px solid transparent; }
+.nav a:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.nav a.active { background: rgba(159,12,69,0.35); color: var(--corail-clair); border-left-color: var(--bordeaux); font-weight: 600; }
+.nav .badge { margin-left: auto; background: var(--bordeaux); color: var(--blanc); font-weight: 600; font-size: 0.66rem; padding: 0.08rem 0.45rem; border-radius: 3px; }
+.main { flex: 1; padding: 1.6rem 2rem 2.5rem; max-width: 1440px; width: 100%; margin: 0 auto; }
+.topbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.3rem; }
+h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.3px; }
+h1 em { font-style: normal; color: var(--bordeaux); border-bottom: 3px solid var(--corail); padding-bottom: 0.1rem; }
+.search { flex: 1; max-width: 380px; padding: 0.55rem 0.9rem; border: 1px solid var(--bord); border-radius: 6px; background: var(--blanc); font-family: inherit; font-weight: 500; font-size: 0.85rem; }
+.open-status { background: var(--corail-fonce); color: var(--blanc); font-weight: 600; font-size: 0.72rem; padding: 0.3rem 0.7rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.date { font-size: 0.78rem; color: var(--soft); font-weight: 500; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; margin-bottom: 1.2rem; }
+.kpi { background: var(--blanc); border: 1px solid var(--bord); border-left: 3px solid var(--corail); border-radius: 6px; padding: 0.85rem 1rem; }
+.kpi:nth-child(1) { border-left-color: var(--bordeaux); background: var(--bordeaux); color: var(--blanc); }
+.kpi:nth-child(2) { border-left-color: var(--corail); }
+.kpi:nth-child(4) { border-left-color: var(--nuit); }
+.kpi .num { font-size: 1.8rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--nuit); }
+.kpi:nth-child(1) .num { color: var(--corail-clair); }
+.kpi .lab { font-size: 0.72rem; font-weight: 600; color: var(--soft); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.8px; }
+.kpi:nth-child(1) .lab { color: rgba(255,255,255,0.8); }
+.card { background: var(--blanc); border: 1px solid var(--bord); border-radius: 6px; padding: 1.05rem 1.15rem; margin-bottom: 1.1rem; }
+.card h3 { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.85rem; color: var(--bordeaux); }
+.card h3 .hint { margin-left: auto; font-size: 0.72rem; color: var(--soft); font-weight: 500; }
+.row { display: flex; align-items: center; gap: 0.7rem; padding: 0.58rem 0.75rem; border-radius: 4px; margin-bottom: 0.4rem; background: var(--row); font-weight: 500; font-size: 0.88rem; border: 1px solid transparent; }
+.row:hover { border-color: var(--corail); background: var(--corail-doux); }
+.row:last-child { margin-bottom: 0; }
+.slot { background: var(--corail); color: var(--blanc); padding: 0.14rem 0.55rem; border-radius: 3px; font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.slot.pm { background: var(--bordeaux); color: var(--blanc); }
+.count { margin-left: auto; background: var(--nuit); color: var(--blanc); padding: 0.14rem 0.55rem; border-radius: 3px; font-weight: 600; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+.rank { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; background: var(--blanc); color: var(--bordeaux); border: 1px solid var(--bord); border-radius: 3px; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+.hint { font-size: 0.76rem; color: var(--soft); font-weight: 400; }
+.notif { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.65rem 0.3rem; border-bottom: 1px solid var(--bord); }
+.notif:last-child { border-bottom: none; }
+.notif .msg { font-weight: 500; font-size: 0.88rem; line-height: 1.4; }
+.notif .meta { font-size: 0.72rem; color: var(--soft); font-weight: 500; margin-top: 0.15rem; }
+.tag { display: inline-block; padding: 0.08rem 0.5rem; border-radius: 3px; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: var(--bordeaux); color: var(--blanc); }
+.tag.attente { background: var(--corail); color: var(--blanc); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+.card.in-grid { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<nav class="side">
+    <div class="brand">Atelier du Web<small>EPN · Saint-Gilles</small></div>
+    <div class="nav">
+        <a href="#" class="active">📊 Tableau de bord</a>
+        <a href="#">👥 Membres</a>
+        <a href="#">🎓 Formations</a>
+        <a href="#">📅 Salles</a>
+        <a href="#">🛠️ Incidents</a>
+        <a href="#">💡 Suggestions</a>
+        <a href="#">📈 Statistiques</a>
+        <a href="#">🔔 Notifications <span class="badge">3</span></a>
+    </div>
+</nav>
+<main class="main">
+    <div class="topbar">
+        <h1><em>Tableau de bord</em></h1>
+        <input class="search" placeholder="Rechercher : membre, formation…">
+        <span class="date">Vendredi 13 nov. 2026</span>
+        <span class="open-status">Ouvert · 9h–17h</span>
+    </div>
+
+    <div class="kpis">
+        <div class="kpi"><div class="num">12</div><div class="lab">Visites aujourd'hui</div></div>
+        <div class="kpi"><div class="num">2</div><div class="lab">Incidents ouverts</div></div>
+        <div class="kpi"><div class="num">3</div><div class="lab">Nouveaux aujourd'hui</div></div>
+        <div class="kpi"><div class="num">9</div><div class="lab">En liste d'attente</div></div>
+    </div>
+
+    <div class="card">
+        <h3>🌱 Aujourd'hui à l'Atelier <span class="hint">2 formations · 10 inscrits</span></h3>
+        <div class="row"><span class="slot">Matin</span><strong>Créez des designs avec Canva</strong><span class="hint">9h30–12h30 · L'Atelier du web</span><span class="count">6/4 inscrits/payés</span></div>
+        <div class="row"><span class="slot pm">A-midi</span><strong>Initiation à WordPress</strong><span class="hint">13h30–16h30 · Salle 2</span><span class="count">4/2 inscrits/payés</span></div>
+    </div>
+
+    <div class="grid2">
+        <div class="card in-grid">
+            <h3>📋 Dernières visites</h3>
+            <div class="row"><strong>Marie Dupont</strong><span class="hint">#1002 · il y a 20 min</span><span class="count">1 €</span></div>
+            <div class="row"><strong>Jean Martin</strong><span class="hint">#1045 · il y a 1 h</span><span class="count">incluse</span></div>
+            <div class="row"><strong>Sofia Garcia</strong><span class="hint">#1010 · il y a 2 h</span><span class="count">1 €</span></div>
+        </div>
+        <div class="card in-grid">
+            <h3>🖨️ Impressions à solder</h3>
+            <div class="row"><strong>Ahmed Benali</strong><span class="hint">#1032 · 2 impressions</span><span class="count">0,80 €</span></div>
+            <div class="row"><strong>Lucie Peeters</strong><span class="hint">#1018 · 1 impression</span><span class="count">0,50 €</span></div>
+        </div>
+    </div>
+
+    <div class="grid2" style="margin-top:1.1rem;">
+        <div class="card in-grid">
+            <h3>🔔 Dernières notifications</h3>
+            <div class="notif">
+                <span>⚠️</span>
+                <div>
+                    <div class="msg">« Créez des designs avec Canva » n'a pas de salle attribuée</div>
+                    <div class="meta">il y a 2 h · <span class="tag">Alerte</span></div>
+                </div>
+            </div>
+            <div class="notif">
+                <span>🎯</span>
+                <div>
+                    <div class="msg">5 membres attendent « Canva » — nouvelles dates disponibles</div>
+                    <div class="meta">il y a 5 h · <span class="tag attente">Attente</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="card in-grid">
+            <h3>🎯 Les plus attendues <span class="hint">9 en attente</span></h3>
+            <div class="row"><span class="rank">1</span><strong>Créez des designs avec Canva</strong><span class="count">5 en attente</span></div>
+            <div class="row"><span class="rank">2</span><strong>Initiation à WordPress</strong><span class="count">4 en attente</span></div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
