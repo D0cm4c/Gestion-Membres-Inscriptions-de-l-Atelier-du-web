@@ -43,8 +43,10 @@ h1 em { font-style: normal; color: var(--brun-noir); border-bottom: 3px solid va
 .kpi { background: var(--blanc); border: 1px solid var(--bord); border-left: 3px solid var(--beige-fonce); border-radius: 6px; padding: 0.85rem 1rem; }
 .kpi:nth-child(1) { border-left-color: var(--bordeaux); background: var(--blanc); color: var(--encre); }
 .kpi:nth-child(2) { border-left-color: var(--beige-fonce); }
+.kpi:nth-child(3) { border-left-color: var(--vert); } /* Nouveaux aujourd'hui : la bonne nouvelle */
 .kpi:nth-child(4) { border-left-color: var(--brun-noir); }
 .kpi .num { font-size: 1.8rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--nuit); }
+.kpi:nth-child(3) .num { color: var(--vert); }
 .kpi:nth-child(1) .num { color: var(--bordeaux); }
 .kpi .lab { font-size: 0.72rem; font-weight: 600; color: var(--soft); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.8px; }
 .kpi:nth-child(1) .lab { color: var(--soft); }
@@ -52,7 +54,7 @@ h1 em { font-style: normal; color: var(--brun-noir); border-bottom: 3px solid va
 .card h3 { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.85rem; color: var(--brun-noir); }
 .card h3 .hint { margin-left: auto; font-size: 0.72rem; color: var(--soft); font-weight: 500; }
 .row { display: flex; align-items: center; gap: 0.7rem; padding: 0.58rem 0.75rem; border-radius: 4px; margin-bottom: 0.4rem; background: var(--row); font-weight: 500; font-size: 0.88rem; border: 1px solid transparent; }
-.row:hover { border-color: var(--beige-fonce); }
+.row:hover { border-color: var(--vert); }
 .row:last-child { margin-bottom: 0; }
 .slot { background: var(--nuit); color: var(--beige); padding: 0.14rem 0.55rem; border-radius: 3px; font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; }
 .slot.pm { background: var(--brun-noir); color: var(--beige); }
