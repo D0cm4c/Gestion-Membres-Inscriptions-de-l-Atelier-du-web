@@ -57,7 +57,7 @@
         }
         html += '<p class="topbar-date" id="todayDate"></p>';
         html += '<span class="open-status" id="openStatus" role="status" aria-live="polite"></span>';
-        html += '<span id="notifCenter" style="display:inline-flex' + (cfg.searchId ? '' : ';margin-left:auto') + '"></span>';
+        html += '<span id="notifCenter"></span>';
         html += '<button class="theme-toggle" id="themeToggle" title="Basculer le thème" aria-label="Basculer entre thème clair et sombre">\uD83C\uDF17</button>';
         html += '</header>';
         return html;
