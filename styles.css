@@ -163,6 +163,7 @@ body {
 .topbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
     padding: 0.95rem 2rem;
     background: rgba(255, 255, 255, 0.85);
@@ -176,7 +177,7 @@ body {
 .topbar-title { font-size: 1.35rem; font-weight: 700; color: var(--text); letter-spacing: -0.3px; border-bottom: 3px solid var(--primary); padding-bottom: 0.1rem; }
 .topbar-date { font-size: 0.78rem; color: var(--text-soft); font-weight: 500; }
 
-.search-bar { position: relative; flex: 1; max-width: 380px; min-width: 0; }
+.search-bar { position: relative; flex: 0 1 380px; min-width: 180px; }
 
 .search-bar input {
     width: 100%;
