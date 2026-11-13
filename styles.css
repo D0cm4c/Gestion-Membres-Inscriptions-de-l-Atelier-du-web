@@ -5,21 +5,21 @@
    ================================================================ */
 
 :root {
-    --side-bg: #0D1B2A;
-    --side-bg-2: #13263A;
-    --side-text: #A9BCCA;
+    --side-bg: #2B2226;
+    --side-bg-2: #3A2E33;
+    --side-text: #D9CDB8;
 
-    --bg: #F2F5F8;
+    --bg: #F7F3EA;
     --surface: #FFFFFF;
-    --border: #E2E8EF;
-    --text: #17252F;
-    --text-soft: #64758A;
+    --border: #E5DCC8;
+    --text: #2B2226;
+    --text-soft: #8A7E68;
 
-    --primary: #0F3D5C;
-    --primary-soft: #1B5A7F;
-    --accent: #E8734A;
-    --accent-hover: #D05A32;
-    --accent-light: #FDEEE7;
+    --primary: #9f0c45;
+    --primary-soft: #7A0A35;
+    --accent: #9f0c45;
+    --accent-hover: #7A0A35;
+    --accent-light: #F7E8E4;
     --violet: #6C5CE7;
     --violet-light: #EEEBFB;
     --blue: #2F9BE4;
@@ -322,7 +322,7 @@ body {
 .heat-cell.l1 { background: #CDE7F6; border-color: #B5D9EF; }
 .heat-cell.l2 { background: #7FBFE4; border-color: #6AB0DA; }
 .heat-cell.l3 { background: #2F9BE4; border-color: #1F86CE; }
-.heat-cell.l4 { background: #0F3D5C; border-color: #0A2E46; }
+.heat-cell.l4 { background: #3A2E33; border-color: #2B2226; }
 
 .heat-cell.today { outline: 2px solid var(--accent); outline-offset: 1px; }
 
@@ -373,7 +373,7 @@ main {
 
 /* ============ Hero ============ */
 .hero {
-    background: linear-gradient(115deg, var(--primary) 0%, var(--primary-soft) 60%, #17607A 130%);
+    background: linear-gradient(115deg, #3A2E33 0%, #2B2226 60%, #241D21 130%);
     border-radius: var(--radius);
     padding: 1.5rem 1.9rem;
     color: #fff;
@@ -1003,14 +1003,23 @@ main {
 
 /* KPI héro (Visites aujourd'hui — la donnée vedette) : dégradé accent → violet */
 .kpi-card.kpi-hero {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--violet) 100%);
-    color: #fff;
-    border: none;
-    box-shadow: 0 8px 24px rgba(232, 115, 74, 0.35);
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    box-shadow: 0 4px 14px rgba(59, 46, 51, 0.08);
 }
-.kpi-card.kpi-hero .stat-num { color: #fff; font-size: 2.2rem; letter-spacing: -0.5px; }
-.kpi-card.kpi-hero .stat-label { color: rgba(255, 255, 255, 0.85); }
-.kpi-card.kpi-hero .kpi-icon { background: rgba(255, 255, 255, 0.18) !important; }
+.kpi-card.kpi-hero .stat-num { color: var(--primary); font-size: 2.2rem; letter-spacing: -0.5px; }
+.kpi-card.kpi-hero .stat-label { color: var(--text-soft); }
+.kpi-card.kpi-hero .kpi-icon { background: var(--accent-light) !important; }
+
+/* Liserés des KPI du dashboard (thème crème-charte) :
+   hero = bordeaux (identité), incidents = beige, nouveaux = lime (positif), attente = brun */
+.kpi-card { border-left: 3px solid var(--border); }
+#dashboardMosaic .kpi-card:nth-child(2) { border-left-color: #C4B49A; }
+#dashboardMosaic .kpi-card:nth-child(3) { border-left-color: #bbcc6a; }
+#dashboardMosaic .kpi-card:nth-child(3) .stat-num { color: #8FA344; }
+#dashboardMosaic .kpi-card:nth-child(4) { border-left-color: #3A2E33; }
 
 /* CTA principaux : dégradé + ombre colorée + clic tactile */
 .btn-primary {
@@ -1544,19 +1553,19 @@ main {
 /* ============ Mode sombre ============ */
 @media (prefers-color-scheme: dark) {
     :root {
-        --side-bg: #060D14;
-        --side-bg-2: #0A1520;
-        --side-text: #8FA3B3;
-        --bg: #0E1620;
-        --surface: #16222E;
-        --border: #263646;
-        --text: #E5EDF3;
-        --text-soft: #93A7B8;
-        --primary: #9CC8E8;
-        --primary-soft: #2E4A5C;
-        --accent: #F0885E;
-        --accent-hover: #F59F7B;
-        --accent-light: #33221B;
+        --side-bg: #171216;
+        --side-bg-2: #201A1E;
+        --side-text: #A8988F;
+        --bg: #1A161A;
+        --surface: #252025;
+        --border: #3A3238;
+        --text: #EFE9E0;
+        --text-soft: #A8988F;
+        --primary: #E8A0BC;
+        --primary-soft: #4A2535;
+        --accent: #D9CDB8;
+        --accent-hover: #EFE4D0;
+        --accent-light: #3A2E26;
         --violet: #9B8CFF;
         --violet-light: #232040;
         --blue: #58B4F0;
@@ -1590,19 +1599,19 @@ main {
 /* Quand l'utilisateur force le clair alors que le système est sombre */
 @media (prefers-color-scheme: dark) {
     :root[data-theme="light"] {
-        --side-bg: #0D1B2A;
-        --side-bg-2: #13263A;
-        --side-text: #A9BCCA;
-        --bg: #F2F5F8;
+        --side-bg: #2B2226;
+        --side-bg-2: #3A2E33;
+        --side-text: #D9CDB8;
+        --bg: #F7F3EA;
         --surface: #FFFFFF;
-        --border: #E2E8EF;
-        --text: #17252F;
-        --text-soft: #64758A;
-        --primary: #0F3D5C;
-        --primary-soft: #1B5A7F;
-        --accent: #E8734A;
-        --accent-hover: #D05A32;
-        --accent-light: #FDEEE7;
+        --border: #E5DCC8;
+        --text: #2B2226;
+        --text-soft: #8A7E68;
+        --primary: #9f0c45;
+        --primary-soft: #7A0A35;
+        --accent: #9f0c45;
+        --accent-hover: #7A0A35;
+        --accent-light: #F7E8E4;
         --violet: #6C5CE7;
         --violet-light: #EEEBFB;
         --blue: #2F9BE4;
@@ -1632,19 +1641,19 @@ main {
 /* Quand l'utilisateur force le sombre alors que le système est clair */
 @media (prefers-color-scheme: light) {
     :root[data-theme="dark"] {
-        --side-bg: #060D14;
-        --side-bg-2: #0A1520;
-        --side-text: #8FA3B3;
-        --bg: #0E1620;
-        --surface: #16222E;
-        --border: #263646;
-        --text: #E5EDF3;
-        --text-soft: #93A7B8;
-        --primary: #9CC8E8;
-        --primary-soft: #2E4A5C;
-        --accent: #F0885E;
-        --accent-hover: #F59F7B;
-        --accent-light: #33221B;
+        --side-bg: #171216;
+        --side-bg-2: #201A1E;
+        --side-text: #A8988F;
+        --bg: #1A161A;
+        --surface: #252025;
+        --border: #3A3238;
+        --text: #EFE9E0;
+        --text-soft: #A8988F;
+        --primary: #E8A0BC;
+        --primary-soft: #4A2535;
+        --accent: #D9CDB8;
+        --accent-hover: #EFE4D0;
+        --accent-light: #3A2E26;
         --violet: #9B8CFF;
         --violet-light: #232040;
         --blue: #58B4F0;
@@ -1776,11 +1785,11 @@ main {
 
 /* ============ Formations : couleurs par catégorie ============ */
 /* Palette : chaque catégorie reçoit une couleur déterministe (hash du nom) */
-.f-card[data-tone="0"]  .f-card-banner { background: linear-gradient(135deg, #0F3D5C, #1B5A7F); }
+.f-card[data-tone="0"]  .f-card-banner { background: linear-gradient(135deg, #2B2226, #3A2E33); }
 .f-card[data-tone="1"]  .f-card-banner { background: linear-gradient(135deg, #6C5CE7, #8B7BF0); }
 .f-card[data-tone="2"]  .f-card-banner { background: linear-gradient(135deg, #2F9BE4, #5AB6F2); }
 .f-card[data-tone="3"]  .f-card-banner { background: linear-gradient(135deg, #18A55F, #2FC77A); }
-.f-card[data-tone="4"]  .f-card-banner { background: linear-gradient(135deg, #E8734A, #F58F68); }
+.f-card[data-tone="4"]  .f-card-banner { background: linear-gradient(135deg, #8FA344, #bbcc6a); }
 .f-card[data-tone="5"]  .f-card-banner { background: linear-gradient(135deg, #B26A00, #D98A1F); }
 .f-card[data-tone="6"]  .f-card-banner { background: linear-gradient(135deg, #D8434B, #E86A72); }
 .f-card[data-tone="7"]  .f-card-banner { background: linear-gradient(135deg, #7A5230, #9A6B42); }
@@ -1788,7 +1797,7 @@ main {
 .f-card[data-tone="9"]  .f-card-banner { background: linear-gradient(135deg, #4A4E69, #6B7094); }
 
 /* Le tag de la catégorie principale prend le même ton, les tags secondaires restent bleus */
-.f-card .tag-tone-0  { background: #E4EFF6; color: #0F3D5C; }
+.f-card .tag-tone-0  { background: #F7E8E4; color: #9f0c45; }
 .f-card .tag-tone-1  { background: #EEEBFB; color: #5548C8; }
 .f-card .tag-tone-2  { background: #E4F2FC; color: #1F6FA0; }
 .f-card .tag-tone-3  { background: #E2F6EC; color: #0F7A44; }
@@ -1956,7 +1965,7 @@ main {
 .room-planning a.slot-busy:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
 
 /* Planning salles : couleurs par salle + mise en évidence des créneaux */
-.room-planning th.room-h.room-0 { background: #0F3D5C; }
+.room-planning th.room-h.room-0 { background: #2B2226; }
 .room-planning th.room-h.room-1 { background: #6C5CE7; }
 .room-planning th.room-h.room-2 { background: #18A55F; }
 .room-planning td.slot-cell.room-0 { background: #F0F5FA; }
