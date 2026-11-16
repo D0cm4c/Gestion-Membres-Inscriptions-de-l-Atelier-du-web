@@ -115,7 +115,7 @@
             var cats = (f.categories || '').split(',').map(function (c) { return c.trim(); }).filter(function (c) { return c && !/^\d+$/.test(c); });
             var mainCat = cats[0] || '';
             var tone = mainCat ? toneFor(mainCat) : -1;
-            var bannerStyle = tone >= 0 ? ' style="background:linear-gradient(135deg,' + TONE_SOLID[tone] + ',rgba(0,0,0,0.25))"' : '';
+            var bannerStyle = tone >= 0 ? ' style="background:' + TONE_SOLID[tone] + '"' : '';
 
             var attendees = [];
             try { attendees = ADWDatabase.getFormationAttendees(f.id) || []; } catch (e) { attendees = []; }
