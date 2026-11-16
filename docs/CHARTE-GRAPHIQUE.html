@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charte graphique — Gestion Membres & Inscriptions · Atelier du Web</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+:root {
+    --creme: #F7F3EA; --row: #F3EEE2; --blanc: #FFFFFF;
+    --encre: #2B2226; --brun-noir: #3A2E33;
+    --beige: #D9CDB8; --beige-fonce: #C4B49A; --filet: #E5DCC8;
+    --soft: #8A7E68;
+    --bordeaux: #9f0c45; --lime: #bbcc6a; --lime-texte: #8FA344; --rouge: #D8434B;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--creme); color: var(--encre); padding: 2.5rem; max-width: 1000px; margin: 0 auto; font-size: 14px; line-height: 1.55; }
+h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.3rem; }
+h1 em { font-style: normal; color: var(--bordeaux); border-bottom: 3px solid var(--lime); }
+.sous { color: var(--soft); font-size: 0.9rem; margin-bottom: 2.2rem; font-weight: 500; }
+h2 { font-size: 1.15rem; font-weight: 700; color: var(--brun-noir); margin: 2.2rem 0 0.9rem; padding-top: 1.2rem; border-top: 1px solid var(--filet); }
+h2 .num { color: var(--bordeaux); margin-right: 0.5rem; }
+p.lead { margin-bottom: 1rem; }
+section { margin-bottom: 0.5rem; }
+
+/* swatches */
+.sw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.9rem; margin: 1rem 0; }
+.sw { background: var(--blanc); border: 1px solid var(--filet); border-radius: 6px; overflow: hidden; }
+.sw .col { height: 64px; }
+.sw .info { padding: 0.6rem 0.75rem; }
+.sw .nom { font-weight: 700; font-size: 0.85rem; }
+.sw .hex { font-size: 0.76rem; color: var(--soft); font-family: monospace; }
+.sw .role { font-size: 0.72rem; color: var(--soft); margin-top: 0.2rem; }
+
+/* tableaux */
+table { width: 100%; border-collapse: collapse; background: var(--blanc); border: 1px solid var(--filet); border-radius: 6px; overflow: hidden; margin: 0.8rem 0; }
+th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--soft); padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--filet); }
+td { padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--row); font-size: 0.85rem; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td code { font-family: monospace; font-size: 0.8rem; background: var(--row); padding: 0.08rem 0.35rem; border-radius: 3px; }
+
+/* exemples de composants */
+.exemples { background: var(--blanc); border: 1px solid var(--filet); border-radius: 6px; padding: 1.05rem 1.15rem; margin: 0.8rem 0; }
+.ex-row { display: flex; align-items: center; gap: 0.7rem; padding: 0.58rem 0.75rem; background: var(--row); border: 1px solid transparent; border-radius: 4px; margin-bottom: 0.4rem; font-weight: 500; }
+.ex-row:last-child { margin-bottom: 0; }
+.ex-btn { display: inline-block; padding: 0.55rem 1.1rem; border-radius: 6px; font-weight: 600; font-size: 0.88rem; margin-right: 0.6rem; }
+.ex-btn.primaire { background: var(--bordeaux); color: var(--blanc); }
+.ex-btn.secondaire { background: var(--blanc); color: var(--bordeaux); border: 1px solid var(--filet); }
+.ex-tag { display: inline-block; padding: 0.14rem 0.55rem; border-radius: 3px; font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 0.5rem; }
+.ex-count { margin-left: auto; background: var(--encre); color: var(--blanc); padding: 0.14rem 0.55rem; border-radius: 3px; font-weight: 600; font-size: 0.72rem; }
+.interdit { color: var(--rouge); font-weight: 700; }
+.ok { color: var(--lime-texte); font-weight: 700; }
+.lead-note { background: var(--row); border-left: 3px solid var(--bordeaux); border-radius: 4px; padding: 0.85rem 1rem; margin: 0.8rem 0; }
+</style>
+</head>
+<body>
+
+<h1><em>Charte graphique</em> — Gestion Membres &amp; Inscriptions</h1>
+<p class="sous">Atelier du Web · EPN de Saint-Gilles · Thème « Crème-charte » · Établie nov. 2026, dérivée de la maquette H4 v5 validée</p>
+
+<section class="lead-note">
+<strong>Positionnement.</strong> La chaleur d'un accueil associatif, la rigueur d'un outil professionnel.
+L'identité visuelle du site atelierduweb.be (bordeaux, lime) est présente <strong>en filigrane</strong> — jamais en dominante.
+Trois mots : <em>clair, chaleureux, posé</em>.
+</section>
+
+<h2><span class="num">1.</span> La palette</h2>
+<p class="lead">Chaque couleur a <strong>un seul métier</strong>. Si deux couleurs font le même travail, une de trop.</p>
+
+<div class="sw-grid">
+    <div class="sw"><div class="col" style="background:#F7F3EA; border-bottom:1px solid #E5DCC8"></div><div class="info"><div class="nom">Crème</div><div class="hex">#F7F3EA</div><div class="role">Fond de page — la chaleur</div></div></div>
+    <div class="sw"><div class="col" style="background:#F3EEE2; border-bottom:1px solid #E5DCC8"></div><div class="info"><div class="nom">Crème teinté</div><div class="hex">#F3EEE2</div><div class="role">Lignes-pilules, un ton sous le blanc</div></div></div>
+    <div class="sw"><div class="col" style="background:#FFFFFF; border-bottom:1px solid #E5DCC8"></div><div class="info"><div class="nom">Blanc</div><div class="hex">#FFFFFF</div><div class="role">Surfaces (cartes) — l'air</div></div></div>
+    <div class="sw"><div class="col" style="background:#2B2226"></div><div class="info"><div class="nom">Encre brune</div><div class="hex">#2B2226</div><div class="role">Texte, sidebar, compteurs</div></div></div>
+    <div class="sw"><div class="col" style="background:#3A2E33"></div><div class="info"><div class="nom">Brun-noir</div><div class="hex">#3A2E33</div><div class="role">Hero de page, titres, aplats structure</div></div></div>
+    <div class="sw"><div class="col" style="background:#E5DCC8"></div><div class="info"><div class="nom">Filet</div><div class="hex">#E5DCC8</div><div class="role">Bordures de cartes (1px)</div></div></div>
+    <div class="sw"><div class="col" style="background:#D9CDB8"></div><div class="info"><div class="nom">Beige</div><div class="hex">#D9CDB8</div><div class="role">Texte sur fonds bruns (sidebar)</div></div></div>
+    <div class="sw"><div class="col" style="background:#C4B49A"></div><div class="info"><div class="nom">Beige foncé</div><div class="hex">#C4B49A</div><div class="role">Liserés secondaires</div></div></div>
+    <div class="sw"><div class="col" style="background:#8A7E68"></div><div class="info"><div class="nom">Brun soft</div><div class="hex">#8A7E68</div><div class="role">Texte secondaire, hints</div></div></div>
+    <div class="sw"><div class="col" style="background:#9f0c45"></div><div class="info"><div class="nom">Bordeaux ★</div><div class="hex">#9f0c45</div><div class="role">IDENTITÉ (charte site) — micro-doses seulement</div></div></div>
+    <div class="sw"><div class="col" style="background:#bbcc6a"></div><div class="info"><div class="nom">Lime ★</div><div class="hex">#bbcc6a</div><div class="role">POSITIF (charte site) — Ouvert, nouveaux, attente</div></div></div>
+    <div class="sw"><div class="col" style="background:#8FA344"></div><div class="info"><div class="nom">Lime texte</div><div class="hex">#8FA344</div><div class="role">Lime en texte sur blanc (contraste)</div></div></div>
+    <div class="sw"><div class="col" style="background:#D8434B"></div><div class="info"><div class="nom">Rouge</div><div class="hex">#D8434B</div><div class="role">ATTENTION — alertes, fermé, badge non-lus</div></div></div>
+</div>
+
+<table>
+<tr><th>Couleur</th><th>Usage autorisé</th><th>Usage interdit</th></tr>
+<tr><td><code>#9f0c45</code> bordeaux</td><td>Liseré sidebar, badge, chiffre KPI hero, soulignement titre, tags alerte</td><td class="interdit">Fond de grande surface, dominante, texte long</td></tr>
+<tr><td><code>#bbcc6a</code> lime</td><td>Cartouche Ouvert, liseré KPI Nouveaux, tag Attente, bordure hover</td><td class="interdit">Texte sur blanc (illisible — utiliser #8FA344), grand aplat sans partenaire sombre</td></tr>
+<tr><td><code>#D8434B</code> rouge</td><td>Alertes, état Fermé, badge non-lus, danger</td><td class="interdit">Décoration, positive</td></tr>
+</table>
+
+<h2><span class="num">2.</span> Typographie — Inter</h2>
+<table>
+<tr><th>Élément</th><th>Taille / graisse</th><th>Détails</th></tr>
+<tr><td>Titre de page (h1)</td><td>1.35rem / 700</td><td>Brun-noir, soulignement bordeaux 3px possible, letter-spacing -0.3px</td></tr>
+<tr><td>Titre de carte (h3)</td><td>0.95rem / 700</td><td>Brun-noir</td></tr>
+<tr><td>Corps / lignes</td><td>0.88rem / 500</td><td>Encre brune</td></tr>
+<tr><td>KPI — chiffre</td><td>1.8rem / 700</td><td><code>font-variant-numeric: tabular-nums</code></td></tr>
+<tr><td>KPI — label</td><td>0.72rem / 600</td><td>UPPERCASE, letter-spacing 0.8px</td></tr>
+<tr><td>Texte secondaire</td><td>0.76rem / 400</td><td>Brun soft</td></tr>
+<tr><td>Tags / slots</td><td>0.64-0.68rem / 700</td><td>UPPERCASE, letter-spacing 0.5px</td></tr>
+</table>
+
+<h2><span class="num">3.</span> Formes et espacements</h2>
+<table>
+<tr><th>Règle</th><th>Valeur</th><th>Note</th></tr>
+<tr><td>Coins — cartes, boutons, champs</td><td><code>6px</code></td><td class="interdit">Jamais plus de 6px (sauf donut/dots)</td></tr>
+<tr><td>Coins — badges, tags, compteurs</td><td><code>3px</code></td><td>Les petites pastilles sont carrées</td></tr>
+<tr><td>Bordures</td><td><code>1px solid #E5DCC8</code></td><td>Les filets font le travail — pas les ombres</td></tr>
+<tr><td>Ombres au repos</td><td><span class="interdit">AUCUNE</span></td><td>Une seule exception : KPI hero, très légère</td></tr>
+<tr><td>Dégradés</td><td><span class="interdit">ZÉRO</span></td><td>Tout aplat — la profondeur vient des fonds</td></tr>
+<tr><td>Padding cartes</td><td><code>1.05rem 1.15rem</code></td><td>Resserré</td></tr>
+<tr><td>Lignes-pilules</td><td><code>0.58rem 0.75rem</code></td><td>Fond #F3EEE2, écart 0.4rem — l'espacement sépare, jamais un trait</td></tr>
+<tr><td>Grille de page</td><td>max-width <code>1440px</code> centré</td><td>Padding <code>1.6rem 2rem 2.5rem</code></td></tr>
+</table>
+
+<h2><span class="num">4.</span> États interactifs</h2>
+<table>
+<tr><th>État</th><th>Traitement</th></tr>
+<tr><td>Hover (cartes, lignes)</td><td><strong>Matière, pas position</strong> : bordure visible (lime ou bordeaux) + fond à peine teinté. <span class="interdit">Interdit : translateY, scale, rotate, box-shadow</span></td></tr>
+<tr><td>Bouton primaire hover</td><td><code>filter: brightness(0.92)</code></td></tr>
+<tr><td>Focus</td><td>Outline visible (accessibilité), pas de halo diffus</td></tr>
+</table>
+
+<h2><span class="num">5.</span> Composants de référence</h2>
+<div class="exemples">
+    <div style="margin-bottom:0.8rem;">
+        <span class="ex-btn primaire">Bouton primaire</span>
+        <span class="ex-btn secondaire">Bouton secondaire</span>
+        <span class="ex-tag" style="background:#D8434B;color:#fff">Alerte</span>
+        <span class="ex-tag" style="background:#bbcc6a;color:#2B2226">Attente</span>
+        <span class="ex-tag" style="background:#F7E8E4;color:#9f0c45">Info</span>
+    </div>
+    <div class="ex-row"><strong>Marie Dupont</strong><span style="color:#8A7E68;font-size:0.76rem">#1002 · il y a 20 min</span><span class="ex-count">6/4</span></div>
+    <div class="ex-row"><strong>Créez des designs avec Canva</strong><span style="color:#8A7E68;font-size:0.76rem">9h30–12h30 · L'Atelier</span><span class="ex-count">5 en attente</span></div>
+</div>
+
+<h2><span class="num">6.</span> Dark mode</h2>
+<p class="lead">Bruns chauds sombres — <strong>jamais de bleu nuit</strong> : sidebar <code>#171216</code>, fond <code>#1A161A</code>, surfaces <code>#252025</code>, lignes <code>#2E282D</code>, texte crème <code>#EFE9E0</code>, accent beige <code>#D9CDB8</code>, primary rosé <code>#E8A0BC</code> (lisible sur sombre).</p>
+
+<h2><span class="num">7.</span> Les interdits (leçons gravées)</h2>
+<table>
+<tr><th>Interdit</th><th>Pourquoi</th></tr>
+<tr><td class="interdit">Bordeaux en aplat dominant</td><td>Couleur vitrine ≠ couleur d'app : fatigue à grande dose</td></tr>
+<tr><td class="interdit">Lime en texte sur blanc</td><td>Illisible — toujours #8FA344 pour le texte</td></tr>
+<tr><td class="interdit">Lime sans partenaire sombre</td><td>Délave sur crème — brun dessous ou texte brun</td></tr>
+<tr><td class="interdit">Dégradés, halos, glow</td><td>La profondeur vient des valeurs de fond, pas de la 3D</td></tr>
+<tr><td class="interdit">translateY au hover</td><td>Hover = changement de matière, pas de position</td></tr>
+<tr><td class="interdit">Pilules 999px, cercles</td><td>Coins 6px max (donut et dots de statut exceptés)</td></tr>
+<tr><td class="interdit">Bleu nuit en dark mode</td><td>Le dark reste brun chaud</td></tr>
+</table>
+
+<p class="sous" style="margin-top:2.5rem;">Référence visuelle : maquette H4 v5 (branche <code>maquettes-design</code>) · Skill : <code>docs/SKILL-DESIGN.md</code> · Toute nouvelle décision design validée s'ajoute ici.</p>
+</body>
+</html>
