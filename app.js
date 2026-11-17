@@ -323,12 +323,14 @@
             html += '<ul class="visits-list">';
             memberFormations.forEach(function (f) {
                 var dLabel = f.start_date ? escapeHtml(formatDate(f.start_date)) : 'date à confirmer';
-                html += '<li><span>🎓 ' + escapeHtml(f.title) +
-                    (f.time_label ? ' · <span class="form-hint">' + escapeHtml(f.time_label) + '</span>' : '') +
-                    ' · <span class="form-hint">📅 ' + dLabel + '</span></span>' +
-                    '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="badge badge-sub-monthly" title="Voir la fiche formation">fiche →</a>' +
-                    (f.url ? ' <a href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" class="badge badge-sub-monthly">site</a>' : '') +
-                    '</li>';
+                html += '<li style="display:flex;flex-direction:column;gap:0.15rem;">' +
+                    '<span style="font-weight:600;">🎓 ' + escapeHtml(f.title) + '</span>' +
+                    '<span class="detail-meta">' +
+                    '<span class="form-hint">📅 ' + dLabel + (f.time_label ? ' · ⏰ ' + escapeHtml(f.time_label) : '') + '</span>' +
+                    '<span style="margin-left:auto;display:inline-flex;gap:0.6rem;">' +
+                    '<a href="formation.html?id=' + encodeURIComponent(f.id) + '" class="detail-link">Fiche →</a>' +
+                    (f.url ? '<a href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" class="detail-link">Site ↗</a>' : '') +
+                    '</span></span></li>';
             });
             html += '</ul>';
         } else {
