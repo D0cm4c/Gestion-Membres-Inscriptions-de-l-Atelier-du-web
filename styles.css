@@ -342,7 +342,7 @@ body {
 /* Inclusion numérique (stats) : le donut à DROITE de la liste, la place l'y attendait */
 .inclusion-card {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr 2fr; /* liste = span1, camembert = span2 (retour utilisateur) */
     column-gap: 1.4rem;
     align-items: center;
 }
