@@ -561,8 +561,12 @@
         if (e.key !== 'Enter') return;
         if (!checkinModal || checkinModal.hidden) return;
         if (!reasonStep || reasonStep.hidden) return;
-        var active = document.activeElement;
-        if (active && ((active.tagName || '').toLowerCase() === 'input' || (active.tagName || '').toLowerCase() === 'textarea')) return;
+        // e.target (figé à la frappe) et non activeElement : quand le nav sélectionne
+        // le membre, le focus saute au select DANS le même keydown — activeElement
+        // serait déjà le select et laisserait passer la validation. La cible de la
+        // frappe, elle, dit la vérité : cet Enter vient de la recherche.
+        var t = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
+        if (t === 'input' || t === 'textarea') return;
         e.preventDefault();
         if (reasonConfirmBtn) reasonConfirmBtn.click();
     });
