@@ -553,13 +553,29 @@
 
     if (reasonCancelBtn) reasonCancelBtn.addEventListener('click', hideReasonStep);
 
-    // Entrée = valider et fermer (demande utilisateur) — actif uniquement à l'étape raison
+    // Entrée = valider et fermer (demande utilisateur) — actif uniquement à l'étape raison.
+    // Garde : l'Enter qui SÉLECTIONNE le membre dans la recherche (nav clavier) ne doit pas
+    // valider la raison dans le même keydown — on ignore l'Enter tant que le focus est
+    // sur un champ de saisie. Après la sélection, le focus passe au select de raison.
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Enter') return;
         if (!checkinModal || checkinModal.hidden) return;
         if (!reasonStep || reasonStep.hidden) return;
+        var active = document.activeElement;
+        if (active && ((active.tagName || '').toLowerCase() === 'input' || (active.tagName || '').toLowerCase() === 'textarea')) return;
         e.preventDefault();
         if (reasonConfirmBtn) reasonConfirmBtn.click();
+    });
+
+    // Raccourci P : ouvrir la modale de pointage (hors saisie, modale fermée)
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if ((e.key || '').toLowerCase() !== 'p') return;
+        if (!checkinModal || !checkinModal.hidden) return;
+        var active = document.activeElement;
+        if (active && ((active.tagName || '').toLowerCase() === 'input' || (active.tagName || '').toLowerCase() === 'textarea' || (active.tagName || '').toLowerCase() === 'select')) return;
+        e.preventDefault();
+        openCheckin();
     });
 
     if (reasonConfirmBtn) reasonConfirmBtn.addEventListener('click', function () {
