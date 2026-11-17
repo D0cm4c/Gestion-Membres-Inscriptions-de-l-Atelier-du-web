@@ -64,7 +64,7 @@
                 </div>
             </div>
 
-            <div class="stat-card span-2">
+            <div class="stat-card span-1">
                 <h2>📊 Membres</h2>
                 <ul>
                     <li><strong>Inscriptions expirées :</strong> <span id="statExpired">—</span></li>
@@ -72,6 +72,12 @@
                     <li><strong>Abonnements mensuels (3 €) :</strong> <span id="statMonthly">—</span></li>
                     <li><strong>Abonnements annuels (30 €) :</strong> <span id="statYearly">—</span></li>
                 </ul>
+            </div>
+
+            <div class="stat-card span-1">
+                <h2>🧭 Profil des usagers</h2>
+                <ul style="list-style:none;" id="profileList"></ul>
+                <p class="form-hint" id="profileHint"></p>
             </div>
 
             <div class="stat-card span-2">
@@ -86,9 +92,9 @@
             </div>
 
             <div class="stat-card span-1">
-                <h2>🧭 Profil des usagers</h2>
-                <ul style="list-style:none;" id="profileList"></ul>
-                <p class="form-hint" id="profileHint"></p>
+                <h2>🎯 Motifs de visite</h2>
+                <ul style="list-style:none;" id="reasonsList"></ul>
+                <p class="form-hint" id="reasonsHint"></p>
             </div>
 
             <div class="stat-card span-3">
@@ -149,7 +155,7 @@
     <script src="db.js?v=18"></script>
     <script src="suggestions.js?v=2"></script>
     <script src="globalsearch.js?v=3"></script>
-    <script src="page-stats.js?v=8"></script>
+    <script src="page-stats.js?v=9"></script>
 <script>
         // PWA : enregistrement du service worker (silencieux si non supporté)
         if ('serviceWorker' in navigator) {

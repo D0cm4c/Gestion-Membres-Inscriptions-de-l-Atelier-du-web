@@ -106,6 +106,21 @@
         setText('profileHint', totalCp ? Math.round((sg / totalCp) * 100) + ' % des usagers viennent de la R\u00e9gion de Bruxelles-Capitale' : 'Renseignez les codes postaux pour activer cette analyse.');
     }
 
+    // ===== Motifs de visite (vocabulaire du Zoom Baromètre de l'inclusion numérique 2026, FRB) =====
+    function renderVisitReasons() {
+        var rows = window.ADWDatabase.queryAll(
+            "SELECT reason, COUNT(*) c FROM visits WHERE reason IS NOT NULL AND reason != '' GROUP BY reason ORDER BY c DESC LIMIT 6");
+        var total = one("SELECT COUNT(*) v FROM visits WHERE reason IS NOT NULL AND reason != ''");
+        var rl = document.getElementById('reasonsList');
+        if (rl) {
+            rl.innerHTML = rows.map(function (r) {
+                var pct = total ? Math.round((r.c / total) * 100) : 0;
+                return '<li><strong>' + escapeHtml(r.reason) + '</strong> : ' + r.c + ' (' + pct + ' %)</li>';
+            }).join('') || '<li class="form-hint">Aucun motif renseigné — pointez des visites avec raison.</li>';
+        }
+        setText('reasonsHint', total ? total + ' visites avec motif — source : Zoom Baromètre inclusion numérique 2026 (FRB).' : 'Les motifs se collectent au pointage des visites (dashboard).');
+    }
+
     // ===== Inclusion numérique =====
     function renderInclusion() {
         var totalM = one('SELECT COUNT(*) v FROM members');
@@ -304,6 +319,7 @@
         renderMembersStats();
         renderRetention();
         renderProfile();
+        renderVisitReasons();
         renderInclusion();
         renderStatusDonut();
         renderChart();
