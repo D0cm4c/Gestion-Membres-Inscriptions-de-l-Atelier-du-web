@@ -178,9 +178,7 @@
                 '<div class="stat-card"><h3>📌 Informations</h3><ul>' +
                 '<li><strong>📅 Date :</strong> ' + esc(f.date_text || (f.start_date ? formatDate(f.start_date) : 'à confirmer')) + '</li>' +
                 '<li><strong>⏰ Horaires :</strong> ' + esc(f.time_label || 'à confirmer') + '</li>' +
-                (moduleCount
-                    ? '<li><strong>Modules :</strong> ' + moduleCount + ' module' + (moduleCount > 1 ? 's' : '') + ' <span class="form-hint" style="display:inline;">(séances individuelles)</span></li>'
-                    : '') +
+
                 '<li><strong>⏳ Durée :</strong> ' + esc(f.duration || 'à confirmer') + '</li>' +
                 '<li><strong>💶 Tarif :</strong> ' + (f.price ? esc(f.price) + ' €' : 'voir sur le site') + '</li>' +
                 '<li><strong>📍 Lieu :</strong> ' + esc(f.location || 'à confirmer') + '</li>' +
@@ -292,7 +290,7 @@
             html += '<div class="stats-container" style="margin-top:1.2rem;margin-bottom:1.3rem;"><div class="stat-card"><h3>🗂 Catégories</h3>' +
                 (cats.length ? '<ul style="display:flex;gap:0.4rem;list-style:none;flex-wrap:wrap;">' + cats.map(function (c) {
                     var t = toneFor(c);
-                    return '<li><span class="tag" style="background:' + TONE_SOLID[t] + ';color:#fff;"><span class="month-dot" style="display:inline-block;background:rgba(255,255,255,0.6);margin-right:0.35rem;"></span>' + esc(c) + '</span></li>';
+                    return '<li style="background:none;padding:0;margin:0;border:none;"><span class="tag" style="background:' + TONE_SOLID[t] + ';color:#fff;"><span class="month-dot" style="display:inline-block;background:rgba(255,255,255,0.6);margin-right:0.35rem;"></span>' + esc(c) + '</span></li>';
                 }).join('') + '</ul>' : '<p class="form-hint">Aucune catégorie.</p>') +
                 '</div></div>';
 
