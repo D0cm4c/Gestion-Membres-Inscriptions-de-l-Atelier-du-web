@@ -825,7 +825,7 @@ main {
 
 /* Filigrane du n° de membre (membre.html) — même position que le compteur d'inscrits de formation.html */
 .member-no-watermark {
-    position: absolute; right: 1.4rem; bottom: 1rem;
+    position: absolute; right: 1.4rem; top: 1rem;
     text-align: right; pointer-events: none; z-index: 0;
 }
 .member-no-watermark .wm-num { display: block; font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--border); letter-spacing: -1px; }
