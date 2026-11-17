@@ -761,6 +761,9 @@ main {
 }
 .m-card .visits-list li:hover { background: var(--accent-light); }
 .f-line-title { flex: 1; min-width: 0; }
+.detail-link { color: var(--primary); font-weight: 600; font-size: 0.8rem; text-decoration: none; white-space: nowrap; }
+.detail-link:hover { text-decoration: underline; }
+.detail-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.15rem; }
 .f-line-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 .f-link {
     text-decoration: none;
@@ -768,7 +771,7 @@ main {
     align-items: center;
     gap: 0.3rem;
     white-space: nowrap;
-    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s, filter 0.18s;
+    transition: border-color 0.15s;
 }
 .f-link:hover { filter: brightness(1.05); }
 .f-link-site { background: var(--blue-light); color: var(--blue); border-color: var(--blue); }
@@ -932,7 +935,6 @@ main {
 
 .visits-list {
     list-style: none; max-height: 240px; overflow-y: auto;
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
 }
 .visits-list li {
     display: flex; justify-content: space-between; align-items: center;
