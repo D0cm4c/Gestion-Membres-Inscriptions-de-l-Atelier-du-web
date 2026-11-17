@@ -465,18 +465,18 @@ main {
 }
 
 .stat-card h2, .stat-card h3 {
-    font-size: 1rem; color: var(--text); margin-bottom: 0.85rem;
+    font-size: 0.95rem; color: var(--text); margin-bottom: 0.85rem;
     display: flex; align-items: center; gap: 0.55rem; font-weight: 700;
 }
 
 .stat-card ul { list-style: none; }
-.stat-card li { padding: 0.45rem 0; border-bottom: 1px solid var(--bg); font-size: 0.93rem; }
-.stat-card li:last-child { border-bottom: none; }
+.stat-card li { padding: 0.58rem 0.75rem; background: var(--row); border: 1px solid transparent; border-radius: 4px; margin-bottom: 0.4rem; font-size: 0.93rem; }
+.stat-card li:last-child { margin-bottom: 0; }
 
 .stat-card.alerts ul li { color: var(--warning); display: flex; gap: 0.55rem; align-items: baseline; font-weight: 500; }
 
-.next-formations li { padding: 0.8rem 0; border-bottom: 1px solid var(--bg); }
-.next-formations li:last-child { border-bottom: none; }
+.next-formations li { padding: 0.58rem 0.75rem; background: var(--row); border: 1px solid transparent; border-radius: 4px; margin-bottom: 0.4rem; }
+.next-formations li:last-child { margin-bottom: 0; }
 .next-formations strong { display: block; color: var(--primary); margin-bottom: 0.15rem; }
 .next-formations p { color: var(--text-soft); font-size: 0.88rem; margin-bottom: 0.4rem; }
 
@@ -1517,7 +1517,7 @@ main {
     .kpi-extra { font-size: 0.66rem; margin-left: 0; }
     .stat-card { padding: 1rem 0.95rem; border-radius: var(--radius-sm); }
     .stat-card h2, .stat-card h3 { font-size: 0.95rem; }
-    .stat-card li { padding: 0.4rem 0; font-size: 0.88rem; }
+    .stat-card li { padding: 0.45rem 0.6rem; font-size: 0.88rem; }
     .hero { padding: 1.2rem 1rem; border-radius: var(--radius-sm); }
 
     .member-row { grid-template-columns: 40px 1fr auto; }
