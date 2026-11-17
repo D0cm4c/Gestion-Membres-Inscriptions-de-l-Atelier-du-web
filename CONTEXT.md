@@ -116,6 +116,18 @@ Le design de l'app est désormais défini dans **`docs/SKILL-DESIGN.md`** — TO
 
 Le skill contient : la palette crème-charte (chaque couleur a UN métier), le cahier des charges architectural H4 (radius 6px max, filets pas d'ombres, zéro dégradé, hover = matière pas position, marges resserrées, typo Inter), le skin des composants, le processus de design validé (maquettes → comparatifs → validation → transposition 3 couches), et les leçons.
 
+## 📦 État actuel — fin de session nov. 2026 (2e vague, PRs #128 à #136)
+
+- **THÈME « CRÈME-CHARTE » APPLIQUÉ À TOUTE L'APP** (3 couches, conformes à la charte) :
+  - PR #128 : couleurs (:root, dark mode en bruns chauds, hex en dur migrés)
+  - PR #129 : ARCHI (radius 16→6px, 45 gradients → aplats, hovers = matière pas position, ombres de cartes retirées, marges resserrées) + **docs/SKILL-DESIGN.md** (bibliothèque de 8 thèmes au sens WordPress — précision utilisateur : design = couleur + archi CSS + skin)
+  - PR #130 : entête (titre souligné bordeaux, recherche au centre, cartouche Ouvert LIME, boutons carrés), répartition pleine largeur (variante utilisateur vs maquette), zéro halo, LIGNES-PILULES (variable --row, les séparateurs de listes remplacés partout)
+  - PR #131 : scan complet (15 pilules 999px→3px, mw-rank, avatars 6px, gradient inline de la bannière formation)
+  - PR #133 : page stats au thème (heatmap bleue → échelle brune, barres → bordeaux)
+  - PR #136 : audit charte par l'utilisateur — .agenda-item conforme (fond --row, bordure transparente, hover matière)
+- **CHARTE GRAPHIQUE FORMELLE : docs/CHARTE-GRAPHIQUE.html** (PR #132) — palette avec métiers et interdits, typo, formes, états, composants de référence. **TOUTE session design part d'elle** — plus d'interprétation libre.
+- **MOTIFS DE VISITE (le baromètre FRB)** : PR #134 — au pointage, flux 2 étapes (membre/anonyme → raison), 14 motifs issus du Zoom Baromètre de l'inclusion numérique 2026 (Fondation Roi Baudouin, LU À LA SOURCE) : les 4 services essentiels (e-admin, e-banking, e-santé, e-commerce) + emploi, logement, formation, IA + terrain EPN ; colonne visits.reason (migration PRAGMA) ; PR #135 : carte « Motifs de visite » dans stats.html (top 6, %), Profil des usagers remonte partager l'étage de Membres — la boucle accueil → stats dans le vocabulaire national.
+
 ## 🧠 Leçons apprises (méthodes qui ont marché)
 
 1. PRs incrémentales, une fonctionnalité complète par PR, fusionnées dans l'ordre.
@@ -156,6 +168,9 @@ Le skill contient : la palette crème-charte (chaque couleur a UN métier), le c
 15. Administration des salles dans Paramètres (PR #29) : addRoom/renameRoom/deleteRoom (suppression refusée si formations attribuées). Fix associé (PR #30) : parametres.html n'initialisait jamais la base — `ensureDb()` mémoïsé + `vendor/sql-wasm.js` ajouté ; le smoke test CI vérifie désormais que toute page chargeant db.js charge sql-wasm.js avant.
 16. Refonte visuelle page Paramètres (PR #31) : grille responsive `settings-grid`, en-têtes pastillés, classes dédiées (plus de style inline).
 17. Docs révisées pour l'arrivée du collègue backend : README refait, `docs/BACKEND.md` créé (guide migration Node/better-sqlite3 : inventaire des 36 méthodes ADWDatabase, schéma, sécurité, pièges).
+18. **Les caractères RÉELS dans les ancres de patch** (nov. 2026, 3 échecs) : les fichiers contiennent ✅ et é en caractères directs — les ancres avec les séquences `\u2705` ne matchent JAMAIS. Vérifier avec `cat -A` ou grep avant d'écrire l'ancre ; dans le nouveau code, caractères directs aussi (sauf apostrophe interne → typographique ’ pour ne pas casser les strings).
+19. **Les conflits de bumps `?v=` se règlent à la version max** : deux branches qui bumpent le mêmes fichier créent des conflits triviaux — résoudre en prenant le numéro le plus élevé, puis re-bump.
+20. **Le processus de design validé** (leçon méthode, co-construite) : charte AVANT maquette — direction en mots → charte (palette avec rôles + interdits) → maquette clé → transposition 3 couches → audit par grep et par l'utilisateur. Une règle écrite = un jugement objectif (l'audit #136 l'a prouvé).
 18. **API officielle MEC testée avec clé (22 oct. 2026)** : `wp-json/mec/v1.0` fonctionne en server-to-server — `/events` (contenu complet), `/events/{id}/tickets` (TARIFS enfin disponibles), `/next-occurrences` (dates structurées). **`/bookers` n'existe pas** (404) : la synchro des inscriptions devra passer par le plugin WP prévu ou une lecture directe de `wp_mec_bookings`. CORS bloqué côté navigateur (header custom) : API réservée au futur serveur. Décisions reportées dans `docs/BACKEND.md` §7.
 
 19. **Cartographie complète de l'API officielle MEC (22 oct. 2026, tests réels)** : `GET /events/{id}` renvoie TOUT (lieu, organisateur, tarifs, places restantes/Complet, catégories avec noms, dates structurées, photos) → **les modules 1-3 du plugin prévu sont couverts par l'API**, le plugin WP se réduit au module bookings. `/config/attendee-fields` : le formulaire MEC récolte déjà email/nom/date naissance/adresse/CP/tél/genre/statut (≈ schéma members) mais **PAS le n° de membre** — à ajouter côté MEC (maillon fort du matching). **Le préfill de modale est PRIORITÉ ABSOLUE utilisateur** : snippet complet prêt dans `docs/BACKEND.md` §8 (sélecteurs à ajuster avec le HTML réel de la modale + champ n° membre à créer côté MEC d'abord).
