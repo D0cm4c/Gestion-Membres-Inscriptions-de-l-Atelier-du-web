@@ -269,7 +269,7 @@
         var recentList = document.getElementById('recentVisits');
         if (!recentList) return;
         var recent = ADWDatabase.queryAll(
-            'SELECT v.visit_date, m.first_name, m.last_name, m.member_no, v.amount ' +
+            'SELECT v.visit_date, m.first_name, m.last_name, m.member_no, v.amount, v.reason ' +
             'FROM visits v JOIN members m ON m.id = v.member_id ' +
             'ORDER BY v.visit_date DESC, v.created_at DESC LIMIT 6');
         if (recent.length) {
@@ -278,7 +278,7 @@
                 var label = isNaN(d.getTime()) ? r.visit_date : d.toLocaleDateString('fr-BE');
                 return '<li><span class="rv-name">#' + escapeHtml(r.member_no) + ' ' +
                     escapeHtml(r.first_name) + ' ' + escapeHtml(r.last_name) + '</span>' +
-                    '<span class="rv-date">' + escapeHtml(label) + '</span>' +
+                    '<span class="rv-date">' + escapeHtml(label) + (r.reason && r.reason !== 'Non précisé' ? ' · ' + escapeHtml(r.reason) : '') + '</span>' +
                     '<span class="badge ' + (r.amount > 0 ? 'badge-sub-none' : 'badge-ok') + '">' +
                     (r.amount > 0 ? r.amount.toFixed(2).replace('.', ',') + ' €' : 'abo') + '</span></li>';
             }).join('');
@@ -443,6 +443,7 @@
 
     function openCheckin() {
         if (!checkinModal) return;
+        hideReasonStep();
         checkinModal.hidden = false;
         if (checkinSearch) {
             checkinSearch.value = '';
@@ -492,18 +493,92 @@
         });
     }
 
+    /* ===== Raison de la visite — motifs issus du Zoom Baromètre de l'inclusion numérique 2026 (FRB) ===== */
+    var VISIT_REASONS = [
+        'Non précisé',
+        'Démarches administratives (commune, CSAM, eID, impôts)',
+        'Banque / e-banking',
+        'Santé / e-santé (RDV, mutualité, résultats)',
+        'Emploi / recherche d’emploi (CV, candidatures)',
+        'Logement (recherche, candidature)',
+        'Formation / e-learning',
+        'Mail / communication (courrier, visio, proches)',
+        'Achats en ligne / e-commerce',
+        'Impression / scan de documents',
+        'Accès internet libre',
+        'Aide technique / sécurité (appareil, mots de passe, arnaques)',
+        'Découverte de l’IA',
+        'Apprendre / se perfectionner'
+    ];
+    var reasonStep = document.getElementById('reasonStep');
+    var reasonWho = document.getElementById('reasonWho');
+    var visitReason = document.getElementById('visitReason');
+    var reasonConfirmBtn = document.getElementById('reasonConfirm');
+    var reasonCancelBtn = document.getElementById('reasonCancel');
+    var checkinActions = document.getElementById('checkinActions');
+    var checkinSearchGroup = document.getElementById('checkinSearchGroup');
+    var pendingVisitMember; // null = visite anonyme ; undefined = pas d'étape en cours
+
+    if (visitReason && !visitReason.options.length) {
+        VISIT_REASONS.forEach(function (r) {
+            var o = document.createElement('option');
+            o.value = r;
+            o.textContent = r;
+            visitReason.appendChild(o);
+        });
+    }
+
+    function showReasonStep(member) {
+        pendingVisitMember = member || null;
+        if (reasonWho) {
+            reasonWho.textContent = member
+                ? '👤 ' + member.first_name + ' ' + member.last_name + ' (#' + member.member_no + ')'
+                : '👤 Visite anonyme (1 €)';
+        }
+        if (reasonStep) reasonStep.hidden = false;
+        if (checkinActions) checkinActions.hidden = true;
+        if (checkinSearchGroup) checkinSearchGroup.hidden = true;
+        if (checkinResults) checkinResults.hidden = true;
+        if (visitReason) visitReason.focus();
+    }
+
+    function hideReasonStep() {
+        pendingVisitMember = undefined;
+        if (reasonStep) reasonStep.hidden = true;
+        if (checkinActions) checkinActions.hidden = false;
+        if (checkinSearchGroup) checkinSearchGroup.hidden = false;
+        if (checkinResults) checkinResults.hidden = false;
+        if (checkinSearch) checkinSearch.focus();
+    }
+
+    if (reasonCancelBtn) reasonCancelBtn.addEventListener('click', hideReasonStep);
+
+    if (reasonConfirmBtn) reasonConfirmBtn.addEventListener('click', function () {
+        if (pendingVisitMember === undefined) return;
+        var reason = (visitReason && visitReason.value) || VISIT_REASONS[0];
+        var today = new Date().toISOString().slice(0, 10);
+        var visitId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        var isAnon = pendingVisitMember === null;
+        var memberId = isAnon ? 'anon' : pendingVisitMember.id;
+        var amount = isAnon ? 1 : (pendingVisitMember.subscription === 'none' ? 1 : 0);
+        ADWDatabase.run('INSERT INTO visits (id, member_id, visit_date, amount, reason) VALUES (?, ?, ?, ?, ?)',
+            [visitId, memberId, today, amount, reason]).then(function () {
+                hideReasonStep();
+                closeCheckin();
+                render();
+                pulseVisitsKpi();
+                if (isAnon) {
+                    if (window.ADWNotifications) window.ADWNotifications.push('anon_visit', '👤 Visite anonyme enregistrée (1 €) — ' + reason, 'success');
+                    showToast('✅ Visite anonyme pointée (1 €) — ' + reason);
+                } else {
+                    showToast('✅ Visite de ' + pendingVisitMember.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)') + ' — ' + reason);
+                }
+            });
+    });
+
     function doCheckin(member) {
         if (member.visited_today) return;
-        var today = new Date().toISOString().slice(0, 10);
-        var amount = member.subscription === 'none' ? 1 : 0;
-        var visitId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-        ADWDatabase.run('INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, ?, ?)',
-            [visitId, member.id, today, amount]).then(function () {
-            closeCheckin();
-            render();
-            pulseVisitsKpi();
-            showToast('✅ Visite de ' + member.first_name + ' pointée' + (amount ? ' (1 €)' : ' (incluse abonnement)'));
-        });
+        showReasonStep(member);
     }
 
 
@@ -520,17 +595,7 @@
     // Visite anonyme : passage sans fiche membre — compteur simple à 1 EUR (décision utilisateur).
     // member_id sentinel 'anon' (colonne NOT NULL) — comptée dans les stats visites/revenus.
     var anonVisitBtn = document.getElementById('anonVisitBtn');
-    if (anonVisitBtn) anonVisitBtn.addEventListener('click', function () {
-        var today = new Date().toISOString().slice(0, 10);
-        var visitId = 'av-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        window.ADWDatabase.run('INSERT INTO visits (id, member_id, visit_date, amount) VALUES (?, ?, ?, ?)',
-            [visitId, 'anon', today, 1.0]).then(function () {
-            if (window.ADWNotifications) window.ADWNotifications.push('anon_visit', '👤 Visite anonyme enregistrée (1 €)', 'success');
-            closeCheckin();
-            render();
-            pulseVisitsKpi();
-        });
-    });
+    if (anonVisitBtn) anonVisitBtn.addEventListener('click', function () { showReasonStep(null); });
     // Raccourci A : visible seulement modale ouverte (sinon A en saisie libre serait piégé)
     document.addEventListener('keydown', function (e) {
         if (e.ctrlKey || e.metaKey || e.altKey) return;

@@ -176,6 +176,16 @@
             ')'
         );
         // Migration formations : colonnes organizer/location ajoutées en oct. 2026
+        // Migration visits : colonne reason (raison de la visite, barometre FRB 2026) ajoutee en nov. 2026
+        var vcols = {};
+        var vres = db.exec('PRAGMA table_info(visits)');
+        if (vres.length) {
+            vres[0].values.forEach(function (row) { vcols[row[1]] = true; });
+        }
+        if (!vcols.reason) {
+            db.run('ALTER TABLE visits ADD COLUMN reason TEXT');
+        }
+
         var fcols = {};
         var fres = db.exec('PRAGMA table_info(formations)');
         if (fres.length) {
