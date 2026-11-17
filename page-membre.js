@@ -135,8 +135,8 @@
 
             var html = '<div class="m-card m-card-head"><div class="detail-head' + avatarStatus + '">' +
                     '<div class="member-avatar">' + esc(((member.first_name || '?')[0] || '') + ((member.last_name || '')[0] || '')) + '</div>' +
+                    '<span class="member-no-watermark" aria-hidden="true"><span class="wm-num">#' + esc(member.member_no || '') + '</span><span class="wm-lbl">n° membre</span></span>' +
                     '<div><div class="member-name">' + esc(member.first_name) + ' ' + esc(member.last_name) + '</div>' +
-                    '<div class="member-no-detail">N° de membre : <strong>' + (member.member_no || '—') + '</strong></div>' +
                     '<div class="member-badges">' +
                         ((member.subscription || 'none') === 'none'
                             ? '<span class="badge badge-sub-none">Inactif</span>'
