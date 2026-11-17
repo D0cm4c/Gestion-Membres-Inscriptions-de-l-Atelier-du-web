@@ -822,6 +822,26 @@ main {
 .m-card .detail-visits, .m-card .detail-prints { margin-top: 0; }
 .m-card-head { margin-bottom: 0; }
 .m-card-head .detail-head { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+/* Filigrane du n° de membre (membre.html) — même position que le compteur d'inscrits de formation.html */
+.member-no-watermark {
+    position: absolute; right: 1.4rem; bottom: 1rem;
+    text-align: right; pointer-events: none; z-index: 0;
+}
+.member-no-watermark .wm-num { display: block; font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--border); letter-spacing: -1px; }
+.member-no-watermark .wm-lbl { display: block; font-size: 0.72rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.8px; }
+.detail-head { position: relative; }
+.detail-head > *:not(.member-no-watermark) { position: relative; z-index: 1; }
+
+/* Les selects non stylés (choix de formation, etc.) — conformes à la charte */
+select {
+    padding: 0.48rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem; font-family: var(--font);
+    background: var(--surface); color: var(--text); font-weight: 500;
+    cursor: pointer;
+}
 .m-card .mkpi-row { margin-top: 0; }
 .m-card .care-notes { margin-top: 0.6rem; }
 /* la note « rien à signaler » (care-note seule, sans wrapper) a aussi sa marge au-dessus */
