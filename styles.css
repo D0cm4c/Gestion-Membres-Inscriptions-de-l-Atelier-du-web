@@ -2011,13 +2011,13 @@ main {
 .today-agenda .agenda-list { display: flex; flex-direction: column; gap: 0.45rem; }
 .agenda-item {
     display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.5rem 0.7rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    transition: border-color 0.15s, transform 0.12s;
+    padding: 0.58rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: var(--row);
+    transition: border-color 0.15s;
 }
-.agenda-item:hover { border-color: var(--accent); transform: translateX(3px); }
+.agenda-item:hover { border-color: #bbcc6a; }
 .agenda-slot {
     flex-shrink: 0;
     font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
