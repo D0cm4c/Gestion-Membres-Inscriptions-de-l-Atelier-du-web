@@ -109,13 +109,26 @@
     <div class="modal-overlay" id="checkinModal" hidden>
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="checkinTitle">
             <h3 id="checkinTitle">✅ Pointer une visite</h3>
-            <div class="form-group">
+            <div class="form-group" id="checkinSearchGroup">
                 <label for="checkinSearch">Nom ou n° de membre</label>
                 <input type="text" id="checkinSearch" placeholder="Ex : Marie ou 1002..." autocomplete="off">
                 <p class="form-hint" id="checkinHint">Tapez les premières lettres ou le numéro (#1002).</p>
             </div>
             <ul class="checkin-results" id="checkinResults"></ul>
-            <div class="modal-actions">
+            <div id="reasonStep" hidden>
+                <div class="form-group">
+                    <p class="form-hint" id="reasonWho" style="font-weight:600;"></p>
+                    <label for="visitReason">Raison de la visite</label>
+                    <select id="visitReason"></select>
+                    <p class="form-hint">Source des motifs : Zoom Baromètre de l'inclusion numérique 2026 (Fondation Roi Baudouin).</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-primary" id="reasonConfirm">✅ Pointer la visite</button>
+                    <span style="flex:1"></span>
+                    <button type="button" class="btn btn-secondary" id="reasonCancel">← Retour</button>
+                </div>
+            </div>
+            <div class="modal-actions" id="checkinActions">
                 <button type="button" class="btn btn-primary" id="anonVisitBtn" title="Pointer une visite d'une personne sans fiche membre (A)">👤 Visite anonyme (1 €)</button>
                 <span style="flex:1"></span>
                 <button type="button" class="btn btn-secondary" id="checkinCloseBtn">Fermer</button>
@@ -147,10 +160,10 @@
     <script src="theme.js?v=15"></script>
     <script src="nav.js?v=2"></script>
     <script src="notifications.js?v=7"></script>
-    <script src="db.js?v=45"></script>
+    <script src="db.js?v=47"></script>
     <script src="suggestions.js?v=2"></script>
     <script src="globalsearch.js?v=3"></script>
-    <script src="dashboard.js?v=34"></script>
+    <script src="dashboard.js?v=36"></script>
 <script>
         // PWA : enregistrement du service worker (silencieux si non supporté)
         if ('serviceWorker' in navigator) {
