@@ -324,9 +324,9 @@ body {
     border: 1px solid var(--border);
 }
 
-.heat-cell.l1 { background: #CDE7F6; border-color: #B5D9EF; }
-.heat-cell.l2 { background: #7FBFE4; border-color: #6AB0DA; }
-.heat-cell.l3 { background: #2F9BE4; border-color: #1F86CE; }
+.heat-cell.l1 { background: #F3EEE2; border-color: #E5DCC8; }
+.heat-cell.l2 { background: #C4B49A; border-color: #B0A088; }
+.heat-cell.l3 { background: #8A7E68; border-color: #766B58; }
 .heat-cell.l4 { background: #3A2E33; border-color: #2B2226; }
 
 .heat-cell.today { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -1331,11 +1331,11 @@ main {
 
 .chart-bar {
     width: 100%; max-width: 34px;
-    background: var(--blue);
-    border-radius: 7px 7px 3px 3px;
-    transition: height 0.3s ease; box-shadow: var(--shadow-sm);
+    background: var(--primary);
+    border-radius: 3px 3px 0 0;
+    transition: height 0.3s ease;
 }
-.chart-col:hover .chart-bar { background: var(--accent); }
+.chart-col:hover .chart-bar { filter: brightness(0.85); }
 
 .chart-label { font-size: 0.67rem; color: var(--text-soft); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
