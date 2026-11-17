@@ -553,6 +553,15 @@
 
     if (reasonCancelBtn) reasonCancelBtn.addEventListener('click', hideReasonStep);
 
+    // Entrée = valider et fermer (demande utilisateur) — actif uniquement à l'étape raison
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        if (!checkinModal || checkinModal.hidden) return;
+        if (!reasonStep || reasonStep.hidden) return;
+        e.preventDefault();
+        if (reasonConfirmBtn) reasonConfirmBtn.click();
+    });
+
     if (reasonConfirmBtn) reasonConfirmBtn.addEventListener('click', function () {
         if (pendingVisitMember === undefined) return;
         var reason = (visitReason && visitReason.value) || VISIT_REASONS[0];
