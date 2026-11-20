@@ -110,6 +110,14 @@ Fait dans cette session (PRs #110 à #125, toutes fusionnées) :
 - **Compteurs « X/Y inscrits/payés »** : badges des cartes formations.html (format nu X/Y, détail au survol) et grand compteur de formation.html ; `paid_count` dans listFormations.
 - **Maquettes design** : 8 directions explorées sur la branche jetable `maquettes-design` (jamais fusionnée) — néobrutalisme, terminal, éditorial, solarpunk, solarpunk-corporate (4b, coup de cœur de l'utilisateur, « gardée sous le coude »), claymorphism, swiss, neo-sobre. Liens via raw.githack.com.
 
+## 📚 Chantier en DISCUSSION (ne PAS coder avant décision) — sync chiffrée multi-postes
+
+**État : réflexion ouverte, aucune décision figée.** L'utilisateur veut d'abord comprendre la technique et peser le pour/contre — le doc de conception viendra APRÈS la discussion, pas avant.
+
+Idée examinée : base locale + fichier CHIFFRÉ synchronisé via cloud (Nextcloud, Google Drive...). Piège identifié : SQLite binaire + sync de fichiers = corruption (verrous/WAL, divergences non fusionnables). Pistes : (A) dump chiffré AES-GCM + fusion applicative last-write-wins, via WebDAV Nextcloud — question ouverte : CORS depuis GitHub Pages ; (B) app locale Tauri ; (C) backend.
+
+**✨ TÂCHE À NOTER (demande utilisateur) : trouver ou rédiger un SKILL DE PRÉ-PRODUCTION** — un skill qui encadre toute phase de conception AVANT tout codage : cadrage du besoin, exploration des options, pour/contre documentés, doc de conception, décisions figées. Généralisation de la leçon « charte avant maquette » (n° 20) : « conception avant code ». À chercher dans le registre Mistral, à rédiger sinon.
+
 ## 🧠 Leçons apprises (méthodes qui ont marché)
 
 1. PRs incrémentales, une fonctionnalité complète par PR, fusionnées dans l'ordre.
